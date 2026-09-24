@@ -14,15 +14,25 @@ import {
   CheckCircle2,
   XCircle,
   RefreshCw,
+  LogOut,
+  UserCheck,
+  ShieldAlert,
 } from "lucide-react";
 import { api, type HealthResponse, type ReadyResponse } from "../api/client";
+import { AuthProvider, useAuth } from "../features/auth/AuthContext";
+import { LoginPage } from "../features/auth/LoginPage";
 
-export function App() {
+function AppContent() {
+  const { user, roles, permissions, isAuthenticated, isLoading, logout, hasPermission } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [readiness, setReadiness] = useState<ReadyResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date>(new Date());
+
+  // Direct RBAC test state
+  const [rbacTestStatus, setRbacTestStatus] = useState<string | null>(null);
+  const [rbacTestLoading, setRbacTestLoading] = useState(false);
 
   const checkStatus = async () => {
     setLoading(true);
@@ -40,22 +50,58 @@ export function App() {
   };
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     checkStatus();
     const interval = setInterval(checkStatus, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isAuthenticated]);
 
-  const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "subscribers", label: "Subscribers", icon: Users },
-    { id: "billing", label: "Billing", icon: Receipt },
-    { id: "payments", label: "Payments", icon: CreditCard },
-    { id: "collections", label: "Collections", icon: FolderSync },
-    { id: "receivables", label: "Receivables", icon: AlertCircle },
-    { id: "services", label: "Services", icon: Layers },
-    { id: "reports", label: "Reports", icon: FileBarChart2 },
-    { id: "administration", label: "Administration", icon: ShieldCheck },
+  const testDirectAdminApi = async () => {
+    setRbacTestLoading(true);
+    setRbacTestStatus(null);
+    try {
+      const res = await api.checkAdminAudit();
+      setRbacTestStatus(`SUCCESS (200 OK): ${res.message}`);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setRbacTestStatus(`FORBIDDEN (403): ${err.message}`);
+      } else {
+        setRbacTestStatus("Error calling admin endpoint");
+      }
+    } finally {
+      setRbacTestLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#F6F8FB] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-3 border-[#2563EB] border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-xs text-[#64748B] font-medium">Initializing terminal session...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
+  const allNavItems = [
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, perm: null },
+    { id: "subscribers", label: "Subscribers", icon: Users, perm: "subscriber.view" },
+    { id: "billing", label: "Billing", icon: Receipt, perm: "billing.view" },
+    { id: "payments", label: "Payments", icon: CreditCard, perm: "payment.view" },
+    { id: "collections", label: "Collections", icon: FolderSync, perm: "collection.view" },
+    { id: "receivables", label: "Receivables", icon: AlertCircle, perm: "receivables.view" },
+    { id: "services", label: "Services", icon: Layers, perm: "service.view" },
+    { id: "reports", label: "Reports", icon: FileBarChart2, perm: "report.view" },
+    { id: "administration", label: "Administration", icon: ShieldCheck, perm: "user.manage" },
   ];
+
+  // Role-aware navigation filtering
+  const visibleNavItems = allNavItems.filter((item) => !item.perm || hasPermission(item.perm));
 
   const isConnected = health?.status === "ok";
   const isDbReady = readiness?.database === "connected";
@@ -74,16 +120,16 @@ export function App() {
             <p className="text-xs text-slate-300 mt-0.5">Desktop Operations Client</p>
           </div>
 
-          {/* Navigation Items */}
+          {/* Navigation Items (Role-filtered) */}
           <nav className="p-3 space-y-1">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors cursor-pointer ${
                     isActive
                       ? "bg-[#2563EB] text-white shadow-sm"
                       : "text-slate-300 hover:bg-[#1E3A5F] hover:text-white"
@@ -97,26 +143,51 @@ export function App() {
           </nav>
         </div>
 
-        {/* System Connection Badge in Sidebar */}
-        <div className="p-4 border-t border-[#1E3A5F] bg-[#0A1B33]">
-          <div className="flex items-center justify-between text-xs mb-2">
-            <span className="text-slate-400">API Gateway:</span>
-            <span className="flex items-center gap-1.5 font-medium">
-              {isConnected ? (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  <span className="text-emerald-400">Connected</span>
-                </>
-              ) : (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-rose-400"></span>
-                  <span className="text-rose-400">Offline</span>
-                </>
-              )}
-            </span>
+        {/* User Info & Connection Badge */}
+        <div className="border-t border-[#1E3A5F] bg-[#0A1B33]">
+          {/* User Profile */}
+          <div className="p-4 border-b border-[#1E3A5F]/60">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-[#1E3A5F] text-[#2563EB] flex items-center justify-center font-bold text-xs shrink-0">
+                {user?.displayName.slice(0, 2).toUpperCase() || "U"}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-semibold text-white truncate">{user?.displayName}</div>
+                <div className="text-[11px] text-blue-300 font-medium truncate">
+                  {roles[0] || "User"}
+                </div>
+              </div>
+              <button
+                onClick={() => logout()}
+                title="Sign Out"
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-[#1E3A5F] rounded transition-colors cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-          <div className="text-[11px] text-slate-400 truncate">
-            Fastify :3001 &bull; LAN Mode
+
+          {/* Connection Status */}
+          <div className="p-3 px-4">
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <span className="text-slate-400">API Gateway:</span>
+              <span className="flex items-center gap-1.5 font-medium">
+                {isConnected ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span className="text-emerald-400">Connected</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-rose-400"></span>
+                    <span className="text-rose-400">Offline</span>
+                  </>
+                )}
+              </span>
+            </div>
+            <div className="text-[11px] text-slate-400 truncate">
+              Fastify :3001 &bull; LAN Mode
+            </div>
           </div>
         </div>
       </aside>
@@ -129,8 +200,8 @@ export function App() {
             <h2 className="text-base font-semibold capitalize text-[#0F172A]">
               {activeTab}
             </h2>
-            <span className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-              Phase 0: Foundation
+            <span className="text-xs px-2 py-0.5 rounded bg-blue-50 text-[#2563EB] border border-blue-200 font-medium">
+              Role: {roles.join(", ")}
             </span>
           </div>
 
@@ -152,14 +223,78 @@ export function App() {
         {/* Content Area */}
         <div className="p-8 max-w-7xl w-full mx-auto space-y-6">
           {/* Welcome Banner */}
-          <div className="p-6 bg-white border border-[#E2E8F0] rounded-lg shadow-xs">
-            <h3 className="text-lg font-bold text-[#0F2747]">
-              BCIS Subscription Billing and Collection System
-            </h3>
-            <p className="text-sm text-[#64748B] mt-1 max-w-2xl">
-              Production-ready Windows desktop business system for Bukidnon Cable and Internet Services.
-              Architecture: Tauri Desktop Client &rarr; Fastify API Server &rarr; PostgreSQL 17.
-            </p>
+          <div className="p-6 bg-white border border-[#E2E8F0] rounded-lg shadow-xs flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-[#0F2747] flex items-center gap-2">
+                <span>Welcome, {user?.displayName}</span>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-normal">
+                  Active Session
+                </span>
+              </h3>
+              <p className="text-sm text-[#64748B] mt-1 max-w-2xl">
+                Authenticated as <strong className="text-slate-700">{user?.username}</strong> with{" "}
+                <span className="text-[#2563EB] font-semibold">{permissions.length} granular permissions</span>.
+              </p>
+            </div>
+            <button
+              onClick={() => logout()}
+              className="px-3 py-1.5 rounded border border-[#E2E8F0] bg-white hover:bg-slate-50 text-xs font-medium text-slate-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5 text-slate-500" />
+              <span>Sign Out</span>
+            </button>
+          </div>
+
+          {/* AT-10 Acceptance Test Interactive Demonstration Card */}
+          <div className="p-6 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <h4 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-[#2563EB]" />
+                  <span>Acceptance Test AT-10: Server-Side RBAC Enforcement</span>
+                </h4>
+                <p className="text-xs text-[#64748B] mt-0.5">
+                  Verify that backend rejects unauthorized direct API requests even if called directly.
+                  Endpoint: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800">GET /api/v1/admin/audit-check</code> (Requires <code className="text-blue-600">user.manage</code>)
+                </p>
+              </div>
+              <button
+                onClick={testDirectAdminApi}
+                disabled={rbacTestLoading}
+                className="px-3 py-1.5 rounded bg-[#0F2747] hover:bg-slate-800 text-white text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+              >
+                {rbacTestLoading ? (
+                  <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                ) : (
+                  <UserCheck className="w-3.5 h-3.5" />
+                )}
+                <span>Execute Direct Admin API Call</span>
+              </button>
+            </div>
+
+            {rbacTestStatus && (
+              <div
+                className={`p-3.5 rounded-lg border text-xs flex items-start gap-2.5 ${
+                  rbacTestStatus.includes("SUCCESS")
+                    ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                    : "bg-amber-50 border-amber-200 text-amber-800"
+                }`}
+              >
+                {rbacTestStatus.includes("SUCCESS") ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 mt-0.5" />
+                ) : (
+                  <ShieldAlert className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                )}
+                <div>
+                  <div className="font-semibold">
+                    {rbacTestStatus.includes("SUCCESS")
+                      ? "Direct API Authorization Granted"
+                      : "Direct API Access Blocked (Server-Side Invariant)"}
+                  </div>
+                  <div className="mt-0.5 font-mono text-[11px]">{rbacTestStatus}</div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Subsystem Health Grid */}
@@ -226,7 +361,7 @@ export function App() {
               </div>
             </div>
 
-            {/* Architecture Invariant Card */}
+            {/* Security Boundary Card */}
             <div className="p-5 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
@@ -234,66 +369,34 @@ export function App() {
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-sm font-semibold text-[#0F172A]">Security Boundary</h4>
-                    <p className="text-xs text-[#64748B]">Tauri Capability Guard</p>
+                    <h4 className="text-sm font-semibold text-[#0F172A]">Session Security</h4>
+                    <p className="text-xs text-[#64748B]">Argon2id &bull; SHA-256 Tokens</p>
                   </div>
                 </div>
                 <CheckCircle2 className="w-5 h-5 text-[#059669]" />
               </div>
               <div className="text-xs text-[#64748B] pt-2 border-t border-[#F1F5F9] space-y-1">
                 <div className="flex justify-between">
-                  <span>Financial Authority:</span>
-                  <span className="font-semibold text-[#0F172A]">Fastify Server</span>
+                  <span>Lockout Policy:</span>
+                  <span className="font-semibold text-[#0F172A]">5 Fails &rarr; 15 min lock</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Client RBAC Enforcement:</span>
-                  <span className="font-semibold text-[#0F172A]">Server-Side</span>
+                  <span>Audit Trail:</span>
+                  <span className="font-semibold text-emerald-600">Immutable Enabled</span>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Phase 0 Completion Gate Table */}
-          <div className="bg-white border border-[#E2E8F0] rounded-lg shadow-xs overflow-hidden">
-            <div className="px-6 py-4 border-b border-[#E2E8F0] bg-slate-50">
-              <h4 className="text-sm font-semibold text-[#0F172A]">Phase 0: Engineering Foundation Verification</h4>
-              <p className="text-xs text-[#64748B] mt-0.5">Verification checklist for architecture and foundation gates</p>
-            </div>
-            <div className="p-6 space-y-3 text-sm">
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="text-slate-800 font-medium">Independent Git repositories:</span>
-                <span className="text-slate-600 text-xs font-mono">backend/.git and frontend/.git created</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="text-slate-800 font-medium">Root orchestration:</span>
-                <span className="text-slate-600 text-xs font-mono">Delegation via pnpm --dir, no pnpm-workspace.yaml</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="text-slate-800 font-medium">Authoritative centralized catalog:</span>
-                <span className="text-slate-600 text-xs font-mono">SKILLS.md established at workspace root</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="text-slate-800 font-medium">Authoritative Money value object:</span>
-                <span className="text-slate-600 text-xs font-mono">Integer centavos, zero JS floating-point arithmetic</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="text-slate-800 font-medium">Fastify 5 REST API & OpenAPI contract:</span>
-                <span className="text-slate-600 text-xs font-mono">docs/openapi.yaml and docs/openapi.json synchronized</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="text-slate-800 font-medium">Tauri 2 Desktop Shell:</span>
-                <span className="text-slate-600 text-xs font-mono">src-tauri/ configured with strict capabilities</span>
               </div>
             </div>
           </div>
         </div>
       </main>
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }

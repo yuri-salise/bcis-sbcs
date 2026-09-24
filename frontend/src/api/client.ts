@@ -17,6 +17,27 @@ export interface ReadyResponse {
   timestamp: string;
 }
 
+export interface UserProfile {
+  id: string;
+  username: string;
+  displayName: string;
+  email: string | null;
+}
+
+export interface LoginResponse {
+  user: UserProfile;
+  token: string;
+  expiresAt: string;
+  roles: string[];
+  permissions: string[];
+}
+
+export interface MeResponse {
+  user: UserProfile;
+  roles: string[];
+  permissions: string[];
+}
+
 export class ApiError extends Error {
   public readonly statusCode: number;
   public readonly code: string;
@@ -33,9 +54,32 @@ export class ApiError extends Error {
 
 export class ApiClient {
   private readonly baseUrl: string;
+  private token: string | null = null;
 
   constructor(baseUrl?: string) {
     this.baseUrl = baseUrl || (import.meta.env.VITE_API_BASE_URL as string) || "http://localhost:3001/api/v1";
+    if (typeof window !== "undefined") {
+      this.token = localStorage.getItem("bcis_auth_token");
+    }
+  }
+
+  public setToken(token: string | null): void {
+    this.token = token;
+    if (typeof window !== "undefined") {
+      if (token) {
+        localStorage.setItem("bcis_auth_token", token);
+      } else {
+        localStorage.removeItem("bcis_auth_token");
+      }
+    }
+  }
+
+  public getToken(): string | null {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("bcis_auth_token");
+      if (stored) return stored;
+    }
+    return this.token;
   }
 
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -44,6 +88,10 @@ export class ApiClient {
 
     if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
       headers.set("Content-Type", "application/json");
+    }
+
+    if (this.token && !headers.has("Authorization")) {
+      headers.set("Authorization", `Bearer ${this.token}`);
     }
 
     const response = await fetch(url, {
@@ -75,10 +123,36 @@ export class ApiClient {
   }
 
   public async getReadiness(): Promise<ReadyResponse> {
-    // Call server root /ready
     const rootUrl = this.baseUrl.replace(/\/api\/v1\/?$/, "");
     const response = await fetch(`${rootUrl}/ready`);
     return response.json() as Promise<ReadyResponse>;
+  }
+
+  public async login(username: string, password: string): Promise<LoginResponse> {
+    const result = await this.request<LoginResponse>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    });
+    this.setToken(result.token);
+    return result;
+  }
+
+  public async logout(): Promise<void> {
+    try {
+      await this.request<{ status: string }>("/auth/logout", {
+        method: "POST",
+      });
+    } finally {
+      this.setToken(null);
+    }
+  }
+
+  public async getMe(): Promise<MeResponse> {
+    return this.request<MeResponse>("/auth/me");
+  }
+
+  public async checkAdminAudit(): Promise<{ status: string; message: string }> {
+    return this.request<{ status: string; message: string }>("/admin/audit-check");
   }
 }
 
