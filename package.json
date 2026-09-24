@@ -1,0 +1,25 @@
+{
+  "name": "bcis-subscription-billing-system",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BCIS Subscription Billing and Collection System — Root Orchestration Workspace",
+  "scripts": {
+    "backend:install": "pnpm --dir backend install",
+    "frontend:install": "pnpm --dir frontend install",
+    "install:all": "pnpm backend:install && pnpm frontend:install",
+    "backend:dev": "pnpm --dir backend dev",
+    "frontend:dev": "pnpm --dir frontend dev",
+    "backend:test": "pnpm --dir backend test",
+    "frontend:test": "pnpm --dir frontend test",
+    "test": "pnpm backend:test && pnpm frontend:test",
+    "backend:lint": "pnpm --dir backend lint",
+    "frontend:lint": "pnpm --dir frontend lint",
+    "lint": "pnpm backend:lint && pnpm frontend:lint",
+    "backend:typecheck": "pnpm --dir backend typecheck",
+    "frontend:typecheck": "pnpm --dir frontend typecheck",
+    "typecheck": "pnpm backend:typecheck && pnpm frontend:typecheck",
+    "backend:build": "pnpm --dir backend build",
+    "frontend:build": "pnpm --dir frontend build",
+    "build": "pnpm backend:build && pnpm frontend:build"
+  }
+}

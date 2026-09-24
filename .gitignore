@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build and test outputs
+dist/
+dist-ssr/
+build/
+coverage/
+
+# Environment files and credentials
+.env
+.env*.local
+.env.production
+.env.development
+!.env.example
+
+# Runtime logs and temporary uploads
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+uploads/
+.drizzle/
+
+# Desktop / Tauri build artifacts
+src-tauri/target/
+**/src-tauri/target/
+
+# OS and Editor metadata
+.DS_Store
+Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.idea/
+.vscode/*
+!.vscode/extensions.json
