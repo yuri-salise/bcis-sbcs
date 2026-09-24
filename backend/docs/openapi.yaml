@@ -1,0 +1,126 @@
+openapi: 3.0.3
+info:
+  title: BCIS Subscription Billing and Collection System API
+  description: Official REST API for the BCIS Subscription Billing and Collection System
+  version: 1.0.0
+servers:
+  - url: http://localhost:3001
+    description: Local development server
+tags:
+  - name: System
+    description: Health, readiness, and system status
+  - name: Auth
+    description: Authentication and session management
+  - name: Subscribers
+    description: Subscriber profile and account management
+  - name: Billing
+    description: Invoices, billing cycles, and ledger
+  - name: Payments
+    description: Payment processing and allocation
+  - name: Collections
+    description: Collector batches and remittances
+  - name: Receivables
+    description: AR aging and overdue tracking
+  - name: Reports
+    description: Financial and operational reports
+paths:
+  /health:
+    get:
+      tags:
+        - System
+      description: Liveness probe verifying that the API server is responsive
+      responses:
+        '200':
+          description: Server is live
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - timestamp
+                  - uptime
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                  uptime:
+                    type: number
+  /ready:
+    get:
+      tags:
+        - System
+      description: Readiness probe verifying that database and critical subsystems are healthy
+      responses:
+        '200':
+          description: Subsystems are connected and ready
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - database
+                  - timestamp
+                properties:
+                  status:
+                    type: string
+                    example: ready
+                  database:
+                    type: string
+                    example: connected
+                  timestamp:
+                    type: string
+                    format: date-time
+        '503':
+          description: Database or critical subsystem disconnected
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - database
+                  - timestamp
+                properties:
+                  status:
+                    type: string
+                    example: degraded
+                  database:
+                    type: string
+                    example: disconnected
+                  timestamp:
+                    type: string
+                    format: date-time
+  /api/v1/health:
+    get:
+      tags:
+        - System
+      description: Liveness probe under versioned API prefix
+      responses:
+        '200':
+          description: Server is live
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - timestamp
+                  - uptime
+                properties:
+                  status:
+                    type: string
+                  timestamp:
+                    type: string
+                  uptime:
+                    type: number
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
