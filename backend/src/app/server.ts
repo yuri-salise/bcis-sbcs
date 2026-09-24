@@ -6,6 +6,7 @@ import swaggerUi from "@fastify/swagger-ui";
 import { env } from "./config/env.js";
 import { AppError } from "./errors/app-error.js";
 import { healthRoutes } from "../modules/health/health.routes.js";
+import { authRoutes } from "../modules/auth/auth.routes.js";
 
 export function buildServer(): FastifyInstance {
   const server = Fastify({
@@ -115,6 +116,7 @@ export function buildServer(): FastifyInstance {
   // Register Core Routes
   server.register(healthRoutes);
   server.register(healthRoutes, { prefix: "/api/v1" });
+  server.register(authRoutes, { prefix: "/api/v1" });
 
   return server;
 }
