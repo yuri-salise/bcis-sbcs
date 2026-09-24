@@ -38,6 +38,185 @@ export interface MeResponse {
   permissions: string[];
 }
 
+export interface Address {
+  id?: string;
+  subscriberId?: string;
+  label: string;
+  line1: string;
+  line2?: string | null;
+  barangay: string;
+  cityMunicipality: string;
+  province: string;
+  postalCode?: string;
+  landmark?: string | null;
+  isPrimary?: boolean;
+}
+
+export interface ServiceType {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+}
+
+export interface ServicePlan {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  monthlyPrice: string;
+  installationFee: string;
+  reconnectionFee: string;
+  speedMbps?: number | null;
+  channelCount?: number | null;
+  isActive: boolean;
+  serviceType: ServiceType;
+}
+
+export interface CollectionArea {
+  id: string;
+  code: string;
+  name: string;
+  description?: string | null;
+  isActive: boolean;
+}
+
+export interface Collector {
+  id: string;
+  collectorCode: string;
+  name: string;
+  contactNumber?: string | null;
+  isActive: boolean;
+}
+
+export interface ServiceAccountStatusHistoryItem {
+  id: string;
+  serviceAccountId: string;
+  fromStatus: string;
+  toStatus: string;
+  effectiveAt: string;
+  reason: string;
+  actorUserId?: string | null;
+  actor?: {
+    id: string;
+    username: string;
+    displayName: string;
+  } | null;
+  notes?: string | null;
+}
+
+export interface ServiceAccount {
+  id: string;
+  subscriberId: string;
+  serviceAccountNumber: string;
+  serviceTypeId: string;
+  servicePlanId: string;
+  installationAddressId: string;
+  activationDate: string;
+  billingStartDate: string;
+  billingDay: number;
+  dueDay: number;
+  currentRate: string;
+  status: "PENDING" | "ACTIVE" | "SUSPENDED" | "DISCONNECTED" | "TERMINATED";
+  collectorId?: string | null;
+  collectionAreaId?: string | null;
+  cachedBalanceDue: string;
+  lastBilledAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  serviceType?: ServiceType;
+  servicePlan?: ServicePlan;
+  collectionArea?: CollectionArea;
+  collector?: Collector;
+  statusHistory?: ServiceAccountStatusHistoryItem[];
+}
+
+export interface Subscriber {
+  id: string;
+  accountNumber: string;
+  firstName: string;
+  middleName?: string | null;
+  lastName: string;
+  businessName?: string | null;
+  primaryContactNumber: string;
+  secondaryContactNumber?: string | null;
+  email?: string | null;
+  status: "ACTIVE" | "INACTIVE" | "TERMINATED" | "ARCHIVED";
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  primaryAddress?: Address | null;
+  addresses?: Address[];
+  serviceAccounts?: ServiceAccount[];
+  serviceAccountsCount?: number;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface CreateSubscriberPayload {
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  businessName?: string;
+  primaryContactNumber: string;
+  secondaryContactNumber?: string;
+  email?: string;
+  notes?: string;
+  address: {
+    label?: string;
+    line1: string;
+    line2?: string;
+    barangay: string;
+    cityMunicipality?: string;
+    province?: string;
+    postalCode?: string;
+    landmark?: string;
+  };
+}
+
+export interface UpdateSubscriberPayload {
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
+  businessName?: string;
+  primaryContactNumber?: string;
+  secondaryContactNumber?: string;
+  email?: string;
+  status?: string;
+  notes?: string;
+  address?: {
+    label?: string;
+    line1?: string;
+    line2?: string;
+    barangay?: string;
+    cityMunicipality?: string;
+    province?: string;
+    postalCode?: string;
+    landmark?: string;
+  };
+}
+
+export interface CreateServiceAccountPayload {
+  servicePlanId: string;
+  installationAddressId?: string;
+  activationDate?: string;
+  billingStartDate?: string;
+  billingDay?: number;
+  dueDay?: number;
+  collectorId?: string;
+  collectionAreaId?: string;
+  reason?: string;
+  notes?: string;
+}
+
 export class ApiError extends Error {
   public readonly statusCode: number;
   public readonly code: string;
@@ -153,6 +332,74 @@ export class ApiClient {
 
   public async checkAdminAudit(): Promise<{ status: string; message: string }> {
     return this.request<{ status: string; message: string }>("/admin/audit-check");
+  }
+
+  // --- Subscriber & Catalog Methods ---
+
+  public async listSubscribers(params: {
+    search?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<PaginatedResult<Subscriber>> {
+    const searchParams = new URLSearchParams();
+    if (params.search) searchParams.set("search", params.search);
+    if (params.status) searchParams.set("status", params.status);
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+
+    const qs = searchParams.toString();
+    return this.request<PaginatedResult<Subscriber>>(`/subscribers${qs ? `?${qs}` : ""}`);
+  }
+
+  public async getSubscriberById(id: string): Promise<Subscriber> {
+    return this.request<Subscriber>(`/subscribers/${id}`);
+  }
+
+  public async createSubscriber(payload: CreateSubscriberPayload): Promise<Subscriber> {
+    return this.request<Subscriber>("/subscribers", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async updateSubscriber(id: string, payload: UpdateSubscriberPayload): Promise<Subscriber> {
+    return this.request<Subscriber>(`/subscribers/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async createServiceAccount(
+    subscriberId: string,
+    payload: CreateServiceAccountPayload
+  ): Promise<ServiceAccount> {
+    return this.request<ServiceAccount>(`/subscribers/${subscriberId}/service-accounts`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async updateServiceAccountStatus(
+    serviceAccountId: string,
+    payload: { toStatus: string; reason: string; notes?: string }
+  ): Promise<ServiceAccount> {
+    return this.request<ServiceAccount>(`/service-accounts/${serviceAccountId}/status`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async listServicePlans(): Promise<ServicePlan[]> {
+    return this.request<ServicePlan[]>("/service-plans");
+  }
+
+  public async listCollectionAreas(): Promise<CollectionArea[]> {
+    return this.request<CollectionArea[]>("/collection-areas");
+  }
+
+  public async listCollectors(): Promise<Collector[]> {
+    return this.request<Collector[]>("/collectors");
   }
 }
 
