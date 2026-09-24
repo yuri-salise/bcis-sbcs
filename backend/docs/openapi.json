@@ -446,6 +446,364 @@
           }
         }
       }
+    },
+    "/api/v1/subscribers": {
+      "get": {
+        "tags": [
+          "Subscribers"
+        ],
+        "description": "List subscribers with search, status filtering, and pagination",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "search",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "status",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "in": "query",
+            "name": "page",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "default": 20
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Subscribers"
+        ],
+        "description": "Create a new subscriber with primary address and authoritative account number",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "firstName",
+                  "lastName",
+                  "primaryContactNumber",
+                  "address"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "middleName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "businessName": {
+                    "type": "string"
+                  },
+                  "primaryContactNumber": {
+                    "type": "string",
+                    "minLength": 7
+                  },
+                  "secondaryContactNumber": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "notes": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": "object",
+                    "required": [
+                      "line1",
+                      "barangay"
+                    ],
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "default": "Home"
+                      },
+                      "line1": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "line2": {
+                        "type": "string"
+                      },
+                      "barangay": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "cityMunicipality": {
+                        "type": "string",
+                        "default": "Malaybalay City"
+                      },
+                      "province": {
+                        "type": "string",
+                        "default": "Bukidnon"
+                      },
+                      "postalCode": {
+                        "type": "string",
+                        "default": "8700"
+                      },
+                      "landmark": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/subscribers/{id}": {
+      "get": {
+        "tags": [
+          "Subscribers"
+        ],
+        "description": "Get full subscriber profile, addresses, service accounts, and history",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Subscribers"
+        ],
+        "description": "Update subscriber details and primary address",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/subscribers/{id}/service-accounts": {
+      "post": {
+        "tags": [
+          "Subscribers"
+        ],
+        "description": "Create a billable service account under a subscriber with catalog rate snapshot",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "servicePlanId"
+                ],
+                "properties": {
+                  "servicePlanId": {
+                    "type": "string"
+                  },
+                  "installationAddressId": {
+                    "type": "string"
+                  },
+                  "activationDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "billingStartDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "billingDay": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 28
+                  },
+                  "dueDay": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 28
+                  },
+                  "collectorId": {
+                    "type": "string"
+                  },
+                  "collectionAreaId": {
+                    "type": "string"
+                  },
+                  "reason": {
+                    "type": "string"
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/service-accounts/{id}/status": {
+      "patch": {
+        "tags": [
+          "Subscribers"
+        ],
+        "description": "Change service account status (suspend, reconnect, disconnect) with mandatory audit reason",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "toStatus",
+                  "reason"
+                ],
+                "properties": {
+                  "toStatus": {
+                    "type": "string",
+                    "enum": [
+                      "PENDING",
+                      "ACTIVE",
+                      "SUSPENDED",
+                      "DISCONNECTED",
+                      "TERMINATED"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/service-plans": {
+      "get": {
+        "tags": [
+          "Subscribers"
+        ],
+        "description": "List active catalog service plans",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/collection-areas": {
+      "get": {
+        "tags": [
+          "Subscribers"
+        ],
+        "description": "List active collection areas",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/collectors": {
+      "get": {
+        "tags": [
+          "Subscribers"
+        ],
+        "description": "List active collectors",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
     }
   },
   "servers": [
