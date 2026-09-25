@@ -168,7 +168,7 @@ export class PaymentService {
    * 5. Captures any overpayment as advance credit (AT-03).
    * 6. Posts ledger credit in the subscriber's financial journal.
    */
-  public async createPayment(payload: CreatePaymentPayload, cashierUserId: string) {
+  public async createPayment(payload: CreatePaymentPayload, cashierUserId: string, externalTx?: any) {
     const amountPaid = Money.fromDecimal(payload.amountPaid);
     if (amountPaid.isNegative() || amountPaid.isZero()) {
       throw new Error("Payment amount must be greater than zero");
@@ -188,7 +188,8 @@ export class PaymentService {
     // AT-05 Invariant: Duplicate GCash / Reference Protection
     const trimmedRef = payload.referenceNumber?.trim();
     if (trimmedRef) {
-      const [existingRef] = await db
+      const q = externalTx || db;
+      const [existingRef] = await q
         .select({ id: payments.id, receiptNumber: payments.receiptNumber })
         .from(payments)
         .where(and(eq(payments.referenceNumber, trimmedRef), eq(payments.isReversed, false)))
@@ -203,7 +204,7 @@ export class PaymentService {
 
     const todayStr: string = payload.paymentDate || (new Date().toISOString().split("T")[0] as string);
 
-    return await db.transaction(async (tx) => {
+    const executeInTx = async (tx: any) => {
       // 1. Verify subscriber
       const [sub] = await tx
         .select()
@@ -232,7 +233,7 @@ export class PaymentService {
         throw new Error("No service accounts found for payment allocation");
       }
 
-      const accountIds = accounts.map((a) => a.id);
+      const accountIds = accounts.map((a: { id: string }) => a.id);
 
       // 3. Query unpaid/partially-paid invoices strictly OLDEST FIRST (AT-04)
       const unpaidInvoices = await tx
@@ -282,7 +283,7 @@ export class PaymentService {
             .where(eq(invoices.id, inv.id));
 
           // Decrement service account cached balance due
-          const currentSa = accounts.find((a) => a.id === inv.serviceAccountId);
+          const currentSa = accounts.find((a: { id: string; cachedBalanceDue: string }) => a.id === inv.serviceAccountId);
           if (currentSa) {
             const currentSaBal = Money.fromDecimal(currentSa.cachedBalanceDue);
             const updatedSaBal = Money.max(Money.zero(), currentSaBal.minus(alloc));
@@ -384,7 +385,12 @@ export class PaymentService {
         advanceCredit: advanceAmount.toDecimalString(),
         message: `Payment of ₱${amountPaid.toDecimalString()} posted successfully. Receipt #${receiptNumber} generated.`,
       };
-    });
+    };
+
+    if (externalTx) {
+      return await executeInTx(externalTx);
+    }
+    return await db.transaction(executeInTx);
   }
 
   /**

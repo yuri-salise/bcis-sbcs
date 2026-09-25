@@ -4,3 +4,4 @@ export * from "./auth.js";
 export * from "./subscribers.js";
 export * from "./billing.js";
 export * from "./payments.js";
+export * from "./gcash.js";

@@ -61,3 +61,25 @@ export function requirePermission(permissionCode: string) {
     }
   };
 }
+
+export function requireAnyPermission(...permissionCodes: string[]) {
+  return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    if (!request.user) {
+      await authenticate(request, reply);
+    }
+
+    const roles = request.roles ?? [];
+    const permissions = request.permissions ?? [];
+
+    if (roles.includes("SUPER_ADMIN")) {
+      return;
+    }
+
+    const hasAny = permissionCodes.some((code) => permissions.includes(code));
+    if (!hasAny) {
+      throw new ForbiddenError(
+        `Access denied. You lack one of the required permissions: [${permissionCodes.join(", ")}] to access this resource.`
+      );
+    }
+  };
+}

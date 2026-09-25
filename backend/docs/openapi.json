@@ -1332,6 +1332,124 @@
           }
         }
       }
+    },
+    "/api/v1/gcash/submit": {
+      "post": {
+        "tags": [
+          "GCash"
+        ],
+        "description": "Submit a GCash proof of payment attachment and metadata",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/gcash/verification-queue": {
+      "get": {
+        "tags": [
+          "GCash"
+        ],
+        "description": "List payment proofs in verification queue with search, filter, and duplicate status",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/gcash/proofs/{id}": {
+      "get": {
+        "tags": [
+          "GCash"
+        ],
+        "description": "Get detailed proof information including duplicate detection results",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/gcash/proofs/{id}/file": {
+      "get": {
+        "tags": [
+          "GCash"
+        ],
+        "description": "Stream the uploaded proof image or PDF document securely",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/gcash/proofs/{id}/verify": {
+      "post": {
+        "tags": [
+          "GCash"
+        ],
+        "description": "Verify GCash proof, mint official receipt, and post payment with oldest-first allocation",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/gcash/proofs/{id}/reject": {
+      "post": {
+        "tags": [
+          "GCash"
+        ],
+        "description": "Reject payment proof with mandatory reason while preserving evidence",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
     }
   },
   "servers": [

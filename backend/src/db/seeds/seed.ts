@@ -94,11 +94,13 @@ export async function runSeeds() {
       "service.view",
       "billing.view",
       "payment.view", "payment.create",
+      "gcash.verify",
       "receivables.view",
     ],
     COLLECTION_SUPERVISOR: [
       "subscriber.view",
       "payment.view", "payment.reverse",
+      "gcash.verify",
       "collection.view", "collection.manage", "collection.reconcile",
       "receivables.view",
       "report.view",

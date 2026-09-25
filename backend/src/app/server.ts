@@ -1,5 +1,6 @@
 import Fastify, { type FastifyInstance, type FastifyError } from "fastify";
 import cors from "@fastify/cors";
+import multipart from "@fastify/multipart";
 import sensible from "@fastify/sensible";
 import swagger from "@fastify/swagger";
 import swaggerUi from "@fastify/swagger-ui";
@@ -10,6 +11,7 @@ import { authRoutes } from "../modules/auth/auth.routes.js";
 import { subscriberRoutes } from "../modules/subscribers/subscriber.routes.js";
 import { billingRoutes } from "../modules/billing/billing.routes.js";
 import { paymentRoutes } from "../modules/payments/payment.routes.js";
+import { gcashRoutes } from "../modules/gcash/gcash.routes.js";
 
 export function buildServer(): FastifyInstance {
   const server = Fastify({
@@ -30,6 +32,14 @@ export function buildServer(): FastifyInstance {
 
   // Sensible defaults
   server.register(sensible);
+
+  // Multipart file upload support for payment proof attachments
+  server.register(multipart, {
+    limits: {
+      fileSize: 5 * 1024 * 1024, // 5MB maximum file size
+      files: 1,
+    },
+  });
 
   // CORS configuration
   server.register(cors, {
@@ -94,6 +104,15 @@ export function buildServer(): FastifyInstance {
       });
     }
 
+    if (error.name === "ZodError" || (error as any).issues) {
+      return reply.status(422).send({
+        statusCode: 422,
+        code: "VALIDATION_ERROR",
+        message: "Request validation failed",
+        details: (error as any).issues,
+      });
+    }
+
     const fastifyErr = error as FastifyError;
 
     // Fastify validation errors
@@ -123,6 +142,7 @@ export function buildServer(): FastifyInstance {
   server.register(subscriberRoutes, { prefix: "/api/v1" });
   server.register(billingRoutes, { prefix: "/api/v1" });
   server.register(paymentRoutes, { prefix: "/api/v1" });
+  server.register(gcashRoutes, { prefix: "/api/v1" });
 
   return server;
 }
