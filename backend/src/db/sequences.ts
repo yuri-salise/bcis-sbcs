@@ -1,7 +1,13 @@
 import { sql } from "drizzle-orm";
 import { db } from "./db.js";
 
-export type SequenceType = "BCIS-SUB" | "BCIS-SA" | "BCIS-INV" | "BCIS-REC";
+export type SequenceType =
+  | "BCIS-SUB"
+  | "BCIS-SA"
+  | "BCIS-INV"
+  | "BCIS-REC"
+  | "BCIS-BATCH"
+  | "BCIS-REMIT";
 
 interface SequenceConfig {
   sequenceName: string;
@@ -34,6 +40,18 @@ function getSequenceConfig(prefix: SequenceType): SequenceConfig {
         sequenceName: "receipt_number_seq",
         tableName: "payments",
         columnName: "receipt_number",
+      };
+    case "BCIS-BATCH":
+      return {
+        sequenceName: "collection_batch_seq",
+        tableName: "collection_batches",
+        columnName: "batch_number",
+      };
+    case "BCIS-REMIT":
+      return {
+        sequenceName: "collector_remittance_seq",
+        tableName: "collector_remittances",
+        columnName: "remittance_number",
       };
   }
 }

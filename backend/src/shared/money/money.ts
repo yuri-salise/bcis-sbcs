@@ -133,6 +133,10 @@ export class Money {
     return this.centavos < 0n;
   }
 
+  public abs(): Money {
+    return new Money(this.centavos < 0n ? -this.centavos : this.centavos);
+  }
+
   public equals(other: Money): boolean {
     return this.centavos === other.centavos;
   }

@@ -1450,6 +1450,225 @@
           }
         }
       }
+    },
+    "/api/v1/collections/batches": {
+      "get": {
+        "tags": [
+          "Collections"
+        ],
+        "description": "List collection batches with filters, search, and pagination",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Collections"
+        ],
+        "description": "Create a new collection batch and route sheet for a collector/area",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/collections/batches/{id}": {
+      "get": {
+        "tags": [
+          "Collections"
+        ],
+        "description": "Get collection batch details with accounts and remittances",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/collections/batches/{id}/collections": {
+      "post": {
+        "tags": [
+          "Collections"
+        ],
+        "description": "Record a field collection on a batch account and issue official receipt",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/collections/batches/{id}/accounts/{accountId}/collect": {
+      "post": {
+        "tags": [
+          "Collections"
+        ],
+        "description": "Record a field collection on a specific batch account",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "accountId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/collections/batches/{id}/submit": {
+      "post": {
+        "tags": [
+          "Collections"
+        ],
+        "description": "Submit completed field collection batch for cash remittance handover",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/collections/batches/{id}/remit": {
+      "post": {
+        "tags": [
+          "Collections"
+        ],
+        "description": "Record physical cash and non-cash remittance, calculate shortage/overage",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/collections/batches/{id}/reconcile": {
+      "post": {
+        "tags": [
+          "Collections"
+        ],
+        "description": "Verify remittance, acknowledge variance, and mark batch reconciled",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/collections/batches/{id}/close": {
+      "post": {
+        "tags": [
+          "Collections"
+        ],
+        "description": "Close collection batch permanently, requiring reason if unbalanced (AT-08)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/collections/collectors": {
+      "get": {
+        "tags": [
+          "Collections"
+        ],
+        "description": "List active collectors",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/collections/areas": {
+      "get": {
+        "tags": [
+          "Collections"
+        ],
+        "description": "List active collection areas",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
     }
   },
   "servers": [
