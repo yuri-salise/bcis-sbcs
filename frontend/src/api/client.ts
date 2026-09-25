@@ -465,6 +465,53 @@ export class ApiClient {
   public async getSubscriberLedger(subscriberId: string): Promise<SubscriberLedgerResponse> {
     return this.request<SubscriberLedgerResponse>(`/subscribers/${subscriberId}/ledger`);
   }
+
+  // --- Payments Endpoints (Phase 4 - AT-01 to AT-06) ---
+
+  public async previewPaymentAllocation(
+    params: PreviewPaymentAllocationParams
+  ): Promise<PaymentAllocationPreviewResult> {
+    return this.request<PaymentAllocationPreviewResult>("/payments/preview", {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
+  }
+
+  public async listPayments(params: ListPaymentsParams = {}): Promise<PaginatedResult<Payment>> {
+    const searchParams = new URLSearchParams();
+    if (params.search) searchParams.set("search", params.search);
+    if (params.status) searchParams.set("status", params.status);
+    if (params.paymentMethod) searchParams.set("paymentMethod", params.paymentMethod);
+    if (params.subscriberId) searchParams.set("subscriberId", params.subscriberId);
+    if (params.startDate) searchParams.set("startDate", params.startDate);
+    if (params.endDate) searchParams.set("endDate", params.endDate);
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+
+    const qs = searchParams.toString();
+    return this.request<PaginatedResult<Payment>>(`/payments${qs ? `?${qs}` : ""}`);
+  }
+
+  public async getPaymentById(id: string): Promise<Payment> {
+    return this.request<Payment>(`/payments/${id}`);
+  }
+
+  public async createPayment(payload: CreatePaymentPayload): Promise<CreatePaymentResponse> {
+    return this.request<CreatePaymentResponse>("/payments", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async reversePayment(
+    id: string,
+    reason: string
+  ): Promise<{ payment: Payment; message: string }> {
+    return this.request<{ payment: Payment; message: string }>(`/payments/${id}/reverse`, {
+      method: "POST",
+      body: JSON.stringify({ reason }),
+    });
+  }
 }
 
 export interface BillingCycle {
@@ -579,6 +626,139 @@ export interface GenerateBillingResponse {
   skippedCount: number;
   totalAmount: string;
   invoices: Invoice[];
+}
+
+// --- Payment Interfaces (Phase 4 - AT-01 to AT-06) ---
+
+export type PaymentMethod = "CASH" | "GCASH" | "BANK_TRANSFER" | "CHECK" | "OTHER";
+export type PaymentStatus = "POSTED" | "REVERSED" | "VOID";
+
+export interface PreviewPaymentAllocationParams {
+  subscriberId: string;
+  serviceAccountId?: string;
+  amount: string;
+}
+
+export interface InvoiceAllocationPreview {
+  invoiceId: string;
+  invoiceNumber: string;
+  cycleCode: string;
+  dueDate: string;
+  currentBalance: string;
+  allocatedAmount: string;
+  remainingBalance: string;
+  resultingStatus: "PAID" | "PARTIALLY_PAID";
+}
+
+export interface PaymentAllocationPreviewResult {
+  totalPaymentAmount: string;
+  totalAllocated: string;
+  advanceCredit: string;
+  invoiceAllocations: InvoiceAllocationPreview[];
+}
+
+export interface PaymentAllocation {
+  id: string;
+  paymentId: string;
+  invoiceId: string;
+  allocatedAmount: string;
+  previousInvoiceBalance: string;
+  remainingInvoiceBalance: string;
+  createdAt: string;
+  invoice?: {
+    id: string;
+    invoiceNumber: string;
+    cycleCode?: string;
+    dueDate: string;
+    totalAmount: string;
+    status: string;
+  };
+}
+
+export interface Payment {
+  id: string;
+  receiptNumber: string;
+  subscriberId: string;
+  serviceAccountId?: string | null;
+  paymentDate: string;
+  paymentMethod: PaymentMethod;
+  referenceNumber?: string | null;
+  amountPaid: string;
+  tenderedAmount?: string | null;
+  changeAmount?: string | null;
+  allocatedAmount: string;
+  advanceAmount: string;
+  status: PaymentStatus;
+  cashierId: string;
+  collectorId?: string | null;
+  isReversed: boolean;
+  reversedAt?: string | null;
+  reversedBy?: string | null;
+  reversalReason?: string | null;
+  notes?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  subscriber?: {
+    id: string;
+    accountNumber: string;
+    firstName: string;
+    lastName: string;
+    businessName?: string | null;
+    primaryContactNumber: string;
+  };
+  serviceAccount?: {
+    id: string;
+    serviceAccountNumber: string;
+    currentRate: string;
+  };
+  cashier?: {
+    id: string;
+    username: string;
+    displayName: string;
+  };
+  collector?: {
+    id: string;
+    collectorCode: string;
+    name: string;
+  };
+  allocations?: PaymentAllocation[];
+}
+
+export interface CreatePaymentPayload {
+  subscriberId: string;
+  serviceAccountId?: string;
+  paymentDate?: string;
+  paymentMethod: PaymentMethod;
+  referenceNumber?: string;
+  amountPaid: string;
+  tenderedAmount?: string;
+  collectorId?: string;
+  notes?: string;
+}
+
+export interface CreatePaymentResponse {
+  payment: Payment;
+  allocations: Array<{
+    invoiceId: string;
+    invoiceNumber: string;
+    allocatedAmount: string;
+    previousBalance: string;
+    remainingBalance: string;
+    status: string;
+  }>;
+  advanceCredit: string;
+  message: string;
+}
+
+export interface ListPaymentsParams {
+  search?: string;
+  status?: string;
+  paymentMethod?: string;
+  subscriberId?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
 }
 
 export const api = new ApiClient();

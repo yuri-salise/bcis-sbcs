@@ -102,14 +102,14 @@ describe("BillingPage Component (Phase 3 & AT-11)", () => {
     localStorage.clear();
     api.setToken("mock-token-abc");
 
-    vi.spyOn(api, "listBillingCycles").mockResolvedValue(mockCycles);
+    vi.spyOn(api, "listBillingCycles").mockResolvedValue(mockCycles as any);
     vi.spyOn(api, "listInvoices").mockResolvedValue({
-      data: mockInvoices,
+      data: mockInvoices as any,
       pagination: { page: 1, limit: 15, total: 1, totalPages: 1 },
     });
-    vi.spyOn(api, "getInvoiceById").mockResolvedValue(mockInvoices[0]);
+    vi.spyOn(api, "getInvoiceById").mockResolvedValue(mockInvoices[0] as any);
     vi.spyOn(api, "previewBillingGeneration").mockResolvedValue({
-      cycle: mockCycles[0],
+      cycle: mockCycles[0] as any,
       totalActiveAccounts: 3,
       alreadyBilledCount: 0,
       billableCount: 3,
@@ -132,7 +132,7 @@ describe("BillingPage Component (Phase 3 & AT-11)", () => {
       generatedCount: 3,
       skippedCount: 0,
       totalAmount: "3897.00",
-      invoices: mockInvoices,
+      invoices: mockInvoices as any,
     });
     vi.spyOn(api, "getSubscriberLedger").mockResolvedValue({
       subscriber: {
