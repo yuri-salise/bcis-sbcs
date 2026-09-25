@@ -12,6 +12,7 @@ import {
   serviceAccountStatusHistory,
 } from "../schema/subscribers.js";
 import { billingCycles } from "../schema/billing.js";
+import { applicationSettings } from "../schema/system.js";
 import { AuthService } from "../../modules/auth/auth.service.js";
 import { setSequenceValue } from "../sequences.js";
 
@@ -100,6 +101,7 @@ export async function runSeeds() {
     ],
     COLLECTION_SUPERVISOR: [
       "subscriber.view",
+      "service.control",
       "payment.view", "payment.reverse",
       "gcash.verify",
       "collection.view", "collection.manage", "collection.reconcile",
@@ -642,7 +644,22 @@ export async function runSeeds() {
     }
   }
 
-  console.log("Database seeded successfully with catalog, subscribers, service accounts, and billing cycles.");
+  // 9. Application Settings (PRODUCT.md Section 8.11)
+  const defaultSettings = [
+    { key: "grace_period_days", value: "5", description: "Default grace period in days before an unpaid invoice is deemed delinquent" },
+    { key: "suspension_threshold_amount", value: "1500.00", description: "Cumulative overdue balance threshold triggering suspension recommendation" },
+    { key: "suspension_threshold_overdue_days", value: "30", description: "Overdue days threshold triggering service suspension candidate status" },
+    { key: "default_reconnection_fee", value: "300.00", description: "Standard service reconnection fee in PHP" },
+  ];
+
+  for (const s of defaultSettings) {
+    const [existing] = await db.select().from(applicationSettings).where(eq(applicationSettings.key, s.key)).limit(1);
+    if (!existing) {
+      await db.insert(applicationSettings).values(s);
+    }
+  }
+
+  console.log("Database seeded successfully with catalog, subscribers, service accounts, billing cycles, and system settings.");
 }
 
 // Allow direct CLI execution

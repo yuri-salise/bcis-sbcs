@@ -1669,6 +1669,180 @@
           }
         }
       }
+    },
+    "/api/v1/receivables/outstanding": {
+      "get": {
+        "tags": [
+          "Receivables"
+        ],
+        "description": "List all outstanding receivables with balance > 0",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/receivables/overdue": {
+      "get": {
+        "tags": [
+          "Receivables"
+        ],
+        "description": "List overdue receivables taking grace period into account",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/receivables/aging": {
+      "get": {
+        "tags": [
+          "Receivables"
+        ],
+        "description": "Accounts receivable aging summary across 5 standard buckets and subscriber breakdown",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/receivables/suspension-candidates": {
+      "get": {
+        "tags": [
+          "Receivables"
+        ],
+        "description": "List active service accounts exceeding overdue balance or days thresholds",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/service-accounts/{id}/suspend": {
+      "post": {
+        "tags": [
+          "Service Control"
+        ],
+        "description": "Suspend service account, writing suspension record and state history",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/service-accounts/{id}/reconnect": {
+      "post": {
+        "tags": [
+          "Service Control"
+        ],
+        "description": "Request service reconnection or execute immediate restoration",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/service-accounts/{id}/service-history": {
+      "get": {
+        "tags": [
+          "Service Control"
+        ],
+        "description": "Get complete chronological service control and status history for an account",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/receivables/reconnections": {
+      "get": {
+        "tags": [
+          "Service Control"
+        ],
+        "description": "List service reconnection work orders with filter by status and technician",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/receivables/reconnections/{id}/complete": {
+      "post": {
+        "tags": [
+          "Service Control"
+        ],
+        "description": "Mark a reconnection work order completed, restoring account to ACTIVE status",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/receivables/technicians": {
+      "get": {
+        "tags": [
+          "Service Control"
+        ],
+        "description": "List users available for technician work order assignment",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
     }
   },
   "servers": [

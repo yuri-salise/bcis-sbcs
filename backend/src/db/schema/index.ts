@@ -6,3 +6,4 @@ export * from "./billing.js";
 export * from "./payments.js";
 export * from "./gcash.js";
 export * from "./collections.js";
+export * from "./service_control.js";

@@ -8,6 +8,7 @@ import {
   date,
   timestamp,
   unique,
+  index,
 } from "drizzle-orm/pg-core";
 import { users } from "./auth.js";
 import { serviceAccounts } from "./subscribers.js";
@@ -58,6 +59,9 @@ export const invoices = pgTable(
       table.serviceAccountId,
       table.billingCycleId
     ),
+    // PRODUCT.md Section 8.9: High-performance query indexes for AR aging and overdue querying
+    index("invoices_status_due_date_idx").on(table.status, table.dueDate),
+    index("invoices_sa_status_due_date_idx").on(table.serviceAccountId, table.status, table.dueDate),
   ]
 );
 

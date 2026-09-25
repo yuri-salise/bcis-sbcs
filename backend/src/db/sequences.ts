@@ -7,7 +7,8 @@ export type SequenceType =
   | "BCIS-INV"
   | "BCIS-REC"
   | "BCIS-BATCH"
-  | "BCIS-REMIT";
+  | "BCIS-REMIT"
+  | "BCIS-RECON";
 
 interface SequenceConfig {
   sequenceName: string;
@@ -52,6 +53,12 @@ function getSequenceConfig(prefix: SequenceType): SequenceConfig {
         sequenceName: "collector_remittance_seq",
         tableName: "collector_remittances",
         columnName: "remittance_number",
+      };
+    case "BCIS-RECON":
+      return {
+        sequenceName: "reconnection_seq",
+        tableName: "reconnection_records",
+        columnName: "reconnection_number",
       };
   }
 }

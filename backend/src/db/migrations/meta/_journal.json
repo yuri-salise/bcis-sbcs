@@ -43,6 +43,13 @@
       "when": 1790344507780,
       "tag": "0005_certain_spitfire",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790346075760,
+      "tag": "0006_low_diamondback",
+      "breakpoints": true
     }
   ]
 }

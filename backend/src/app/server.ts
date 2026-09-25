@@ -13,6 +13,7 @@ import { billingRoutes } from "../modules/billing/billing.routes.js";
 import { paymentRoutes } from "../modules/payments/payment.routes.js";
 import { gcashRoutes } from "../modules/gcash/gcash.routes.js";
 import { collectionsRoutes } from "../modules/collections/collections.routes.js";
+import { receivablesRoutes } from "../modules/receivables/receivables.routes.js";
 
 export function buildServer(): FastifyInstance {
   const server = Fastify({
@@ -145,6 +146,7 @@ export function buildServer(): FastifyInstance {
   server.register(paymentRoutes, { prefix: "/api/v1" });
   server.register(gcashRoutes, { prefix: "/api/v1" });
   server.register(collectionsRoutes, { prefix: "/api/v1" });
+  server.register(receivablesRoutes, { prefix: "/api/v1" });
 
   return server;
 }
