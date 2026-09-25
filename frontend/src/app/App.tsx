@@ -27,6 +27,7 @@ import { BillingPage } from "../features/billing/BillingPage";
 import { PaymentsPage } from "../features/payments/PaymentsPage";
 import { GcashVerificationPage } from "../features/gcash/GcashVerificationPage";
 import { CollectionsPage } from "../features/collections/CollectionsPage";
+import { ReceivablesPage } from "../features/receivables/ReceivablesPage";
 
 function AppContent() {
   const { user, roles, permissions, isAuthenticated, isLoading, logout, hasPermission } = useAuth();
@@ -234,6 +235,7 @@ function AppContent() {
           {activeTab === "payments" && <PaymentsPage />}
           {activeTab === "gcash" && <GcashVerificationPage />}
           {activeTab === "collections" && <CollectionsPage />}
+          {activeTab === "receivables" && <ReceivablesPage />}
 
           {activeTab === "dashboard" && (
             <>

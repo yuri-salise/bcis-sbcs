@@ -673,6 +673,160 @@ export class ApiClient {
       body: JSON.stringify(payload),
     });
   }
+
+  // --- Phase 7: Receivables, AR Aging & Service Control Methods ---
+
+  public async getOutstandingReceivables(params: {
+    search?: string;
+    subscriberId?: string;
+    serviceAccountId?: string;
+    collectionAreaId?: string;
+    collectorId?: string;
+    status?: string;
+    asOfDate?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<OutstandingReceivablesResponse> {
+    const searchParams = new URLSearchParams();
+    if (params.search) searchParams.set("search", params.search);
+    if (params.subscriberId) searchParams.set("subscriberId", params.subscriberId);
+    if (params.serviceAccountId) searchParams.set("serviceAccountId", params.serviceAccountId);
+    if (params.collectionAreaId) searchParams.set("collectionAreaId", params.collectionAreaId);
+    if (params.collectorId) searchParams.set("collectorId", params.collectorId);
+    if (params.status) searchParams.set("status", params.status);
+    if (params.asOfDate) searchParams.set("asOfDate", params.asOfDate);
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+
+    return this.request<OutstandingReceivablesResponse>(`/receivables/outstanding?${searchParams.toString()}`);
+  }
+
+  public async getOverdueReceivables(params: {
+    search?: string;
+    collectionAreaId?: string;
+    collectorId?: string;
+    asOfDate?: string;
+    includeGracePeriod?: boolean;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<OverdueReceivablesResponse> {
+    const searchParams = new URLSearchParams();
+    if (params.search) searchParams.set("search", params.search);
+    if (params.collectionAreaId) searchParams.set("collectionAreaId", params.collectionAreaId);
+    if (params.collectorId) searchParams.set("collectorId", params.collectorId);
+    if (params.asOfDate) searchParams.set("asOfDate", params.asOfDate);
+    if (params.includeGracePeriod !== undefined) searchParams.set("includeGracePeriod", params.includeGracePeriod.toString());
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+
+    return this.request<OverdueReceivablesResponse>(`/receivables/overdue?${searchParams.toString()}`);
+  }
+
+  public async getAgingReport(params: {
+    asOfDate?: string;
+    collectionAreaId?: string;
+    collectorId?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<AgingReportResponse> {
+    const searchParams = new URLSearchParams();
+    if (params.asOfDate) searchParams.set("asOfDate", params.asOfDate);
+    if (params.collectionAreaId) searchParams.set("collectionAreaId", params.collectionAreaId);
+    if (params.collectorId) searchParams.set("collectorId", params.collectorId);
+    if (params.search) searchParams.set("search", params.search);
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+
+    return this.request<AgingReportResponse>(`/receivables/aging?${searchParams.toString()}`);
+  }
+
+  public async getSuspensionCandidates(params: {
+    collectionAreaId?: string;
+    collectorId?: string;
+    search?: string;
+    asOfDate?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<SuspensionCandidatesResponse> {
+    const searchParams = new URLSearchParams();
+    if (params.collectionAreaId) searchParams.set("collectionAreaId", params.collectionAreaId);
+    if (params.collectorId) searchParams.set("collectorId", params.collectorId);
+    if (params.search) searchParams.set("search", params.search);
+    if (params.asOfDate) searchParams.set("asOfDate", params.asOfDate);
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+
+    return this.request<SuspensionCandidatesResponse>(`/receivables/suspension-candidates?${searchParams.toString()}`);
+  }
+
+  public async suspendServiceAccount(
+    serviceAccountId: string,
+    payload: { reason: string; notes?: string; effectiveDate?: string }
+  ): Promise<{ message: string; serviceAccount: any; suspension: any }> {
+    return this.request<{ message: string; serviceAccount: any; suspension: any }>(
+      `/service-accounts/${serviceAccountId}/suspend`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    );
+  }
+
+  public async requestReconnection(
+    serviceAccountId: string,
+    payload: {
+      fee?: string;
+      technicianUserId?: string;
+      scheduledAt?: string;
+      notes?: string;
+      immediate?: boolean;
+    } = {}
+  ): Promise<{ message: string; reconnection: any; reconnectedImmediately: boolean }> {
+    return this.request<{ message: string; reconnection: any; reconnectedImmediately: boolean }>(
+      `/service-accounts/${serviceAccountId}/reconnect`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    );
+  }
+
+  public async completeReconnection(
+    reconnectionId: string,
+    payload: { notes?: string } = {}
+  ): Promise<{ message: string; reconnection: any; serviceAccount: any }> {
+    return this.request<{ message: string; reconnection: any; serviceAccount: any }>(
+      `/receivables/reconnections/${reconnectionId}/complete`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    );
+  }
+
+  public async getServiceControlHistory(serviceAccountId: string): Promise<{ events: ServiceHistoryEvent[] }> {
+    return this.request<{ events: ServiceHistoryEvent[] }>(`/service-accounts/${serviceAccountId}/service-history`);
+  }
+
+  public async listReconnections(params: {
+    status?: string;
+    technicianUserId?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<PaginatedResult<ReconnectionWorkOrder>> {
+    const searchParams = new URLSearchParams();
+    if (params.status) searchParams.set("status", params.status);
+    if (params.technicianUserId) searchParams.set("technicianUserId", params.technicianUserId);
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+
+    return this.request<PaginatedResult<ReconnectionWorkOrder>>(`/receivables/reconnections?${searchParams.toString()}`);
+  }
+
+  public async listTechnicians(): Promise<{ data: TechnicianUser[] }> {
+    return this.request<{ data: TechnicianUser[] }>(`/receivables/technicians`);
+  }
 }
 
 export interface BillingCycle {
@@ -1125,6 +1279,162 @@ export interface RecordRemittancePayload {
   remittedBankTransfer?: string;
   otherNonCash?: string;
   notes?: string;
+}
+
+// Phase 7: Receivables, Aging, Suspension & Reconnection Interfaces
+
+export interface OutstandingReceivableItem {
+  invoiceId: string;
+  invoiceNumber: string;
+  serviceAccountId: string;
+  serviceAccountNumber: string;
+  subscriberId: string;
+  subscriberAccountNumber: string;
+  subscriberDisplayName: string;
+  subscriberMobile: string | null;
+  servicePlanName: string;
+  collectionAreaName: string | null;
+  collectorName: string | null;
+  invoiceDate: string;
+  dueDate: string;
+  totalAmount: string;
+  amountPaid: string;
+  balanceDue: string;
+  status: string;
+  daysPastDue: number;
+  isOverdue: boolean;
+}
+
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface OutstandingReceivablesResponse {
+  data: OutstandingReceivableItem[];
+  totalOutstanding: string;
+  pagination: PaginationInfo;
+}
+
+export interface OverdueReceivableItem extends OutstandingReceivableItem {
+  daysOverdue: number;
+  graceDaysConfigured: number;
+  delinquencySeverity: string;
+}
+
+export interface OverdueReceivablesResponse {
+  data: OverdueReceivableItem[];
+  totalOverdue: string;
+  gracePeriodDays: number;
+  asOfDate: string;
+  pagination: PaginationInfo;
+}
+
+export interface AgingBucketSummary {
+  amount: string;
+  count: number;
+  percentage: number;
+}
+
+export interface AgingReportSummary {
+  asOfDate: string;
+  totalReceivable: string;
+  current: AgingBucketSummary;
+  days1to30: AgingBucketSummary;
+  days31to60: AgingBucketSummary;
+  days61to90: AgingBucketSummary;
+  days90Plus: AgingBucketSummary;
+}
+
+export interface SubscriberAgingRow {
+  subscriberId: string;
+  subscriberAccountNumber: string;
+  displayName: string;
+  mobileNumber: string | null;
+  activeAccountsCount: number;
+  currentAmount: string;
+  days1to30Amount: string;
+  days31to60Amount: string;
+  days61to90Amount: string;
+  days90PlusAmount: string;
+  totalDue: string;
+  oldestDueDate: string | null;
+  maxDaysOverdue: number;
+  hasSuspendedService: boolean;
+}
+
+export interface AgingReportResponse {
+  summary: AgingReportSummary;
+  subscribers: SubscriberAgingRow[];
+  pagination: PaginationInfo;
+}
+
+export interface SuspensionCandidate {
+  serviceAccountId: string;
+  serviceAccountNumber: string;
+  subscriberId: string;
+  subscriberAccountNumber: string;
+  subscriberDisplayName: string;
+  subscriberMobile: string | null;
+  servicePlanName: string;
+  collectionAreaName: string | null;
+  collectorName: string | null;
+  accountStatus: string;
+  totalBalanceDue: string;
+  overdueBalance: string;
+  overdueInvoicesCount: number;
+  oldestDueDate: string;
+  daysOverdue: number;
+  candidateReasons: string[];
+}
+
+export interface SuspensionCandidatesResponse {
+  data: SuspensionCandidate[];
+  thresholds: {
+    gracePeriodDays: number;
+    suspensionThresholdAmount: string;
+    suspensionThresholdOverdueDays: number;
+  };
+  pagination: PaginationInfo;
+}
+
+export interface ServiceHistoryEvent {
+  id: string;
+  eventType: "STATUS_CHANGE" | "SUSPENSION" | "RECONNECTION";
+  occurredAt: string;
+  title: string;
+  description: string;
+  actorName: string | null;
+  metadata?: Record<string, unknown>;
+}
+
+export interface ReconnectionWorkOrder {
+  id: string;
+  reconnectionNumber: string;
+  serviceAccountId: string;
+  serviceAccountNumber: string;
+  subscriberId: string;
+  subscriberAccountNumber: string;
+  subscriberDisplayName: string;
+  subscriberMobile: string | null;
+  servicePlanName: string;
+  requestDate: string;
+  fee: string;
+  status: "REQUESTED" | "SCHEDULED" | "COMPLETED" | "CANCELLED";
+  scheduledAt?: string | null;
+  completedAt?: string | null;
+  notes?: string | null;
+  technicianUserId?: string | null;
+  createdAt: string;
+}
+
+export interface TechnicianUser {
+  id: string;
+  displayName: string;
+  email: string;
+  username: string;
 }
 
 export const api = new ApiClient();
