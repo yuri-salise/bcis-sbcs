@@ -22,6 +22,7 @@ import { api, type HealthResponse, type ReadyResponse } from "../api/client";
 import { AuthProvider, useAuth } from "../features/auth/AuthContext";
 import { LoginPage } from "../features/auth/LoginPage";
 import { SubscribersPage } from "../features/subscribers/SubscribersPage";
+import { BillingPage } from "../features/billing/BillingPage";
 
 function AppContent() {
   const { user, roles, permissions, isAuthenticated, isLoading, logout, hasPermission } = useAuth();
@@ -224,6 +225,7 @@ function AppContent() {
         {/* Content Area */}
         <div className="p-8 max-w-7xl w-full mx-auto space-y-6">
           {activeTab === "subscribers" && <SubscribersPage />}
+          {activeTab === "billing" && <BillingPage />}
 
           {activeTab === "dashboard" && (
             <>
@@ -395,7 +397,7 @@ function AppContent() {
             </>
           )}
 
-          {activeTab !== "dashboard" && activeTab !== "subscribers" && (
+          {activeTab !== "dashboard" && activeTab !== "subscribers" && activeTab !== "billing" && (
             <div className="p-12 bg-white border border-[#E2E8F0] rounded-lg text-center space-y-2">
               <h3 className="text-base font-bold text-[#0F172A] capitalize">{activeTab} Module</h3>
               <p className="text-xs text-[#64748B] max-w-md mx-auto">

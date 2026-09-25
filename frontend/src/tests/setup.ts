@@ -32,7 +32,7 @@ global.fetch = vi.fn().mockImplementation((url: string) => {
           token: "mock-token-abc",
           expiresAt: new Date(Date.now() + 86400000).toISOString(),
           roles: ["SUPER_ADMIN"],
-          permissions: ["subscriber.view", "billing.view", "payment.view", "user.manage"],
+          permissions: ["subscriber.view", "billing.view", "billing.generate", "payment.view", "user.manage"],
         }),
     });
   }
@@ -49,7 +49,7 @@ global.fetch = vi.fn().mockImplementation((url: string) => {
             email: "admin@bcis.local",
           },
           roles: ["SUPER_ADMIN"],
-          permissions: ["subscriber.view", "billing.view", "payment.view", "user.manage"],
+          permissions: ["subscriber.view", "billing.view", "billing.generate", "payment.view", "user.manage"],
         }),
     });
   }

@@ -401,6 +401,184 @@ export class ApiClient {
   public async listCollectors(): Promise<Collector[]> {
     return this.request<Collector[]>("/collectors");
   }
+
+  // --- Phase 3: Billing & Invoicing Methods ---
+
+  public async listBillingCycles(): Promise<BillingCycle[]> {
+    return this.request<BillingCycle[]>("/billing/cycles");
+  }
+
+  public async createBillingCycle(payload: {
+    cycleCode: string;
+    periodStart: string;
+    periodEnd: string;
+    billingDate: string;
+    dueDate: string;
+  }): Promise<BillingCycle> {
+    return this.request<BillingCycle>("/billing/cycles", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async previewBillingGeneration(cycleCode: string): Promise<BillingPreviewResponse> {
+    return this.request<BillingPreviewResponse>(
+      `/billing/generate/preview?cycleCode=${encodeURIComponent(cycleCode)}`
+    );
+  }
+
+  public async generateMonthlyBilling(cycleCode: string): Promise<GenerateBillingResponse> {
+    return this.request<GenerateBillingResponse>("/billing/generate", {
+      method: "POST",
+      body: JSON.stringify({ cycleCode }),
+    });
+  }
+
+  public async listInvoices(
+    params: {
+      cycleCode?: string;
+      serviceAccountId?: string;
+      subscriberId?: string;
+      status?: string;
+      search?: string;
+      page?: number;
+      limit?: number;
+    } = {}
+  ): Promise<PaginatedResult<Invoice>> {
+    const searchParams = new URLSearchParams();
+    if (params.cycleCode) searchParams.set("cycleCode", params.cycleCode);
+    if (params.serviceAccountId) searchParams.set("serviceAccountId", params.serviceAccountId);
+    if (params.subscriberId) searchParams.set("subscriberId", params.subscriberId);
+    if (params.status) searchParams.set("status", params.status);
+    if (params.search) searchParams.set("search", params.search);
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+
+    const qs = searchParams.toString();
+    return this.request<PaginatedResult<Invoice>>(`/invoices${qs ? `?${qs}` : ""}`);
+  }
+
+  public async getInvoiceById(id: string): Promise<Invoice> {
+    return this.request<Invoice>(`/invoices/${id}`);
+  }
+
+  public async getSubscriberLedger(subscriberId: string): Promise<SubscriberLedgerResponse> {
+    return this.request<SubscriberLedgerResponse>(`/subscribers/${subscriberId}/ledger`);
+  }
+}
+
+export interface BillingCycle {
+  id: string;
+  cycleCode: string;
+  periodStart: string;
+  periodEnd: string;
+  billingDate: string;
+  dueDate: string;
+  status: "OPEN" | "GENERATING" | "GENERATED" | "LOCKED" | "CLOSED";
+  createdAt: string;
+  closedAt?: string | null;
+}
+
+export interface InvoiceItem {
+  id: string;
+  invoiceId: string;
+  lineType: string;
+  description: string;
+  quantity: number;
+  unitPrice: string;
+  lineTotal: string;
+  sourceReference?: string | null;
+  createdAt: string;
+}
+
+export interface Invoice {
+  id: string;
+  invoiceNumber: string;
+  serviceAccountId: string;
+  billingCycleId: string;
+  invoiceDate: string;
+  dueDate: string;
+  status: "DRAFT" | "UNPAID" | "PARTIALLY_PAID" | "PAID" | "OVERDUE" | "VOID" | "CREDITED";
+  subtotal: string;
+  discountTotal: string;
+  penaltyTotal: string;
+  adjustmentTotal: string;
+  totalAmount: string;
+  amountPaidCache: string;
+  balanceDueCache: string;
+  finalizedAt?: string | null;
+  voidedAt?: string | null;
+  voidReason?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  billingCycle?: BillingCycle;
+  serviceAccount?: {
+    id: string;
+    serviceAccountNumber: string;
+    currentRate: string;
+    servicePlan?: ServicePlan;
+  };
+  subscriber?: {
+    id: string;
+    accountNumber: string;
+    firstName: string;
+    lastName: string;
+    businessName?: string | null;
+    primaryContactNumber: string;
+    primaryAddress?: Address | null;
+  };
+  servicePlan?: ServicePlan;
+  items?: InvoiceItem[];
+}
+
+export interface LedgerEntry {
+  id: string;
+  serviceAccountId: string;
+  serviceAccountNumber?: string;
+  entryNo: number;
+  postedAt: string;
+  entryDate: string;
+  referenceType: string;
+  referenceId: string;
+  description: string;
+  debitAmount: string;
+  creditAmount: string;
+  currency: string;
+  runningBalance: string;
+  createdAt: string;
+}
+
+export interface SubscriberLedgerResponse {
+  subscriber: Subscriber;
+  serviceAccounts: ServiceAccount[];
+  entries: LedgerEntry[];
+  currentTotalBalance: string;
+}
+
+export interface BillingPreviewResponse {
+  cycle: BillingCycle;
+  totalActiveAccounts: number;
+  alreadyBilledCount: number;
+  billableCount: number;
+  estimatedTotalSum: string;
+  billableAccounts: Array<{
+    serviceAccountId: string;
+    serviceAccountNumber: string;
+    subscriberName: string;
+    planName: string;
+    serviceType: string;
+    monthlyRate: string;
+  }>;
+}
+
+export interface GenerateBillingResponse {
+  cycleCode: string;
+  status: string;
+  message: string;
+  generatedCount: number;
+  skippedCount: number;
+  totalAmount: string;
+  invoices: Invoice[];
 }
 
 export const api = new ApiClient();
