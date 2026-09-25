@@ -69,6 +69,10 @@ export class Money {
     return `${isNegative ? "-" : ""}${whole.toString()}.${fractionStr}`;
   }
 
+  public toDecimalString(): string {
+    return this.toDecimal();
+  }
+
   public toNumeric(): number {
     return Number(this.toDecimal());
   }

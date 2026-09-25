@@ -11,6 +11,7 @@ import {
   serviceAccounts,
   serviceAccountStatusHistory,
 } from "../schema/subscribers.js";
+import { billingCycles } from "../schema/billing.js";
 import { AuthService } from "../../modules/auth/auth.service.js";
 import { setSequenceValue } from "../sequences.js";
 
@@ -609,7 +610,35 @@ export async function runSeeds() {
   await setSequenceValue("BCIS-SUB", 3);
   await setSequenceValue("BCIS-SA", 3);
 
-  console.log("Database seeded successfully with catalog, subscribers, and service accounts.");
+  // 10. Seed Billing Cycles
+  console.log("Seeding billing cycles...");
+  const defaultCycles = [
+    {
+      cycleCode: "2026-08",
+      periodStart: "2026-08-01",
+      periodEnd: "2026-08-31",
+      billingDate: "2026-08-01",
+      dueDate: "2026-08-15",
+      status: "CLOSED",
+    },
+    {
+      cycleCode: "2026-09",
+      periodStart: "2026-09-01",
+      periodEnd: "2026-09-30",
+      billingDate: "2026-09-01",
+      dueDate: "2026-09-15",
+      status: "OPEN",
+    },
+  ];
+
+  for (const c of defaultCycles) {
+    const [existing] = await db.select().from(billingCycles).where(eq(billingCycles.cycleCode, c.cycleCode)).limit(1);
+    if (!existing) {
+      await db.insert(billingCycles).values(c);
+    }
+  }
+
+  console.log("Database seeded successfully with catalog, subscribers, service accounts, and billing cycles.");
 }
 
 // Allow direct CLI execution

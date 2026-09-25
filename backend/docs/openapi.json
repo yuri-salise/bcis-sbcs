@@ -804,6 +804,244 @@
           }
         }
       }
+    },
+    "/api/v1/billing/cycles": {
+      "get": {
+        "tags": [
+          "Billing"
+        ],
+        "description": "List all monthly billing cycles",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Billing"
+        ],
+        "description": "Create a new accounting billing cycle",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "cycleCode",
+                  "periodStart",
+                  "periodEnd",
+                  "billingDate",
+                  "dueDate"
+                ],
+                "properties": {
+                  "cycleCode": {
+                    "type": "string",
+                    "minLength": 7,
+                    "maxLength": 32
+                  },
+                  "periodStart": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "periodEnd": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "billingDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "dueDate": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/billing/generate/preview": {
+      "get": {
+        "tags": [
+          "Billing"
+        ],
+        "description": "Preview accounts and projected total amount for monthly billing generation",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "cycleCode",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/billing/generate": {
+      "post": {
+        "tags": [
+          "Billing"
+        ],
+        "description": "Generate monthly invoices and ledger debits for all eligible active accounts (AT-11 idempotent)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "cycleCode"
+                ],
+                "properties": {
+                  "cycleCode": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/invoices": {
+      "get": {
+        "tags": [
+          "Billing"
+        ],
+        "description": "List finalized invoices with search, status filtering, and pagination",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "cycleCode",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "serviceAccountId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "subscriberId",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "status",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "query",
+            "name": "search",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "in": "query",
+            "name": "page",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "default": 20
+            },
+            "in": "query",
+            "name": "limit",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/invoices/{id}": {
+      "get": {
+        "tags": [
+          "Billing"
+        ],
+        "description": "Get invoice details including line items, subscriber, and rate breakdown",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/subscribers/{id}/ledger": {
+      "get": {
+        "tags": [
+          "Billing",
+          "Subscribers"
+        ],
+        "description": "Get full subscriber ledger history with computed running balance",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
     }
   },
   "servers": [
