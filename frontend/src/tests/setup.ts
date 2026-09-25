@@ -128,3 +128,13 @@ global.fetch = vi.fn().mockImplementation((url: string) => {
     json: () => Promise.resolve({}),
   });
 });
+
+// URL helpers mock for file previews
+if (typeof window !== "undefined") {
+  if (!window.URL.createObjectURL) {
+    window.URL.createObjectURL = vi.fn(() => "blob:http://localhost/fake-proof-blob");
+  }
+  if (!window.URL.revokeObjectURL) {
+    window.URL.revokeObjectURL = vi.fn();
+  }
+}

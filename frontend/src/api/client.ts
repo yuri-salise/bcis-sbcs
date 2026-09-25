@@ -512,6 +512,78 @@ export class ApiClient {
       body: JSON.stringify({ reason }),
     });
   }
+
+  // --- Phase 5: GCash Verification Methods ---
+
+  public async listGcashQueue(params: {
+    status?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<PaginatedResult<GcashProofItem>> {
+    const searchParams = new URLSearchParams();
+    if (params.status) searchParams.set("status", params.status);
+    if (params.search) searchParams.set("search", params.search);
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+
+    return this.request<PaginatedResult<GcashProofItem>>(`/gcash/verification-queue?${searchParams.toString()}`);
+  }
+
+  public async getGcashProof(id: string): Promise<GcashProofDetail> {
+    return this.request<GcashProofDetail>(`/gcash/proofs/${id}`);
+  }
+
+  public getGcashProofFileUrl(id: string): string {
+    return `${this.baseUrl}/gcash/proofs/${id}/file`;
+  }
+
+  public async getGcashProofFileBlob(id: string): Promise<Blob> {
+    const url = `${this.baseUrl}/gcash/proofs/${id}/file`;
+    const headers = new Headers();
+    if (this.token) {
+      headers.set("Authorization", `Bearer ${this.token}`);
+    }
+    const res = await fetch(url, { headers });
+    if (!res.ok) {
+      throw new Error(`Failed to load proof file: ${res.statusText}`);
+    }
+    return await res.blob();
+  }
+
+  public async submitGcashProof(payload: SubmitGcashProofPayload): Promise<{
+    proof: GcashProofItem;
+    isFlagged: boolean;
+    duplicateWarning?: string | null;
+  }> {
+    return this.request<{ proof: GcashProofItem; isFlagged: boolean; duplicateWarning?: string | null }>(
+      "/gcash/submit",
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }
+    );
+  }
+
+  public async verifyGcashProof(
+    id: string,
+    payload: { notes?: string; serviceAccountId?: string } = {}
+  ): Promise<VerifyGcashProofResponse> {
+    return this.request<VerifyGcashProofResponse>(`/gcash/proofs/${id}/verify`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async rejectGcashProof(
+    id: string,
+    payload: { reason: string }
+  ): Promise<{ proof: any; message: string }> {
+    return this.request<{ proof: any; message: string }>(`/gcash/proofs/${id}/reject`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
 }
 
 export interface BillingCycle {
@@ -759,6 +831,94 @@ export interface ListPaymentsParams {
   endDate?: string;
   page?: number;
   limit?: number;
+}
+
+export type GcashVerificationStatus = "PENDING" | "VERIFIED" | "REJECTED" | "FLAGGED";
+
+export interface GcashProofItem {
+  id: string;
+  referenceNumber: string;
+  amount: string;
+  transactionDate: string;
+  senderName?: string | null;
+  senderMobile?: string | null;
+  verificationStatus: GcashVerificationStatus;
+  submittedAt: string;
+  verifiedAt?: string | null;
+  rejectionReason?: string | null;
+  originalFilename: string;
+  mimeType: string;
+  fileSize: number;
+  sha256: string;
+  subscriberId: string;
+  subscriberAccountNumber: string;
+  subscriberFirstName: string;
+  subscriberLastName: string;
+  subscriberBusinessName?: string | null;
+  subscriberDisplayName: string;
+  serviceAccountId?: string | null;
+  serviceAccountNumber?: string | null;
+  paymentId?: string | null;
+  receiptNumber?: string | null;
+  duplicateDetected: boolean;
+  duplicateWarning?: string | null;
+}
+
+export interface GcashProofDetail extends GcashProofItem {
+  storageKey: string;
+  notes?: string | null;
+  subscriberEmail?: string | null;
+  subscriberMobile?: string | null;
+  servicePlanId?: string | null;
+  paymentDate?: string | null;
+  paymentStatus?: string | null;
+  duplicateDetection: {
+    isDuplicate: boolean;
+    duplicateWarning?: string | null;
+    matchedPayment?: {
+      id: string;
+      receiptNumber: string;
+      amountPaid: string;
+      paymentDate: string;
+      status: string;
+    } | null;
+    matchedProof?: {
+      id: string;
+      verificationStatus: string;
+      amount: string;
+      submittedAt: string;
+    } | null;
+  };
+}
+
+export interface SubmitGcashProofPayload {
+  subscriberId: string;
+  serviceAccountId?: string;
+  referenceNumber: string;
+  senderName?: string;
+  senderMobile?: string;
+  amount: string;
+  transactionDate: string;
+  notes?: string;
+  originalFilename: string;
+  mimeType: string;
+  fileBase64: string;
+}
+
+export interface VerifyGcashProofResponse {
+  proof: any;
+  payment: Payment;
+  allocations: Array<{
+    invoiceId: string;
+    invoiceNumber: string;
+    allocatedAmount: string;
+    previousBalance: string;
+    remainingBalance: string;
+    status: string;
+  }>;
+  advanceCredit: string;
+  receiptNumber: string;
+  message: string;
 }
 
 export const api = new ApiClient();

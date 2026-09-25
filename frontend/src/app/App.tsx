@@ -17,6 +17,7 @@ import {
   LogOut,
   UserCheck,
   ShieldAlert,
+  FileCheck,
 } from "lucide-react";
 import { api, type HealthResponse, type ReadyResponse } from "../api/client";
 import { AuthProvider, useAuth } from "../features/auth/AuthContext";
@@ -24,6 +25,7 @@ import { LoginPage } from "../features/auth/LoginPage";
 import { SubscribersPage } from "../features/subscribers/SubscribersPage";
 import { BillingPage } from "../features/billing/BillingPage";
 import { PaymentsPage } from "../features/payments/PaymentsPage";
+import { GcashVerificationPage } from "../features/gcash/GcashVerificationPage";
 
 function AppContent() {
   const { user, roles, permissions, isAuthenticated, isLoading, logout, hasPermission } = useAuth();
@@ -96,6 +98,7 @@ function AppContent() {
     { id: "subscribers", label: "Subscribers", icon: Users, perm: "subscriber.view" },
     { id: "billing", label: "Billing", icon: Receipt, perm: "billing.view" },
     { id: "payments", label: "Payments", icon: CreditCard, perm: "payment.view" },
+    { id: "gcash", label: "GCash Verification", icon: FileCheck, perm: "gcash.verify" },
     { id: "collections", label: "Collections", icon: FolderSync, perm: "collection.view" },
     { id: "receivables", label: "Receivables", icon: AlertCircle, perm: "receivables.view" },
     { id: "services", label: "Services", icon: Layers, perm: "service.view" },
@@ -228,6 +231,7 @@ function AppContent() {
           {activeTab === "subscribers" && <SubscribersPage />}
           {activeTab === "billing" && <BillingPage />}
           {activeTab === "payments" && <PaymentsPage />}
+          {activeTab === "gcash" && <GcashVerificationPage />}
 
           {activeTab === "dashboard" && (
             <>
@@ -399,7 +403,7 @@ function AppContent() {
             </>
           )}
 
-          {activeTab !== "dashboard" && activeTab !== "subscribers" && activeTab !== "billing" && activeTab !== "payments" && (
+          {activeTab !== "dashboard" && activeTab !== "subscribers" && activeTab !== "billing" && activeTab !== "payments" && activeTab !== "gcash" && (
             <div className="p-12 bg-white border border-[#E2E8F0] rounded-lg text-center space-y-2">
               <h3 className="text-base font-bold text-[#0F172A] capitalize">{activeTab} Module</h3>
               <p className="text-xs text-[#64748B] max-w-md mx-auto">
