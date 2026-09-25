@@ -26,6 +26,7 @@ import { SubscribersPage } from "../features/subscribers/SubscribersPage";
 import { BillingPage } from "../features/billing/BillingPage";
 import { PaymentsPage } from "../features/payments/PaymentsPage";
 import { GcashVerificationPage } from "../features/gcash/GcashVerificationPage";
+import { CollectionsPage } from "../features/collections/CollectionsPage";
 
 function AppContent() {
   const { user, roles, permissions, isAuthenticated, isLoading, logout, hasPermission } = useAuth();
@@ -232,6 +233,7 @@ function AppContent() {
           {activeTab === "billing" && <BillingPage />}
           {activeTab === "payments" && <PaymentsPage />}
           {activeTab === "gcash" && <GcashVerificationPage />}
+          {activeTab === "collections" && <CollectionsPage />}
 
           {activeTab === "dashboard" && (
             <>
@@ -403,7 +405,7 @@ function AppContent() {
             </>
           )}
 
-          {activeTab !== "dashboard" && activeTab !== "subscribers" && activeTab !== "billing" && activeTab !== "payments" && activeTab !== "gcash" && (
+          {activeTab !== "dashboard" && activeTab !== "subscribers" && activeTab !== "billing" && activeTab !== "payments" && activeTab !== "gcash" && activeTab !== "collections" && (
             <div className="p-12 bg-white border border-[#E2E8F0] rounded-lg text-center space-y-2">
               <h3 className="text-base font-bold text-[#0F172A] capitalize">{activeTab} Module</h3>
               <p className="text-xs text-[#64748B] max-w-md mx-auto">

@@ -584,6 +584,95 @@ export class ApiClient {
       body: JSON.stringify(payload),
     });
   }
+
+  // --- Phase 6: Collections, Batches & Remittances Methods ---
+
+  public async listBatches(params: ListBatchesParams = {}): Promise<PaginatedResult<CollectionBatch>> {
+    const searchParams = new URLSearchParams();
+    if (params.status) searchParams.set("status", params.status);
+    if (params.collectorId) searchParams.set("collectorId", params.collectorId);
+    if (params.collectionAreaId) searchParams.set("collectionAreaId", params.collectionAreaId);
+    if (params.date) searchParams.set("date", params.date);
+    if (params.search) searchParams.set("search", params.search);
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+
+    return this.request<PaginatedResult<CollectionBatch>>(`/collections/batches?${searchParams.toString()}`);
+  }
+
+  public async getBatchById(id: string): Promise<CollectionBatchDetail> {
+    return this.request<CollectionBatchDetail>(`/collections/batches/${id}`);
+  }
+
+  public async createBatch(payload: CreateBatchPayload): Promise<{ data: CollectionBatch; message: string }> {
+    return this.request<{ data: CollectionBatch; message: string }>("/collections/batches", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async recordFieldCollection(
+    batchId: string,
+    payload: RecordFieldCollectionPayload
+  ): Promise<{
+    batch: CollectionBatch;
+    account: CollectionBatchAccount;
+    payment: Payment;
+    receiptNumber: string;
+    message: string;
+  }> {
+    return this.request(`/collections/batches/${batchId}/collections`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async submitBatch(batchId: string): Promise<{ batch: CollectionBatch; status: string; message: string }> {
+    return this.request<{ batch: CollectionBatch; status: string; message: string }>(`/collections/batches/${batchId}/submit`, {
+      method: "POST",
+    });
+  }
+
+  public async recordRemittance(
+    batchId: string,
+    payload: RecordRemittancePayload
+  ): Promise<{
+    batch: CollectionBatch;
+    remittance: CollectorRemittance;
+    remittanceNumber: string;
+    remittedCash: string;
+    isBalanced: boolean;
+    difference: string;
+    shortageAmount: string;
+    overageAmount: string;
+    batchStatus: string;
+    message: string;
+  }> {
+    return this.request(`/collections/batches/${batchId}/remit`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async reconcileBatch(
+    batchId: string,
+    payload: { notes?: string } = {}
+  ): Promise<{ batch: CollectionBatch; status: string; message: string }> {
+    return this.request<{ batch: CollectionBatch; status: string; message: string }>(`/collections/batches/${batchId}/reconcile`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
+
+  public async closeBatch(
+    batchId: string,
+    payload: { reason?: string } = {}
+  ): Promise<{ batch: CollectionBatch; status: string; message: string }> {
+    return this.request<{ batch: CollectionBatch; status: string; message: string }>(`/collections/batches/${batchId}/close`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  }
 }
 
 export interface BillingCycle {
@@ -919,6 +1008,123 @@ export interface VerifyGcashProofResponse {
   advanceCredit: string;
   receiptNumber: string;
   message: string;
+}
+
+// --- Phase 6: Collections Interfaces ---
+
+export type CollectionBatchStatus = "OPEN" | "IN_PROGRESS" | "SUBMITTED" | "REMITTED" | "RECONCILED" | "CLOSED";
+export type BatchAccountStatus = "UNPAID" | "PARTIAL" | "COLLECTED";
+
+export interface CollectionBatch {
+  id: string;
+  batchNumber: string;
+  collectorId: string;
+  collectorCode?: string;
+  collectorName?: string;
+  collectorContact?: string | null;
+  collectionAreaId: string;
+  collectionAreaCode?: string;
+  collectionAreaName?: string;
+  collectionDate: string;
+  status: CollectionBatchStatus;
+  expectedCash: string;
+  expectedNonCash: string;
+  expectedTotal: string;
+  collectedCash: string;
+  collectedNonCash: string;
+  collectedTotal: string;
+  remittedCash: string;
+  difference: string;
+  shortageAmount: string;
+  overageAmount: string;
+  submittedAt?: string | null;
+  reconciledAt?: string | null;
+  closedAt?: string | null;
+  notes?: string | null;
+  openedBy?: string;
+  openedByUsername?: string;
+  openedByDisplayName?: string;
+  createdAt: string;
+}
+
+export interface CollectionBatchAccount {
+  id: string;
+  collectionBatchId: string;
+  serviceAccountId: string;
+  serviceAccountNumber?: string;
+  subscriberId?: string;
+  subscriberAccountNumber?: string;
+  subscriberFirstName?: string;
+  subscriberLastName?: string;
+  subscriberBusinessName?: string | null;
+  subscriberDisplayName?: string;
+  servicePlanName?: string;
+  addressLine?: string;
+  invoiceId: string;
+  invoiceNumber?: string;
+  expectedAmount: string;
+  collectedAmount: string;
+  status: BatchAccountStatus;
+  collectedAt?: string | null;
+  notes?: string | null;
+}
+
+export interface CollectorRemittance {
+  id: string;
+  collectionBatchId: string;
+  remittanceNumber: string;
+  remittedCash: string;
+  remittedGcash: string;
+  remittedBankTransfer: string;
+  otherNonCash: string;
+  totalRemitted: string;
+  expectedCash: string;
+  shortageAmount: string;
+  overageAmount: string;
+  receivedBy: string;
+  receivedByUsername?: string;
+  receivedByDisplayName?: string;
+  receivedAt: string;
+  notes?: string | null;
+}
+
+export interface CollectionBatchDetail extends CollectionBatch {
+  accounts: CollectionBatchAccount[];
+  remittances: CollectorRemittance[];
+}
+
+export interface ListBatchesParams {
+  status?: string;
+  collectorId?: string;
+  collectionAreaId?: string;
+  date?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface CreateBatchPayload {
+  collectorId: string;
+  collectionAreaId: string;
+  collectionDate: string;
+  serviceAccountIds?: string[];
+  notes?: string;
+}
+
+export interface RecordFieldCollectionPayload {
+  batchAccountId: string;
+  amount: string;
+  paymentMethod?: "CASH" | "GCASH" | "BANK_TRANSFER" | "CHECK" | "OTHER";
+  referenceNumber?: string;
+  notes?: string;
+}
+
+export interface RecordRemittancePayload {
+  remittedCash: string;
+  remittedGcash?: string;
+  remittedBankTransfer?: string;
+  otherNonCash?: string;
+  notes?: string;
 }
 
 export const api = new ApiClient();
