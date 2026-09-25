@@ -88,12 +88,28 @@ export class Money {
     return `${isNegative ? "-" : ""}${currencySymbol}${withCommas}.${fraction}`;
   }
 
+  public static min(a: Money, b: Money): Money {
+    return a.isLessThanOrEqual(b) ? a : b;
+  }
+
+  public static max(a: Money, b: Money): Money {
+    return a.isGreaterThanOrEqual(b) ? a : b;
+  }
+
   public add(other: Money): Money {
     return new Money(this.centavos + other.centavos);
   }
 
+  public plus(other: Money): Money {
+    return this.add(other);
+  }
+
   public subtract(other: Money): Money {
     return new Money(this.centavos - other.centavos);
+  }
+
+  public minus(other: Money): Money {
+    return this.subtract(other);
   }
 
   public multiply(factor: number): Money {

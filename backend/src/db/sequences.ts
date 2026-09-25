@@ -1,7 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "./db.js";
 
-export type SequenceType = "BCIS-SUB" | "BCIS-SA" | "BCIS-INV";
+export type SequenceType = "BCIS-SUB" | "BCIS-SA" | "BCIS-INV" | "BCIS-REC";
 
 interface SequenceConfig {
   sequenceName: string;
@@ -28,6 +28,12 @@ function getSequenceConfig(prefix: SequenceType): SequenceConfig {
         sequenceName: "invoice_number_seq",
         tableName: "invoices",
         columnName: "invoice_number",
+      };
+    case "BCIS-REC":
+      return {
+        sequenceName: "receipt_number_seq",
+        tableName: "payments",
+        columnName: "receipt_number",
       };
   }
 }
@@ -67,7 +73,7 @@ export async function getNextDocumentNumber(
   const lastVal = Number(currRow?.last_value || 0);
   const isCalled = Boolean(currRow?.is_called);
 
-  if (maxExisting >= (isCalled ? lastVal : 0)) {
+  if (maxExisting > 0 && maxExisting >= (isCalled ? lastVal : 0)) {
     await runner.execute(sql.raw(`SELECT setval('${sequenceName}', ${maxExisting}, true);`));
   }
 
@@ -98,5 +104,7 @@ export async function setSequenceValue(
   const maxExisting = Number(maxRow?.max_num || 0);
   const effectiveVal = Math.max(value, maxExisting);
 
-  await runner.execute(sql.raw(`SELECT setval('${sequenceName}', ${effectiveVal}, true);`));
+  if (effectiveVal > 0) {
+    await runner.execute(sql.raw(`SELECT setval('${sequenceName}', ${effectiveVal}, true);`));
+  }
 }

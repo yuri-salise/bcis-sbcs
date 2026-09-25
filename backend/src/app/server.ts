@@ -9,6 +9,7 @@ import { healthRoutes } from "../modules/health/health.routes.js";
 import { authRoutes } from "../modules/auth/auth.routes.js";
 import { subscriberRoutes } from "../modules/subscribers/subscriber.routes.js";
 import { billingRoutes } from "../modules/billing/billing.routes.js";
+import { paymentRoutes } from "../modules/payments/payment.routes.js";
 
 export function buildServer(): FastifyInstance {
   const server = Fastify({
@@ -121,6 +122,7 @@ export function buildServer(): FastifyInstance {
   server.register(authRoutes, { prefix: "/api/v1" });
   server.register(subscriberRoutes, { prefix: "/api/v1" });
   server.register(billingRoutes, { prefix: "/api/v1" });
+  server.register(paymentRoutes, { prefix: "/api/v1" });
 
   return server;
 }
