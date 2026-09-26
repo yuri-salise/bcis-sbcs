@@ -18,6 +18,7 @@ import {
   Lock,
   TrendingDown,
   TrendingUp,
+  Printer,
 } from "lucide-react";
 import {
   api,
@@ -58,6 +59,7 @@ export function CollectionsPage() {
   const [showRemitModal, setShowRemitModal] = useState(false);
   const [showReconcileModal, setShowReconcileModal] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
+  const [showRouteSheetModal, setShowRouteSheetModal] = useState(false);
 
   // Form States: Create Batch
   const [newCollectorId, setNewCollectorId] = useState("");
@@ -92,6 +94,9 @@ export function CollectionsPage() {
   const [closeReason, setCloseReason] = useState("");
   const [closing, setClosing] = useState(false);
   const [closeError, setCloseError] = useState<string | null>(null);
+
+  // Submit Batch State
+  const [submittingBatch, setSubmittingBatch] = useState(false);
 
   // Toast / Feedback
   const [notification, setNotification] = useState<{ message: string; type: "success" | "error" } | null>(null);
@@ -262,7 +267,8 @@ export function CollectionsPage() {
 
   // Handle Submit Batch
   const handleSubmitBatch = async () => {
-    if (!selectedBatchId) return;
+    if (!selectedBatchId || submittingBatch) return;
+    setSubmittingBatch(true);
     try {
       const res = await api.submitBatch(selectedBatchId);
       showToast(res.message || "Batch submitted for remittance.");
@@ -271,6 +277,8 @@ export function CollectionsPage() {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to submit batch.";
       showToast(msg, "error");
+    } finally {
+      setSubmittingBatch(false);
     }
   };
 
@@ -708,14 +716,29 @@ export function CollectionsPage() {
 
                   {/* Lifecycle Action Buttons */}
                   <div className="flex flex-wrap items-center gap-2">
+                    {/* Print Route Sheet Button */}
+                    <button
+                      onClick={() => setShowRouteSheetModal(true)}
+                      className="px-3 py-1.5 rounded bg-white hover:bg-slate-50 border border-[#CBD5E1] text-[#334155] text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      title="Print Route Sheet for Field Collector"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-[#2563EB]" />
+                      <span>Print Route Sheet</span>
+                    </button>
+
                     {/* Submit Button */}
                     {(activeBatchDetail.status === "OPEN" || activeBatchDetail.status === "IN_PROGRESS") && canManage && (
                       <button
                         onClick={handleSubmitBatch}
-                        className="px-3 py-1.5 rounded bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        disabled={submittingBatch}
+                        className="px-3 py-1.5 rounded bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white text-xs font-semibold transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer shadow-xs"
                       >
-                        <FileCheck className="w-3.5 h-3.5" />
-                        <span>Submit Batch</span>
+                        {submittingBatch ? (
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <FileCheck className="w-3.5 h-3.5" />
+                        )}
+                        <span>{submittingBatch ? "Submitting..." : "Submit Batch"}</span>
                       </button>
                     )}
 
@@ -1465,6 +1488,163 @@ export function CollectionsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 5: PRINTABLE ROUTE SHEET (PRODUCT.md Section 24) */}
+      {showRouteSheetModal && activeBatchDetail && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full border border-slate-200 p-6 space-y-6 animate-in fade-in zoom-in-95 my-8">
+            {/* Modal Toolbar (Non-printable buttons) */}
+            <div className="flex items-center justify-between border-b border-slate-200 pb-4 print:hidden">
+              <div className="flex items-center gap-2">
+                <Printer className="w-5 h-5 text-[#2563EB]" />
+                <h3 className="text-base font-bold text-[#0F172A]">Field Collector Route Sheet</h3>
+                <span className="text-xs px-2 py-0.5 rounded bg-blue-50 text-[#2563EB] font-mono font-medium">
+                  {activeBatchDetail.batchNumber}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold shadow-xs cursor-pointer"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Print Route Sheet</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowRouteSheetModal(false)}
+                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-md cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Printable Document Body */}
+            <div className="space-y-6 text-[#0F172A]">
+              {/* Header Letterhead */}
+              <div className="flex items-start justify-between border-b-2 border-[#0F2747] pb-4">
+                <div>
+                  <h1 className="text-lg font-bold tracking-tight text-[#0F2747]">
+                    BUKIDNON CABLE & INTERNET SERVICES (BCIS)
+                  </h1>
+                  <p className="text-xs text-[#64748B]">Official Field Collection Manifest & Route Sheet</p>
+                  <p className="text-[11px] text-[#64748B]">Malaybalay City, Bukidnon &bull; Operations & Dispatch</p>
+                </div>
+                <div className="text-right text-xs">
+                  <div className="font-mono font-bold text-sm text-[#0F2747]">{activeBatchDetail.batchNumber}</div>
+                  <div className="text-[#64748B] mt-0.5">Date: {activeBatchDetail.collectionDate}</div>
+                  <div className="text-[#64748B]">Status: <span className="font-semibold uppercase">{activeBatchDetail.status}</span></div>
+                </div>
+              </div>
+
+              {/* Collector & Area Metadata Box */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#F8FAFC] p-3.5 rounded-lg border border-[#E2E8F0] text-xs">
+                <div>
+                  <span className="text-[#64748B] block text-[11px]">Assigned Collector</span>
+                  <span className="font-bold text-[#0F172A]">{activeBatchDetail.collectorName}</span>
+                  <span className="font-mono text-[#64748B] text-[10px] block">({activeBatchDetail.collectorCode})</span>
+                </div>
+                <div>
+                  <span className="text-[#64748B] block text-[11px]">Collection Route / Area</span>
+                  <span className="font-bold text-[#0F172A]">{activeBatchDetail.collectionAreaName}</span>
+                  <span className="font-mono text-[#64748B] text-[10px] block">{activeBatchDetail.collectionAreaCode}</span>
+                </div>
+                <div>
+                  <span className="text-[#64748B] block text-[11px]">Assigned Accounts</span>
+                  <span className="font-bold font-mono text-sm text-[#0F172A]">{activeBatchDetail.accounts?.length || 0}</span>
+                </div>
+                <div>
+                  <span className="text-[#64748B] block text-[11px]">Expected Collection</span>
+                  <span className="font-bold font-mono text-sm text-[#2563EB]">{formatMoney(activeBatchDetail.expectedTotal)}</span>
+                </div>
+              </div>
+
+              {/* Accounts Manifest Table */}
+              <div className="overflow-x-auto border border-[#E2E8F0] rounded-lg">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-[#F1F5F9] border-b border-[#E2E8F0] text-[#475569] font-bold">
+                      <th className="py-2.5 px-3">#</th>
+                      <th className="py-2.5 px-3">Account & Subscriber</th>
+                      <th className="py-2.5 px-3">Service Address</th>
+                      <th className="py-2.5 px-3">Plan</th>
+                      <th className="py-2.5 px-3 text-right">Expected</th>
+                      <th className="py-2.5 px-3 text-center w-24">Collected ₱</th>
+                      <th className="py-2.5 px-3 text-center w-28">OR / Ref #</th>
+                      <th className="py-2.5 px-3 text-center w-28">Signature</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E2E8F0]">
+                    {(!activeBatchDetail.accounts || activeBatchDetail.accounts.length === 0) ? (
+                      <tr>
+                        <td colSpan={8} className="py-6 text-center text-[#64748B]">
+                          No accounts assigned to this route batch.
+                        </td>
+                      </tr>
+                    ) : (
+                      activeBatchDetail.accounts.map((acc, idx) => (
+                        <tr key={acc.id} className="hover:bg-slate-50/50">
+                          <td className="py-2 px-3 font-mono text-[#64748B]">{idx + 1}</td>
+                          <td className="py-2 px-3">
+                            <div className="font-bold text-[#0F172A]">
+                              {acc.subscriberDisplayName ||
+                                (acc.subscriberLastName ? `${acc.subscriberLastName}, ${acc.subscriberFirstName}` : acc.subscriberBusinessName) ||
+                                "Subscriber"}
+                            </div>
+                            <div className="font-mono text-[10px] text-[#64748B]">{acc.serviceAccountNumber}</div>
+                          </td>
+                          <td className="py-2 px-3 text-[#475569] text-[11px]">
+                            {acc.addressLine || activeBatchDetail.collectionAreaName}
+                          </td>
+                          <td className="py-2 px-3 text-[#475569] text-[11px]">
+                            {acc.servicePlanName || "Broadband"}
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono font-bold text-[#0F172A]">
+                            {formatMoney(acc.expectedAmount)}
+                          </td>
+                          <td className="py-2 px-3 text-center font-mono">
+                            {acc.status === "COLLECTED" ? (
+                              <span className="font-semibold text-emerald-700">{formatMoney(acc.collectedAmount)}</span>
+                            ) : (
+                              <div className="border-b border-dashed border-slate-400 w-16 mx-auto h-4"></div>
+                            )}
+                          </td>
+                          <td className="py-2 px-3 text-center font-mono text-[11px]">
+                            {acc.invoiceNumber || (
+                              <div className="border-b border-dashed border-slate-400 w-20 mx-auto h-4"></div>
+                            )}
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <div className="border-b border-slate-400 w-20 mx-auto h-4"></div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Sign-off Footer */}
+              <div className="grid grid-cols-2 gap-8 pt-8 border-t border-slate-200 text-xs">
+                <div className="space-y-10">
+                  <div className="text-[11px] text-[#64748B]">Prepared & Dispatched By:</div>
+                  <div className="border-t border-[#0F172A] pt-1 text-center font-medium">
+                    Billing Supervisor / Cashier Signature
+                  </div>
+                </div>
+                <div className="space-y-10">
+                  <div className="text-[11px] text-[#64748B]">Received & Field Collected By:</div>
+                  <div className="border-t border-[#0F172A] pt-1 text-center font-medium">
+                    {activeBatchDetail.collectorName} (Field Collector)
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}

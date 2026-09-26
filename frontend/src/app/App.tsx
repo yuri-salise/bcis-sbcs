@@ -31,6 +31,7 @@ import { ReceivablesPage } from "../features/receivables/ReceivablesPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { ReportsPage } from "../features/reports/ReportsPage";
 import { BackupPage } from "../features/system/BackupPage";
+import { ServicesPage } from "../features/services/ServicesPage";
 
 function AppContent() {
   const { user, roles, permissions, isAuthenticated, isLoading, logout, hasPermission } = useAuth();
@@ -125,11 +126,15 @@ function AppContent() {
         <div>
           {/* Logo / Header */}
           <div className="px-6 py-5 border-b border-[#1E3A5F]">
-            <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB]"></span>
-              BCIS BILLING
-            </h1>
-            <p className="text-xs text-slate-300 mt-0.5">Desktop Operations Client</p>
+            <div className="flex items-center gap-3">
+              <img src="/favicon.svg" alt="BCIS Logo" className="w-8 h-8 rounded-lg shadow-xs shrink-0" />
+              <div>
+                <h1 className="text-base font-bold tracking-tight text-white leading-tight">
+                  BCIS BILLING
+                </h1>
+                <p className="text-[11px] text-slate-300">Desktop Operations Client</p>
+              </div>
+            </div>
           </div>
 
           {/* Navigation Items (Role-filtered) */}
@@ -240,6 +245,7 @@ function AppContent() {
           {activeTab === "gcash" && <GcashVerificationPage />}
           {activeTab === "collections" && <CollectionsPage />}
           {activeTab === "receivables" && <ReceivablesPage />}
+          {activeTab === "services" && <ServicesPage />}
 
           {activeTab === "dashboard" && (
             <div className="space-y-6">

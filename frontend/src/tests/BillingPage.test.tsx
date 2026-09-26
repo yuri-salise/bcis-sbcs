@@ -248,4 +248,24 @@ describe("BillingPage Component (Phase 3 & AT-11)", () => {
       expect(screen.getAllByText("₱1,299.00").length).toBeGreaterThan(0);
     });
   });
+
+  it("selects All Cycles without resetting and queries invoices across all cycles", async () => {
+    renderWithAuth(<BillingPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: /all cycles/i })).toBeInTheDocument();
+    });
+
+    const allCyclesBtn = screen.getByRole("button", { name: /all cycles/i });
+    fireEvent.click(allCyclesBtn);
+
+    await waitFor(() => {
+      expect(api.listInvoices).toHaveBeenCalledWith(
+        expect.objectContaining({
+          cycleCode: undefined,
+        })
+      );
+      expect(allCyclesBtn.className).toContain("bg-[#0F172A]");
+    });
+  });
 });

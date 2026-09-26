@@ -130,6 +130,40 @@ describe("PaymentsPage Component (Phase 4 - AT-01 to AT-06)", () => {
       payment: { ...mockPayments[0]!, isReversed: true, status: "REVERSED" },
       message: "Payment reversed successfully.",
     });
+    vi.spyOn(api, "listGcashQueue").mockResolvedValue({
+      data: [],
+      pagination: { page: 1, limit: 1, total: 0, totalPages: 1 },
+    });
+    vi.spyOn(api, "submitGcashProof").mockResolvedValue({
+      proof: {
+        id: "proof-test-1",
+        referenceNumber: "1029384756123",
+        amount: "1299.00",
+        transactionDate: "2026-09-10",
+        verificationStatus: "PENDING",
+        submittedAt: "2026-09-10T00:00:00Z",
+        originalFilename: "receipt.png",
+        mimeType: "image/png",
+        fileSize: 12345,
+        sha256: "abc123sha",
+        subscriberId: "sub-1",
+        subscriberAccountNumber: "BCIS-SUB-2026-0001",
+        subscriberDisplayName: "Juan Mercado",
+        subscriberFirstName: "Juan",
+        subscriberLastName: "Mercado",
+        duplicateDetected: false,
+      },
+      isFlagged: false,
+      duplicateWarning: null,
+    });
+    vi.spyOn(api, "verifyGcashProof").mockResolvedValue({
+      proof: { id: "proof-test-1", verificationStatus: "VERIFIED" },
+      payment: { ...mockPayments[0]!, paymentMethod: "GCASH", referenceNumber: "1029384756123" },
+      allocations: [],
+      advanceCredit: "0.00",
+      receiptNumber: "BCIS-REC-2026-0001",
+      message: "GCash verified",
+    });
   });
 
   it("renders payments dashboard with table, search input, and summary metrics", async () => {
@@ -249,4 +283,123 @@ describe("PaymentsPage Component (Phase 4 - AT-01 to AT-06)", () => {
       expect(api.reversePayment).toHaveBeenCalledWith("pmt-1", "Customer cheque bounced by bank");
     });
   });
+
+  it("enforces AT-05 security protocol: requires screenshot proof and reference number for GCash payments", async () => {
+    renderWithAuth(<PaymentsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Receive Payment")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText("Receive Payment"));
+
+    // Select subscriber
+    await waitFor(() => {
+      expect(screen.getByText("(BCIS-SUB-2026-0001)")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText("(BCIS-SUB-2026-0001)"));
+
+    // Switch payment method to GCash
+    const methodSelect = screen.getByLabelText(/2\. payment method/i);
+    fireEvent.change(methodSelect, { target: { value: "GCASH" } });
+
+    // Verify AT-05 Protocol Notice is rendered
+    expect(screen.getByText(/GCash Digital Settlement Protocol \(AT-05 Compliance\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/Receipt Screenshot \/ Proof File \*/i)).toBeInTheDocument();
+
+    // Verify the buttons are disabled without proof file
+    const verifyBtn = screen.getByRole("button", { name: /submit & verify \(issue receipt\)/i });
+    expect(verifyBtn).toBeDisabled();
+
+    // Attach file
+    const file = new File(["dummy content"], "gcash_slip.png", { type: "image/png" });
+    const fileInput = document.getElementById("gcash-file-input-payments") as HTMLInputElement;
+    fireEvent.change(fileInput, { target: { files: [file] } });
+
+    // Enter reference number and amount
+    const refInput = screen.getByPlaceholderText(/1029384756123/i);
+    fireEvent.change(refInput, { target: { value: "1029384756123" } });
+
+    const amountInput = screen.getByPlaceholderText("0.00");
+    fireEvent.change(amountInput, { target: { value: "1299.00" } });
+
+    // Verify button is now enabled
+    await waitFor(() => {
+      expect(verifyBtn).not.toBeDisabled();
+    });
+
+    // Submit and verify
+    fireEvent.click(verifyBtn);
+
+    await waitFor(() => {
+      expect(api.submitGcashProof).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subscriberId: "sub-1",
+          referenceNumber: "1029384756123",
+          amount: "1299.00",
+        })
+      );
+      expect(api.verifyGcashProof).toHaveBeenCalledWith("proof-test-1", expect.any(Object));
+      expect(screen.getByText("Official Receipt Preview")).toBeInTheDocument();
+    });
+  });
+
+  it("allows opening GCash proof intake directly from 'File GCash Proof' button", async () => {
+    renderWithAuth(<PaymentsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("File GCash Proof")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByText("File GCash Proof"));
+
+    await waitFor(() => {
+      expect(screen.getByText(/GCash Digital Settlement Protocol \(AT-05 Compliance\)/i)).toBeInTheDocument();
+    });
+  });
+
+  it("allows receiving GCash payment over-the-counter with reference number without mandatory file attachment", async () => {
+    renderWithAuth(<PaymentsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Receive Payment")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText("Receive Payment"));
+
+    // Select subscriber
+    await waitFor(() => {
+      expect(screen.getByText("(BCIS-SUB-2026-0001)")).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByText("(BCIS-SUB-2026-0001)"));
+
+    // Switch payment method to GCash
+    const methodSelect = screen.getByLabelText(/2\. payment method/i);
+    fireEvent.change(methodSelect, { target: { value: "GCASH" } });
+
+    // Enter reference number and amount (no file attached)
+    const refInput = screen.getByPlaceholderText(/1029384756123/i);
+    fireEvent.change(refInput, { target: { value: "1029384756123" } });
+
+    const amountInput = screen.getByPlaceholderText("0.00");
+    fireEvent.change(amountInput, { target: { value: "1299.00" } });
+
+    // Submit button should be enabled
+    const verifyBtn = screen.getByRole("button", { name: /submit & verify \(issue receipt\)/i });
+    expect(verifyBtn).not.toBeDisabled();
+
+    // Submit payment directly
+    fireEvent.click(verifyBtn);
+
+    await waitFor(() => {
+      expect(api.createPayment).toHaveBeenCalledWith(
+        expect.objectContaining({
+          subscriberId: "sub-1",
+          paymentMethod: "GCASH",
+          referenceNumber: "1029384756123",
+          amountPaid: "1299.00",
+        })
+      );
+      expect(screen.getByText("Official Receipt Preview")).toBeInTheDocument();
+    });
+  });
 });
+

@@ -170,6 +170,70 @@ describe("ReceivablesPage Component (Phase 7 - Receivables, Aging, Suspension & 
       serviceAccount: { id: "sa-1", status: "ACTIVE" } as any,
     });
     vi.spyOn(api, "getServiceControlHistory").mockResolvedValue(mockHistoryResponse as any);
+    vi.spyOn(api, "getSubscriberLedger").mockResolvedValue({
+      subscriber: {
+        id: "sub-1",
+        accountNumber: "BCIS-SUB-2026-0001",
+        firstName: "Juan",
+        lastName: "Mercado",
+        primaryContactNumber: "0917-123-4567",
+        status: "ACTIVE",
+        createdAt: "2026-01-01T00:00:00Z",
+        updatedAt: "2026-01-01T00:00:00Z",
+      } as any,
+      serviceAccounts: [],
+      entries: [
+        {
+          id: "entry-1",
+          entryNo: 1,
+          entryDate: "2026-09-01",
+          referenceType: "INVOICE",
+          description: "Monthly subscription billing",
+          debitAmount: "1500.00",
+          creditAmount: "0.00",
+          runningBalance: "1500.00",
+        },
+      ] as any,
+      currentTotalBalance: "1500.00",
+    });
+    vi.spyOn(api, "getSubscriberSOA").mockResolvedValue({
+      statementNumber: "SOA-BCIS-SUB-2026-0001-20260926",
+      statementDate: "2026-09-26",
+      company: {
+        name: "BUKIDNON CABLE & INTERNET SERVICES",
+        address: "Malaybalay City",
+        contactNumber: "(088) 813-1234",
+        email: "billing@bcis.local",
+        tin: "452-987-654-000",
+      },
+      subscriber: {
+        id: "sub-1",
+        accountNumber: "BCIS-SUB-2026-0001",
+        displayName: "Mercado, Juan B.",
+        address: "Barangay Casisang",
+        mobileNumber: "0917-555-0101",
+        email: null,
+        status: "ACTIVE",
+      },
+      serviceAccounts: [],
+      financialSummary: {
+        previousBalance: "₱0.00",
+        currentCharges: "₱1,500.00",
+        totalAmountDue: "₱1,500.00",
+        rawTotalAmountDue: "1500.00",
+        dueDate: "2026-09-15",
+        aging: {
+          current: "₱0.00",
+          days1to30: "₱0.00",
+          days31to60: "₱1,500.00",
+          days61to90: "₱0.00",
+          days90Plus: "₱0.00",
+        },
+      },
+      invoices: [],
+      payments: [],
+      ledger: [],
+    });
   });
 
   it("renders AR aging 5-bucket metric cards and subscriber breakdown table", async () => {
@@ -296,6 +360,40 @@ describe("ReceivablesPage Component (Phase 7 - Receivables, Aging, Suspension & 
       expect(screen.getByText("Service Control & Status History")).toBeInTheDocument();
       expect(screen.getByText("NON_PAYMENT: Overdue balance exceeds policy threshold.")).toBeInTheDocument();
       expect(screen.getByText(/Maria Santos \(Super Admin\)/i)).toBeInTheDocument();
+    });
+  });
+
+  it("opens Subscriber Financial Ledger modal when Ledger button is clicked in AR Aging table", async () => {
+    renderWithAuth(<ReceivablesPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Mercado, Juan B.")).toBeInTheDocument();
+    });
+
+    const ledgerBtn = screen.getByRole("button", { name: /^ledger$/i });
+    fireEvent.click(ledgerBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText("Subscriber Financial Ledger")).toBeInTheDocument();
+      expect(screen.getByText("Monthly subscription billing")).toBeInTheDocument();
+      expect(api.getSubscriberLedger).toHaveBeenCalledWith("sub-1");
+    });
+  });
+
+  it("opens Statement of Account modal when SOA button is clicked in AR Aging table", async () => {
+    renderWithAuth(<ReceivablesPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Mercado, Juan B.")).toBeInTheDocument();
+    });
+
+    const soaBtn = screen.getByRole("button", { name: /statement of account|soa/i });
+    fireEvent.click(soaBtn);
+
+    await waitFor(() => {
+      expect(screen.getByRole("heading", { name: "Statement of Account (SOA)" })).toBeInTheDocument();
+      expect(screen.getAllByText("SOA-BCIS-SUB-2026-0001-20260926").length).toBeGreaterThanOrEqual(1);
+      expect(api.getSubscriberSOA).toHaveBeenCalledWith("sub-1", expect.anything());
     });
   });
 });

@@ -10,9 +10,12 @@ import {
   AlertCircle,
   CheckCircle2,
   AlertTriangle,
-  UserCheck,
   Receipt,
   FileCheck,
+  UploadCloud,
+  ShieldCheck,
+  ShieldAlert,
+  Clock,
 } from "lucide-react";
 import {
   api,
@@ -21,6 +24,7 @@ import {
   type Subscriber,
   type PaymentAllocationPreviewResult,
 } from "../../api/client";
+import { SubscriberCombobox } from "../subscribers/SubscriberCombobox";
 import { useAuth } from "../auth/AuthContext";
 import { cn, formatMoney } from "../../lib/utils";
 
@@ -48,8 +52,6 @@ export function PaymentsPage() {
   const [reversalError, setReversalError] = useState<string | null>(null);
 
   // State: Receive Payment Form
-  const [subscribersList, setSubscribersList] = useState<Subscriber[]>([]);
-  const [subSearch, setSubSearch] = useState("");
   const [selectedSub, setSelectedSub] = useState<Subscriber | null>(null);
   const [amountPaid, setAmountPaid] = useState("");
   const [tenderedAmount, setTenderedAmount] = useState("");
@@ -58,6 +60,17 @@ export function PaymentsPage() {
   const [paymentNotes, setPaymentNotes] = useState("");
   const [submittingPayment, setSubmittingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  // State: GCash Intake & Verification Security Protocol (AT-05)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fileBase64, setFileBase64] = useState<string>("");
+  const [submitSenderName, setSubmitSenderName] = useState("");
+  const [submitSenderMobile, setSubmitSenderMobile] = useState("");
+  const [transactionDate, setTransactionDate] = useState(() => new Date().toISOString().split("T")[0] as string);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
+  const [submittingToQueue, setSubmittingToQueue] = useState(false);
+  const [pendingGcashCount, setPendingGcashCount] = useState(0);
+  const [queueSuccessNotice, setQueueSuccessNotice] = useState<string | null>(null);
 
   // State: Allocation Preview
   const [previewResult, setPreviewResult] = useState<PaymentAllocationPreviewResult | null>(null);
@@ -84,29 +97,75 @@ export function PaymentsPage() {
     }
   }, [search, statusFilter, methodFilter, page]);
 
-  useEffect(() => {
-    fetchPayments();
-  }, [fetchPayments]);
-
-  // Load Subscribers for Payment Picker
-  const searchSubscribers = useCallback(async (query: string) => {
+  // Fetch Pending GCash Proofs Count
+  const fetchPendingGcashCount = useCallback(async () => {
     try {
-      const res = await api.listSubscribers({
-        search: query.trim() || undefined,
-        status: "ACTIVE",
-        limit: 8,
-      });
-      setSubscribersList(res.data);
-    } catch (err) {
-      console.error("Failed to fetch subscribers", err);
+      const res = await api.listGcashQueue({ status: "PENDING", limit: 1 });
+      setPendingGcashCount(res.pagination.total);
+    } catch {
+      // Ignore background error
     }
   }, []);
 
   useEffect(() => {
-    if (showReceiveModal) {
-      searchSubscribers(subSearch);
+    fetchPayments();
+    fetchPendingGcashCount();
+  }, [fetchPayments, fetchPendingGcashCount]);
+
+  const resetForm = () => {
+    setSelectedSub(null);
+    setAmountPaid("");
+    setTenderedAmount("");
+    setReferenceNumber("");
+    setPaymentNotes("");
+    setPreviewResult(null);
+    setSelectedFile(null);
+    setFileBase64("");
+    setSubmitSenderName("");
+    setSubmitSenderMobile("");
+    setTransactionDate(new Date().toISOString().split("T")[0] as string);
+    setPaymentError(null);
+  };
+
+  const handleFileChange = (file: File) => {
+    if (!file) return;
+    const allowed = ["image/jpeg", "image/png", "image/webp", "image/pjpeg", "image/jpg", "application/pdf"];
+    const hasValidExt = /\.(png|jpe?g|webp|pdf)$/i.test(file.name);
+    if (!allowed.includes(file.type) && !hasValidExt) {
+      setPaymentError("Invalid file type. Allowed formats: PNG, JPG, WebP, PDF (max 10MB).");
+      return;
     }
-  }, [showReceiveModal, subSearch, searchSubscribers]);
+    if (file.size > 10 * 1024 * 1024) {
+      setPaymentError("File exceeds 10MB limit.");
+      return;
+    }
+    setSelectedFile(file);
+    setPaymentError(null);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const resultStr = reader.result as string;
+      const base64String = resultStr.includes(",") ? resultStr.split(",")[1] : resultStr;
+      if (base64String) setFileBase64(base64String);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    if (paymentMethod !== "GCASH") return;
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item && item.type.indexOf("image") !== -1) {
+        const file = item.getAsFile();
+        if (file) {
+          handleFileChange(file);
+          break;
+        }
+      }
+    }
+  };
 
   // Calculate live change for CASH
   const changeDue = useMemo(() => {
@@ -143,9 +202,154 @@ export function PaymentsPage() {
     return () => clearTimeout(timer);
   }, [selectedSub, amountPaid]);
 
+  // Submit GCash Proof and immediately verify over-the-counter (AT-05 Compliant)
+  const handleGcashSubmitAndVerify = async () => {
+    if (!selectedSub) {
+      setPaymentError("Please select a subscriber to receive payment from.");
+      return;
+    }
+    const cleanRef = referenceNumber.trim();
+    if (!cleanRef) {
+      setPaymentError("GCash reference number is required (AT-05).");
+      return;
+    }
+    const parsedAmount = parseFloat(amountPaid);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      setPaymentError("Please enter a valid payment amount greater than zero.");
+      return;
+    }
+
+    setSubmittingPayment(true);
+    setPaymentError(null);
+
+    try {
+      if (selectedFile && fileBase64) {
+        // 1. Submit proof to secure storage & create proof record with SHA-256
+        const mime = selectedFile.type || (selectedFile.name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image/png");
+        const submitRes = await api.submitGcashProof({
+          subscriberId: selectedSub.id,
+          referenceNumber: cleanRef,
+          amount: parsedAmount.toFixed(2),
+          transactionDate: transactionDate || (new Date().toISOString().split("T")[0] as string),
+          senderName: submitSenderName.trim() || undefined,
+          senderMobile: submitSenderMobile.trim() || undefined,
+          notes: paymentNotes.trim() || undefined,
+          originalFilename: selectedFile.name || "gcash-receipt.png",
+          mimeType: mime,
+          fileBase64,
+        });
+
+        if (submitRes.isFlagged || submitRes.proof.verificationStatus === "FLAGGED") {
+          throw new Error(
+            submitRes.duplicateWarning ||
+            `Duplicate GCash reference '${cleanRef}'. This reference has already been posted or verified (AT-05).`
+          );
+        }
+
+        // 2. Immediately verify and post the payment (AT-05 Verified Counter Settlement)
+        const verifyRes = await api.verifyGcashProof(submitRes.proof.id, {
+          notes: paymentNotes.trim() ? `In-counter verified: ${paymentNotes.trim()}` : "In-counter verified at cashier desk",
+        });
+
+        // 3. Reset form and close modal
+        setShowReceiveModal(false);
+        resetForm();
+
+        // 4. Refresh payments and pending count
+        await fetchPayments();
+        await fetchPendingGcashCount();
+
+        // 5. Open Official Receipt Modal
+        const fullPayment = await api.getPaymentById(verifyRes.payment.id);
+        setSelectedReceipt(fullPayment);
+      } else {
+        // Direct Over-The-Counter GCash settlement without file attachment (AT-05 duplicate protected)
+        const result = await api.createPayment({
+          subscriberId: selectedSub.id,
+          paymentMethod: "GCASH",
+          referenceNumber: cleanRef,
+          amountPaid: parsedAmount.toFixed(2),
+          paymentDate: transactionDate || undefined,
+          notes: paymentNotes.trim() || undefined,
+        });
+
+        setShowReceiveModal(false);
+        resetForm();
+
+        await fetchPayments();
+        await fetchPendingGcashCount();
+
+        const fullPayment = await api.getPaymentById(result.payment.id);
+        setSelectedReceipt(fullPayment);
+      }
+    } catch (err: any) {
+      setPaymentError(err.message || "Failed to process GCash payment.");
+    } finally {
+      setSubmittingPayment(false);
+    }
+  };
+
+  // Submit GCash Proof to Verification Queue (Asynchronous review)
+  const handleGcashSubmitToQueue = async () => {
+    if (!selectedSub) {
+      setPaymentError("Please select a subscriber.");
+      return;
+    }
+    const cleanRef = referenceNumber.trim();
+    if (!cleanRef) {
+      setPaymentError("GCash reference number is required (AT-05).");
+      return;
+    }
+    const parsedAmount = parseFloat(amountPaid);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      setPaymentError("Please enter a valid payment amount greater than zero.");
+      return;
+    }
+    if (!selectedFile || !fileBase64) {
+      setPaymentError("Receipt screenshot proof is strictly required for GCash payments (AT-05 Compliance).");
+      return;
+    }
+
+    setSubmittingToQueue(true);
+    setPaymentError(null);
+
+    try {
+      const res = await api.submitGcashProof({
+        subscriberId: selectedSub.id,
+        referenceNumber: cleanRef,
+        amount: parsedAmount.toFixed(2),
+        transactionDate: transactionDate || (new Date().toISOString().split("T")[0] as string),
+        senderName: submitSenderName.trim() || undefined,
+        senderMobile: submitSenderMobile.trim() || undefined,
+        notes: paymentNotes.trim() || undefined,
+        originalFilename: selectedFile.name || "gcash-receipt.png",
+        mimeType: selectedFile.type || (selectedFile.name.toLowerCase().endsWith(".pdf") ? "application/pdf" : "image/png"),
+        fileBase64,
+      });
+
+      setShowReceiveModal(false);
+      resetForm();
+      await fetchPendingGcashCount();
+
+      setQueueSuccessNotice(
+        `GCash proof submitted successfully (Ref #${res.proof.referenceNumber}). Added to the Verification Queue for review.`
+      );
+      setTimeout(() => setQueueSuccessNotice(null), 6000);
+    } catch (err: any) {
+      setPaymentError(err.message || "Failed to submit GCash proof.");
+    } finally {
+      setSubmittingToQueue(false);
+    }
+  };
+
   // Handle Receive Payment Submission
   const handlePostPayment = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (paymentMethod === "GCASH") {
+      await handleGcashSubmitAndVerify();
+      return;
+    }
+
     if (!selectedSub) {
       setPaymentError("Please select a subscriber to receive payment from.");
       return;
@@ -165,7 +369,7 @@ export function PaymentsPage() {
     }
 
     if (
-      (paymentMethod === "GCASH" || paymentMethod === "BANK_TRANSFER" || paymentMethod === "CHECK") &&
+      (paymentMethod === "BANK_TRANSFER" || paymentMethod === "CHECK") &&
       !referenceNumber.trim()
     ) {
       setPaymentError(`Reference number is required for ${paymentMethod} payments.`);
@@ -188,12 +392,7 @@ export function PaymentsPage() {
 
       // Close receive modal and reset form
       setShowReceiveModal(false);
-      setSelectedSub(null);
-      setAmountPaid("");
-      setTenderedAmount("");
-      setReferenceNumber("");
-      setPaymentNotes("");
-      setPreviewResult(null);
+      resetForm();
 
       // Refresh list
       await fetchPayments();
@@ -254,20 +453,23 @@ export function PaymentsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <CreditCard className="w-7 h-7 text-indigo-600" />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
+            <CreditCard className="w-7 h-7 text-blue-600" />
             Payments & Collections
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             Process payments, issue official receipts, preview oldest-first allocations, and manage reversals.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
-            onClick={() => fetchPayments()}
+            onClick={() => {
+              fetchPayments();
+              fetchPendingGcashCount();
+            }}
             disabled={loading}
-            className="btn btn-secondary flex items-center gap-2"
+            className="btn btn-secondary flex items-center gap-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all shadow-xs cursor-pointer text-sm"
             title="Refresh payments list"
           >
             <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
@@ -277,10 +479,26 @@ export function PaymentsPage() {
           {canCreatePayment && (
             <button
               onClick={() => {
+                resetForm();
+                setPaymentMethod("GCASH");
                 setShowReceiveModal(true);
-                setPaymentError(null);
               }}
-              className="btn btn-primary flex items-center gap-2 shadow-sm"
+              className="btn flex items-center gap-2 shadow-xs bg-sky-50 border border-sky-200 text-sky-700 hover:bg-sky-100 hover:border-sky-300 font-medium px-3.5 py-2 rounded-lg active:scale-95 transition-all cursor-pointer text-sm"
+              title="File and verify GCash payment proof with screenshot attachment"
+            >
+              <FileCheck className="w-4 h-4 text-sky-600" />
+              File GCash Proof
+            </button>
+          )}
+
+          {canCreatePayment && (
+            <button
+              onClick={() => {
+                resetForm();
+                setPaymentMethod("CASH");
+                setShowReceiveModal(true);
+              }}
+              className="btn btn-primary flex items-center gap-2 shadow-xs bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg active:scale-95 transition-all cursor-pointer text-sm"
             >
               <CreditCard className="w-4 h-4" />
               Receive Payment
@@ -289,59 +507,92 @@ export function PaymentsPage() {
         </div>
       </div>
 
+      {/* Toast Notice for Queue Submission */}
+      {queueSuccessNotice && (
+        <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>{queueSuccessNotice}</span>
+          </div>
+          <button
+            onClick={() => setQueueSuccessNotice(null)}
+            className="text-emerald-600 hover:text-emerald-800"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Notice Banner: Pending GCash Proofs in Queue */}
+      {pendingGcashCount > 0 && (
+        <div className="p-3.5 bg-sky-50 border border-sky-200 rounded-xl flex items-center justify-between gap-3 text-xs text-sky-900 shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-sky-100 flex items-center justify-center shrink-0">
+              <ShieldAlert className="w-4 h-4 text-sky-600" />
+            </div>
+            <div>
+              <span className="font-semibold">{pendingGcashCount} pending GCash digital payment proof{pendingGcashCount > 1 ? "s" : ""}</span> awaiting verification in the GCash Verification tab.
+            </div>
+          </div>
+          <span className="text-sky-700 font-semibold flex items-center gap-1 shrink-0">
+            Check GCash tab
+          </span>
+        </div>
+      )}
+
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card p-4 flex items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-          <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-semibold text-lg">
+        <div className="bg-white p-4.5 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4 hover:border-slate-300 transition-colors">
+          <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 font-semibold text-base shrink-0">
             ₱
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Total In Current View
             </p>
-            <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+            <p className="text-xl font-bold text-slate-900 tracking-tight tabular-nums">
               {formatMoney(metrics.totalCollected)}
             </p>
           </div>
         </div>
 
-        <div className="card p-4 flex items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-            <Receipt className="w-6 h-6" />
+        <div className="bg-white p-4.5 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4 hover:border-slate-300 transition-colors">
+          <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0">
+            <Receipt className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Total Records
             </p>
-            <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+            <p className="text-xl font-bold text-slate-900 tracking-tight tabular-nums">
               {metrics.totalCount}
             </p>
           </div>
         </div>
 
-        <div className="card p-4 flex items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-          <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/50 flex items-center justify-center text-amber-600 dark:text-amber-400">
-            <FileCheck className="w-6 h-6" />
+        <div className="bg-white p-4.5 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4 hover:border-slate-300 transition-colors">
+          <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 shrink-0">
+            <FileCheck className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Advance Credits (Overpayment)
             </p>
-            <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+            <p className="text-xl font-bold text-slate-900 tracking-tight tabular-nums">
               {formatMoney(metrics.totalAdvance)}
             </p>
           </div>
         </div>
 
-        <div className="card p-4 flex items-center gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-          <div className="w-12 h-12 rounded-xl bg-rose-50 dark:bg-rose-950/50 flex items-center justify-center text-rose-600 dark:text-rose-400">
-            <RotateCcw className="w-6 h-6" />
+        <div className="bg-white p-4.5 rounded-xl border border-slate-200 shadow-xs flex items-center gap-4 hover:border-slate-300 transition-colors">
+          <div className="w-11 h-11 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600 shrink-0">
+            <RotateCcw className="w-5 h-5" />
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
               Reversals Recorded
             </p>
-            <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+            <p className="text-xl font-bold text-slate-900 tracking-tight tabular-nums">
               {metrics.totalReversed}
             </p>
           </div>
@@ -349,7 +600,7 @@ export function PaymentsPage() {
       </div>
 
       {/* Filters Bar */}
-      <div className="card p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
+      <div className="card p-4 bg-white border border-slate-200 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row items-center gap-3">
           {/* Search */}
           <div className="relative flex-1 w-full">
@@ -362,7 +613,7 @@ export function PaymentsPage() {
                 setPage(1);
               }}
               placeholder="Search receipt #, subscriber name, account #, or reference #..."
-              className="input pl-9 w-full text-sm"
+              className="input pl-9 w-full text-sm bg-white border-slate-200 text-slate-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
@@ -373,7 +624,7 @@ export function PaymentsPage() {
               setMethodFilter(e.target.value);
               setPage(1);
             }}
-            className="input text-sm w-full sm:w-44"
+            className="input text-sm w-full sm:w-44 bg-white border-slate-200 text-slate-700 focus:border-blue-500"
           >
             <option value="">All Methods</option>
             <option value="CASH">Cash</option>
@@ -390,7 +641,7 @@ export function PaymentsPage() {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="input text-sm w-full sm:w-40"
+            className="input text-sm w-full sm:w-40 bg-white border-slate-200 text-slate-700 focus:border-blue-500"
           >
             <option value="">All Statuses</option>
             <option value="POSTED">Posted</option>
@@ -400,10 +651,10 @@ export function PaymentsPage() {
       </div>
 
       {/* Payments Table */}
-      <div className="card bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+      <div className="card bg-white border border-slate-200 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+            <thead className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
               <tr>
                 <th className="py-3.5 px-4">Receipt #</th>
                 <th className="py-3.5 px-4">Date</th>
@@ -416,11 +667,11 @@ export function PaymentsPage() {
                 <th className="py-3.5 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-slate-400">
-                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-500" />
+                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
                     Loading payments...
                   </td>
                 </tr>
@@ -442,18 +693,18 @@ export function PaymentsPage() {
                     <tr
                       key={pmt.id}
                       className={cn(
-                        "hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors",
-                        pmt.isReversed && "bg-rose-50/20 dark:bg-rose-950/10 opacity-75"
+                        "hover:bg-slate-50/80 transition-colors",
+                        pmt.isReversed && "bg-rose-50/30 opacity-75"
                       )}
                     >
-                      <td className="py-3 px-4 font-mono font-semibold text-indigo-600 dark:text-indigo-400">
+                      <td className="py-3 px-4 font-mono font-semibold text-blue-600">
                         {pmt.receiptNumber}
                       </td>
-                      <td className="py-3 px-4 text-slate-600 dark:text-slate-300">
+                      <td className="py-3 px-4 text-slate-600">
                         {pmt.paymentDate}
                       </td>
                       <td className="py-3 px-4">
-                        <div className="font-medium text-slate-900 dark:text-slate-100">
+                        <div className="font-medium text-slate-900">
                           {subName}
                         </div>
                         <div className="text-xs font-mono text-slate-500">
@@ -464,11 +715,11 @@ export function PaymentsPage() {
                         <span
                           className={cn(
                             "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
-                            pmt.paymentMethod === "CASH" && "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
-                            pmt.paymentMethod === "GCASH" && "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300",
-                            pmt.paymentMethod === "BANK_TRANSFER" && "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-300",
-                            pmt.paymentMethod === "CHECK" && "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
-                            pmt.paymentMethod === "OTHER" && "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300"
+                            pmt.paymentMethod === "CASH" && "bg-emerald-50 text-emerald-700 border border-emerald-200/60",
+                            pmt.paymentMethod === "GCASH" && "bg-blue-50 text-blue-700 border border-blue-200/60",
+                            pmt.paymentMethod === "BANK_TRANSFER" && "bg-purple-50 text-purple-700 border border-purple-200/60",
+                            pmt.paymentMethod === "CHECK" && "bg-amber-50 text-amber-700 border border-amber-200/60",
+                            pmt.paymentMethod === "OTHER" && "bg-slate-100 text-slate-700 border border-slate-200"
                           )}
                         >
                           {pmt.paymentMethod}
@@ -479,24 +730,24 @@ export function PaymentsPage() {
                           </div>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-right font-semibold text-slate-900 dark:text-slate-100">
+                      <td className="py-3 px-4 text-right font-semibold text-slate-900">
                         {formatMoney(pmt.amountPaid)}
                       </td>
-                      <td className="py-3 px-4 text-right text-slate-600 dark:text-slate-300 font-mono">
+                      <td className="py-3 px-4 text-right text-slate-600 font-mono">
                         {formatMoney(pmt.allocatedAmount)}
                       </td>
-                      <td className="py-3 px-4 text-right text-amber-600 dark:text-amber-400 font-mono">
+                      <td className="py-3 px-4 text-right text-amber-600 font-mono">
                         {parseFloat(pmt.advanceAmount || "0") > 0
                           ? `+${formatMoney(pmt.advanceAmount)}`
                           : "₱0.00"}
                       </td>
                       <td className="py-3 px-4 text-center">
                         {pmt.isReversed ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
                             REVERSED
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                             POSTED
                           </span>
                         )}
@@ -525,7 +776,7 @@ export function PaymentsPage() {
                               setReversalReason("");
                               setReversalError(null);
                             }}
-                            className="btn py-1 px-2.5 text-xs inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-400 dark:hover:bg-rose-950/80 border border-rose-200 dark:border-rose-900"
+                            className="btn py-1 px-2.5 text-xs inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
                             title="Reverse Payment (Restores Invoices)"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
@@ -543,7 +794,7 @@ export function PaymentsPage() {
 
         {/* Pagination Bar */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-sm">
+          <div className="p-4 border-t border-slate-200 flex items-center justify-between text-sm">
             <span className="text-slate-500">
               Showing page {page} of {totalPages} ({totalCount} total payments)
             </span>
@@ -571,12 +822,12 @@ export function PaymentsPage() {
       {/* MODAL 1: RECEIVE PAYMENT (Oldest-First Live Preview & Change Calculator)   */}
       {/* ========================================================================= */}
       {showReceiveModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-2xl w-full p-6 my-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-2xl w-full p-6 my-8 space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-indigo-600" />
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-blue-600" />
                   Receive & Allocate Payment
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -585,148 +836,63 @@ export function PaymentsPage() {
               </div>
               <button
                 onClick={() => setShowReceiveModal(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="text-slate-400 hover:text-slate-600 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {paymentError && (
-              <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-lg text-rose-700 dark:text-rose-300 text-sm flex items-start gap-2">
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-sm flex items-start gap-2">
                 <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                 <span>{paymentError}</span>
               </div>
             )}
 
-            <form onSubmit={handlePostPayment} className="space-y-5">
-              {/* Subscriber Selector */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                  1. Select Subscriber *
-                </label>
-                {selectedSub ? (
-                  <div className="p-3 bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800 rounded-xl flex items-center justify-between">
-                    <div>
-                      <div className="font-semibold text-slate-900 dark:text-slate-100">
-                        {selectedSub.firstName} {selectedSub.lastName}
-                        {selectedSub.businessName ? ` (${selectedSub.businessName})` : ""}
-                      </div>
-                      <div className="text-xs text-slate-500 font-mono">
-                        {selectedSub.accountNumber} • {selectedSub.primaryContactNumber}
-                      </div>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedSub(null);
-                        setPreviewResult(null);
-                      }}
-                      className="text-xs text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 font-medium underline"
-                    >
-                      Change
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      value={subSearch}
-                      onChange={(e) => setSubSearch(e.target.value)}
-                      placeholder="Type subscriber name or account number to search..."
-                      className="input text-sm w-full"
-                    />
-                    <div className="max-h-40 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg">
-                      {subscribersList.length === 0 ? (
-                        <div className="p-3 text-xs text-slate-400 text-center">
-                          No active subscribers found
-                        </div>
-                      ) : (
-                        subscribersList.map((s) => (
-                          <div
-                            key={s.id}
-                            onClick={() => setSelectedSub(s)}
-                            className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer flex items-center justify-between text-xs"
-                          >
-                            <div>
-                              <span className="font-medium text-slate-900 dark:text-slate-100">
-                                {s.firstName} {s.lastName}
-                              </span>
-                              <span className="text-slate-400 ml-2 font-mono">
-                                ({s.accountNumber})
-                              </span>
-                            </div>
-                            <UserCheck className="w-4 h-4 text-slate-400" />
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+            <form onSubmit={handlePostPayment} onPaste={handlePaste} className="space-y-5">
+              {/* Dynamic Auto-Suggest Subscriber Combobox */}
+              <SubscriberCombobox
+                value={selectedSub}
+                onChange={(sub) => {
+                  setSelectedSub(sub);
+                  if (!sub) setPreviewResult(null);
+                }}
+                label="1. Select Subscriber"
+                required
+                autoFocus
+              />
 
               {/* Method, Reference & Amounts */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                    2. Payment Method *
-                  </label>
-                  <select
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}
-                    className="input text-sm w-full"
-                  >
-                    <option value="CASH">Cash</option>
-                    <option value="GCASH">GCash</option>
-                    <option value="BANK_TRANSFER">Bank Transfer</option>
-                    <option value="CHECK">Cheque</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                    Reference Number {paymentMethod !== "CASH" ? "*" : "(Optional)"}
-                  </label>
-                  <input
-                    type="text"
-                    value={referenceNumber}
-                    onChange={(e) => setReferenceNumber(e.target.value)}
-                    placeholder={
-                      paymentMethod === "GCASH"
-                        ? "e.g. GCash Ref # (unique)"
-                        : paymentMethod === "CHECK"
-                        ? "e.g. Check Number"
-                        : "Bank reference / slip #"
-                    }
-                    className="input text-sm w-full font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                    3. Amount Paid (₱) *
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-semibold">
-                      ₱
-                    </span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      value={amountPaid}
-                      onChange={(e) => setAmountPaid(e.target.value)}
-                      placeholder="0.00"
-                      className="input pl-8 text-sm w-full font-mono font-semibold"
-                      required
-                    />
-                  </div>
-                </div>
-
-                {paymentMethod === "CASH" ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                      Tendered Cash (₱)
+                    <label
+                      htmlFor="payment-method-select"
+                      className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
+                    >
+                      2. Payment Method *
+                    </label>
+                    <select
+                      id="payment-method-select"
+                      value={paymentMethod}
+                      onChange={(e) => {
+                        const newMethod = e.target.value as PaymentMethod;
+                        setPaymentMethod(newMethod);
+                        setPaymentError(null);
+                      }}
+                      className="input text-sm w-full bg-white border-slate-200 text-slate-700 focus:border-blue-500"
+                    >
+                      <option value="CASH">Cash (Drawer)</option>
+                      <option value="GCASH">GCash (Requires Screenshot Proof)</option>
+                      <option value="BANK_TRANSFER">Bank Transfer (Deposit Slip)</option>
+                      <option value="CHECK">Cheque</option>
+                      <option value="OTHER">Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                      3. Amount Paid (₱) *
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-semibold">
@@ -735,40 +901,250 @@ export function PaymentsPage() {
                       <input
                         type="number"
                         step="0.01"
-                        min="0"
-                        value={tenderedAmount}
-                        onChange={(e) => setTenderedAmount(e.target.value)}
-                        placeholder="e.g. 1000.00"
-                        className="input pl-8 text-sm w-full font-mono"
+                        min="0.01"
+                        value={amountPaid}
+                        onChange={(e) => setAmountPaid(e.target.value)}
+                        placeholder="0.00"
+                        className="input pl-8 text-sm w-full font-mono font-semibold bg-white border-slate-200 text-slate-900 focus:border-blue-500"
+                        required
                       />
                     </div>
-                    {changeDue !== null && (
-                      <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-1">
-                        Change Due: {formatMoney(changeDue)}
-                      </p>
-                    )}
+                  </div>
+                </div>
+
+                {/* Conditional Fields based on Payment Method */}
+                {paymentMethod === "GCASH" ? (
+                  <div className="space-y-4 pt-1">
+                    {/* AT-05 Security Compliance Callout */}
+                    <div className="p-3.5 bg-blue-50/80 border border-blue-200 rounded-xl flex items-start gap-3">
+                      <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                      <div className="text-xs text-blue-900 space-y-0.5">
+                        <p className="font-semibold text-blue-950">GCash Digital Settlement Protocol (AT-05 Compliance)</p>
+                        <p className="text-blue-800/90 leading-relaxed">
+                          GCash transfers credit the corporate e-wallet directly. Attaching an authentic receipt screenshot is mandatory for SHA-256 fingerprinting, anti-double-posting verification, and bank reconciliation.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                          GCash Reference Number *
+                        </label>
+                        <input
+                          type="text"
+                          value={referenceNumber}
+                          onChange={(e) => setReferenceNumber(e.target.value)}
+                          placeholder="e.g. 1029384756123 (13 digits)"
+                          className="input text-sm w-full font-mono bg-white border-slate-200 text-slate-900 focus:border-blue-500"
+                          required
+                        />
+                        <p className="text-[11px] text-slate-500 mt-1">13-digit reference number from GCash receipt.</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                          Transaction Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={transactionDate}
+                          onChange={(e) => setTransactionDate(e.target.value)}
+                          className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                          Sender Name (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={submitSenderName}
+                          onChange={(e) => setSubmitSenderName(e.target.value)}
+                          placeholder="e.g. Juan Dela Cruz"
+                          className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                          Sender Mobile (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={submitSenderMobile}
+                          onChange={(e) => setSubmitSenderMobile(e.target.value)}
+                          placeholder="e.g. 0917-123-4567"
+                          className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                          Payment Notes / Memo (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={paymentNotes}
+                          onChange={(e) => setPaymentNotes(e.target.value)}
+                          placeholder="e.g. In-counter payment with mobile screenshot proof"
+                          className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Receipt Screenshot Attachment Dropzone */}
+                    <div onPaste={handlePaste} className="space-y-1.5">
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center justify-between">
+                        <span>Receipt Screenshot / Proof File *</span>
+                        <span className="text-[11px] text-blue-600 font-normal">Tip: Paste screenshot directly with Ctrl+V</span>
+                      </label>
+
+                      {!selectedFile ? (
+                        <div
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            setIsDraggingFile(true);
+                          }}
+                          onDragLeave={() => setIsDraggingFile(false)}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setIsDraggingFile(false);
+                            if (e.dataTransfer.files?.[0]) {
+                              handleFileChange(e.dataTransfer.files[0]);
+                            }
+                          }}
+                          className={cn(
+                            "border-2 border-dashed rounded-xl p-5 text-center transition-all cursor-pointer",
+                            isDraggingFile
+                              ? "border-blue-500 bg-blue-50/50"
+                              : "border-slate-300 hover:border-blue-400 bg-slate-50/60 hover:bg-slate-50"
+                          )}
+                          onClick={() => {
+                            const input = document.getElementById("gcash-file-input-payments");
+                            if (input) input.click();
+                          }}
+                        >
+                          <input
+                            id="gcash-file-input-payments"
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp,application/pdf"
+                            className="hidden"
+                            onChange={(e) => {
+                              if (e.target.files?.[0]) {
+                                handleFileChange(e.target.files[0]);
+                              }
+                            }}
+                          />
+                          <div className="flex flex-col items-center justify-center gap-1.5">
+                            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mb-0.5">
+                              <UploadCloud className="w-5 h-5" />
+                            </div>
+                            <p className="text-sm font-medium text-slate-800">
+                              Click to upload or drag & drop proof screenshot
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              PNG, JPG, WebP, or PDF up to 10MB • Or press <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono shadow-2xs font-semibold">Ctrl+V</kbd> to paste
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-lg bg-blue-100/60 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0">
+                              <FileCheck className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold text-slate-900 truncate">{selectedFile.name}</p>
+                              <p className="text-[11px] text-slate-500">
+                                {(selectedFile.size / 1024).toFixed(1)} KB • {selectedFile.type || "Attached Proof"}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedFile(null);
+                              setFileBase64("");
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            title="Remove file"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : (
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
-                      Notes
-                    </label>
-                    <input
-                      type="text"
-                      value={paymentNotes}
-                      onChange={(e) => setPaymentNotes(e.target.value)}
-                      placeholder="Optional memo or transaction note..."
-                      className="input text-sm w-full"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Reference Number {paymentMethod !== "CASH" ? "*" : "(Optional)"}
+                      </label>
+                      <input
+                        type="text"
+                        value={referenceNumber}
+                        onChange={(e) => setReferenceNumber(e.target.value)}
+                        placeholder={
+                          paymentMethod === "CHECK"
+                            ? "e.g. Check Number"
+                            : "Bank reference / deposit slip #"
+                        }
+                        className="input text-sm w-full font-mono bg-white border-slate-200 text-slate-900 focus:border-blue-500"
+                      />
+                    </div>
+
+                    {paymentMethod === "CASH" ? (
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                          Tendered Cash (₱)
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-semibold">
+                            ₱
+                          </span>
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={tenderedAmount}
+                            onChange={(e) => setTenderedAmount(e.target.value)}
+                            placeholder="e.g. 1000.00"
+                            className="input pl-8 text-sm w-full font-mono bg-white border-slate-200 text-slate-900 focus:border-blue-500"
+                          />
+                        </div>
+                        {changeDue !== null && (
+                          <p className="text-xs text-emerald-600 font-semibold mt-1">
+                            Change Due: {formatMoney(changeDue)}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                          Notes
+                        </label>
+                        <input
+                          type="text"
+                          value={paymentNotes}
+                          onChange={(e) => setPaymentNotes(e.target.value)}
+                          placeholder="Optional memo or transaction note..."
+                          className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500"
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
 
               {/* Oldest-First Allocation Live Preview */}
-              <div className="p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-700 uppercase tracking-wider">
                   <span className="flex items-center gap-1.5">
-                    <Receipt className="w-4 h-4 text-indigo-500" />
+                    <Receipt className="w-4 h-4 text-blue-600" />
                     Oldest-First Allocation Projection
                   </span>
                   {previewLoading && (
@@ -779,40 +1155,40 @@ export function PaymentsPage() {
                 </div>
 
                 {!selectedSub ? (
-                  <p className="text-xs text-slate-400 italic">
+                  <p className="text-xs text-slate-500 italic">
                     Select a subscriber above to preview how this payment will allocate across open invoices.
                   </p>
                 ) : !previewResult || previewResult.invoiceAllocations.length === 0 ? (
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                  <div className="text-xs text-slate-500">
                     {parseFloat(amountPaid || "0") > 0 ? (
-                      <p className="text-amber-600 dark:text-amber-400 font-medium">
+                      <p className="text-amber-700 font-medium">
                         No outstanding unpaid invoices. Full amount ({formatMoney(amountPaid || "0")}) will be credited as an advance surplus for future invoices.
                       </p>
                     ) : (
-                      <p className="text-slate-400">Enter a payment amount to calculate invoice allocations.</p>
+                      <p className="text-slate-500">Enter a payment amount to calculate invoice allocations.</p>
                     )}
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <div className="max-h-44 overflow-y-auto border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
+                    <div className="max-h-44 overflow-y-auto border border-slate-200 rounded-lg overflow-hidden bg-white">
                       <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-100 dark:bg-slate-800 text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                        <thead className="bg-slate-50 text-[11px] font-semibold text-slate-600 border-b border-slate-200">
                           <tr>
                             <th className="py-2 px-3">Invoice</th>
                             <th className="py-2 px-3">Due Date</th>
                             <th className="py-2 px-3 text-right">Current Bal</th>
-                            <th className="py-2 px-3 text-right text-indigo-600 dark:text-indigo-400">Applied</th>
+                            <th className="py-2 px-3 text-right text-blue-600">Applied</th>
                             <th className="py-2 px-3 text-right">New Bal</th>
                             <th className="py-2 px-3 text-center">Status</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        <tbody className="divide-y divide-slate-100">
                           {previewResult.invoiceAllocations.map((alloc) => (
                             <tr key={alloc.invoiceId}>
                               <td className="py-2 px-3 font-mono font-medium">{alloc.invoiceNumber}</td>
                               <td className="py-2 px-3 text-slate-500">{alloc.dueDate}</td>
                               <td className="py-2 px-3 text-right font-mono">{formatMoney(alloc.currentBalance)}</td>
-                              <td className="py-2 px-3 text-right font-mono font-semibold text-indigo-600 dark:text-indigo-400">
+                              <td className="py-2 px-3 text-right font-mono font-semibold text-blue-600">
                                 {formatMoney(alloc.allocatedAmount)}
                               </td>
                               <td className="py-2 px-3 text-right font-mono">{formatMoney(alloc.remainingBalance)}</td>
@@ -821,8 +1197,8 @@ export function PaymentsPage() {
                                   className={cn(
                                     "px-1.5 py-0.5 rounded text-[10px] font-semibold",
                                     alloc.resultingStatus === "PAID"
-                                      ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
-                                      : "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                      : "bg-amber-50 text-amber-700 border border-amber-200"
                                   )}
                                 >
                                   {alloc.resultingStatus}
@@ -836,7 +1212,7 @@ export function PaymentsPage() {
 
                     {/* Advance surplus notice if payment exceeds open invoices */}
                     {parseFloat(previewResult.advanceCredit) > 0 && (
-                      <div className="p-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 rounded text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between">
+                      <div className="p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800 flex items-center justify-between">
                         <span>Surplus advance credit (carried forward):</span>
                         <span className="font-bold font-mono">
                           +{formatMoney(previewResult.advanceCredit)}
@@ -848,32 +1224,98 @@ export function PaymentsPage() {
               </div>
 
               {/* Modal Actions */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                <button
-                  type="button"
-                  onClick={() => setShowReceiveModal(false)}
-                  className="btn btn-secondary text-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={submittingPayment || !selectedSub || parseFloat(amountPaid || "0") <= 0}
-                  className="btn btn-primary text-sm flex items-center gap-2"
-                >
-                  {submittingPayment ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      Posting Payment...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-4 h-4" />
-                      Post Payment & Issue Receipt
-                    </>
-                  )}
-                </button>
-              </div>
+              {paymentMethod === "GCASH" ? (
+                <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowReceiveModal(false)}
+                    className="btn btn-secondary text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      disabled={
+                        submittingToQueue ||
+                        submittingPayment ||
+                        !selectedSub ||
+                        !selectedFile ||
+                        !fileBase64 ||
+                        !referenceNumber.trim() ||
+                        parseFloat(amountPaid || "0") <= 0
+                      }
+                      onClick={handleGcashSubmitToQueue}
+                      className="btn btn-secondary text-sm flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
+                      title="Submit proof to queue for later supervisor verification"
+                    >
+                      {submittingToQueue ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Clock className="w-4 h-4 text-slate-500" />
+                          Submit to Queue
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={
+                        submittingPayment ||
+                        submittingToQueue ||
+                        !selectedSub ||
+                        !referenceNumber.trim() ||
+                        parseFloat(amountPaid || "0") <= 0 ||
+                        (selectedFile !== null && !fileBase64)
+                      }
+                      className="btn btn-primary text-sm flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium active:scale-95 transition-all shadow-xs cursor-pointer"
+                      title="Verify GCash reference against AT-05 deduplication, allocate oldest-first, and issue Official Receipt"
+                    >
+                      {submittingPayment ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          Verifying & Posting...
+                        </>
+                      ) : (
+                        <>
+                          <ShieldCheck className="w-4 h-4" />
+                          Submit & Verify (Issue Receipt)
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowReceiveModal(false)}
+                    className="btn btn-secondary text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submittingPayment || !selectedSub || parseFloat(amountPaid || "0") <= 0}
+                    className="btn btn-primary text-sm flex items-center gap-2"
+                  >
+                    {submittingPayment ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        Posting Payment...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4" />
+                        Post Payment & Issue Receipt
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </form>
           </div>
         </div>
@@ -950,12 +1392,17 @@ export function PaymentsPage() {
                 </div>
                 <div className="text-right">
                   <span className="text-slate-500 block">Payment Method:</span>
-                  <span className="font-semibold text-slate-900">
-                    {selectedReceipt.paymentMethod}
+                  <span className="font-semibold text-slate-900 inline-flex items-center justify-end gap-1">
+                    {selectedReceipt.paymentMethod === "GCASH" && (
+                      <ShieldCheck className="w-3.5 h-3.5 text-blue-600 inline" />
+                    )}
+                    {selectedReceipt.paymentMethod === "GCASH"
+                      ? "GCash (Verified Digital Settlement)"
+                      : selectedReceipt.paymentMethod}
                   </span>
                   {selectedReceipt.referenceNumber && (
                     <span className="font-mono text-slate-500 block">
-                      Ref: {selectedReceipt.referenceNumber}
+                      Ref #: {selectedReceipt.referenceNumber}
                     </span>
                   )}
                 </div>
@@ -1058,14 +1505,14 @@ export function PaymentsPage() {
       {/* MODAL 3: REVERSE PAYMENT (AT-06 Supervisor / Admin Protected)             */}
       {/* ========================================================================= */}
       {reversalPayment && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-rose-200 dark:border-rose-900/60 max-w-lg w-full p-6 space-y-5">
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-rose-200 max-w-lg w-full p-6 space-y-5">
             <div className="flex items-center gap-3 text-rose-600">
-              <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-950 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center shrink-0 border border-rose-200/60">
                 <AlertTriangle className="w-5 h-5 text-rose-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                <h3 className="text-lg font-bold text-slate-900">
                   Reverse Payment Receipt #{reversalPayment.receiptNumber}
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -1074,12 +1521,12 @@ export function PaymentsPage() {
               </div>
             </div>
 
-            <div className="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 rounded-xl text-xs text-rose-800 dark:text-rose-300 space-y-1.5">
-              <p className="font-semibold flex items-center gap-1.5">
-                <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 space-y-1.5">
+              <p className="font-semibold flex items-center gap-1.5 text-rose-900">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
                 Impact of Reversal (AT-06):
               </p>
-              <ul className="list-disc list-inside space-y-0.5 text-slate-600 dark:text-slate-400 pl-1">
+              <ul className="list-disc list-inside space-y-0.5 text-slate-600 pl-1">
                 <li>All invoices allocated by this payment will be re-opened to UNPAID/PARTIALLY_PAID.</li>
                 <li>Invoice cached balance due and service account balance due will be restored.</li>
                 <li>An offsetting compensatory DEBIT of {formatMoney(reversalPayment.amountPaid)} will be posted to the subscriber ledger.</li>
@@ -1087,20 +1534,20 @@ export function PaymentsPage() {
             </div>
 
             {reversalError && (
-              <div className="p-3 bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200 rounded-lg text-xs">
+              <div className="p-3 bg-rose-100 text-rose-800 rounded-lg text-xs font-medium">
                 {reversalError}
               </div>
             )}
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
                 Mandatory Reversal Reason * (min 5 chars)
               </label>
               <textarea
                 value={reversalReason}
                 onChange={(e) => setReversalReason(e.target.value)}
                 placeholder="e.g. Check bounced, erroneous cashier entry, customer bank chargeback..."
-                className="input text-sm w-full h-24 resize-none"
+                className="input text-sm w-full h-24 resize-none bg-white border-slate-200 text-slate-900 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
                 required
               />
             </div>

@@ -1,5 +1,17 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
+  Banknote,
+  TrendingUp,
+  AlertTriangle,
+  Receipt,
+  Smartphone,
+  Scale,
+  Building2,
+  FileText,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
+import {
   api,
   type DashboardMetrics,
 } from "../../api/client";
@@ -82,10 +94,11 @@ export const DashboardPage: React.FC = () => {
           <button
             onClick={loadDashboard}
             disabled={loading}
-            className="inline-flex items-center px-3.5 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+            className="inline-flex items-center px-3.5 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 active:scale-95 transition-all cursor-pointer"
             data-testid="refresh-dashboard-btn"
           >
-            {loading ? "Refreshing..." : "↻ Refresh"}
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
+            {loading ? "Refreshing..." : "Refresh"}
           </button>
         </div>
       </div>
@@ -96,9 +109,11 @@ export const DashboardPage: React.FC = () => {
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow transition-shadow">
           <div className="flex items-center justify-between text-gray-500 text-xs font-medium uppercase tracking-wider">
             <span>Today's Collections</span>
-            <span className="p-1 bg-emerald-50 text-emerald-600 rounded">💵</span>
+            <span className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
+              <Banknote className="w-4 h-4" />
+            </span>
           </div>
-          <div className="mt-2 text-xl font-bold text-emerald-600 tracking-tight" data-testid="kpi-today-collection">
+          <div className="mt-2 text-xl font-bold text-emerald-600 tracking-tight tabular-nums" data-testid="kpi-today-collection">
             {kpis?.todayCollection || "₱0.00"}
           </div>
           <div className="mt-1 text-xs text-gray-500">Posted payments today</div>
@@ -108,9 +123,11 @@ export const DashboardPage: React.FC = () => {
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow transition-shadow">
           <div className="flex items-center justify-between text-gray-500 text-xs font-medium uppercase tracking-wider">
             <span>Current Receivables</span>
-            <span className="p-1 bg-blue-50 text-blue-600 rounded">📊</span>
+            <span className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
+              <TrendingUp className="w-4 h-4" />
+            </span>
           </div>
-          <div className="mt-2 text-xl font-bold text-gray-900 tracking-tight" data-testid="kpi-current-receivable">
+          <div className="mt-2 text-xl font-bold text-gray-900 tracking-tight tabular-nums" data-testid="kpi-current-receivable">
             {kpis?.currentReceivable || "₱0.00"}
           </div>
           <div className="mt-1 text-xs text-blue-600 font-medium">Unpaid within due date</div>
@@ -120,9 +137,11 @@ export const DashboardPage: React.FC = () => {
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow transition-shadow">
           <div className="flex items-center justify-between text-gray-500 text-xs font-medium uppercase tracking-wider">
             <span>Overdue Receivables</span>
-            <span className="p-1 bg-amber-50 text-amber-600 rounded">⚠️</span>
+            <span className="p-1.5 bg-amber-50 text-amber-600 rounded-lg">
+              <AlertTriangle className="w-4 h-4" />
+            </span>
           </div>
-          <div className="mt-2 text-xl font-bold text-amber-600 tracking-tight" data-testid="kpi-overdue-receivable">
+          <div className="mt-2 text-xl font-bold text-amber-600 tracking-tight tabular-nums" data-testid="kpi-overdue-receivable">
             {kpis?.overdueReceivable || "₱0.00"}
           </div>
           <div className="mt-1 text-xs text-amber-700 font-medium">Past grace period</div>
@@ -132,9 +151,11 @@ export const DashboardPage: React.FC = () => {
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow transition-shadow">
           <div className="flex items-center justify-between text-gray-500 text-xs font-medium uppercase tracking-wider">
             <span>Active Billing Cycle</span>
-            <span className="p-1 bg-purple-50 text-purple-600 rounded">📑</span>
+            <span className="p-1.5 bg-purple-50 text-purple-600 rounded-lg">
+              <Receipt className="w-4 h-4" />
+            </span>
           </div>
-          <div className="mt-2 text-xl font-bold text-gray-900 tracking-tight" data-testid="kpi-current-billing">
+          <div className="mt-2 text-xl font-bold text-gray-900 tracking-tight tabular-nums" data-testid="kpi-current-billing">
             {kpis?.currentBilling || "₱0.00"}
           </div>
           <div className="mt-1 text-xs text-gray-500">Current cycle billed</div>
@@ -144,9 +165,11 @@ export const DashboardPage: React.FC = () => {
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow transition-shadow">
           <div className="flex items-center justify-between text-gray-500 text-xs font-medium uppercase tracking-wider">
             <span>Pending GCash</span>
-            <span className="p-1 bg-indigo-50 text-indigo-600 rounded">📱</span>
+            <span className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">
+              <Smartphone className="w-4 h-4" />
+            </span>
           </div>
-          <div className="mt-2 text-xl font-bold text-indigo-600 tracking-tight" data-testid="kpi-pending-gcash">
+          <div className="mt-2 text-xl font-bold text-indigo-600 tracking-tight tabular-nums" data-testid="kpi-pending-gcash">
             {kpis?.pendingGcashCount ?? 0}
           </div>
           <div className="mt-1 text-xs text-indigo-600 font-medium">Awaiting verification</div>
@@ -156,9 +179,11 @@ export const DashboardPage: React.FC = () => {
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow transition-shadow">
           <div className="flex items-center justify-between text-gray-500 text-xs font-medium uppercase tracking-wider">
             <span>Reconciliation Issues</span>
-            <span className="p-1 bg-rose-50 text-rose-600 rounded">⚖️</span>
+            <span className="p-1.5 bg-rose-50 text-rose-600 rounded-lg">
+              <Scale className="w-4 h-4" />
+            </span>
           </div>
-          <div className="mt-2 text-xl font-bold text-rose-600 tracking-tight" data-testid="kpi-reconciliation-exceptions">
+          <div className="mt-2 text-xl font-bold text-rose-600 tracking-tight tabular-nums" data-testid="kpi-reconciliation-exceptions">
             {kpis?.reconciliationExceptionsCount ?? 0}
           </div>
           <div className="mt-1 text-xs text-rose-600 font-medium">Unbalanced batches</div>
@@ -169,7 +194,7 @@ export const DashboardPage: React.FC = () => {
       {(supporting?.delinquencyAlerts.overdueInvoicesCount ?? 0) > 0 && (
         <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-lg shadow-sm flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-xl">⚠️</span>
+            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
             <div>
               <p className="text-sm font-semibold text-amber-900">
                 Action Required: {supporting?.delinquencyAlerts.overdueInvoicesCount} Delinquent Invoices Detected
@@ -335,10 +360,28 @@ export const DashboardPage: React.FC = () => {
               <div key={method.method} className="border-b border-gray-50 pb-2.5 last:border-none last:pb-0">
                 <div className="flex justify-between items-center text-xs mb-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-gray-800">
-                      {method.method === "CASH" ? "💵 Cash" :
-                       method.method === "GCASH" ? "📱 GCash" :
-                       method.method === "BANK_TRANSFER" ? "🏦 Bank Transfer" : "📑 Check"}
+                    <span className="font-semibold text-gray-800 flex items-center gap-1.5">
+                      {method.method === "CASH" ? (
+                        <>
+                          <Banknote className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Cash</span>
+                        </>
+                      ) : method.method === "GCASH" ? (
+                        <>
+                          <Smartphone className="w-3.5 h-3.5 text-blue-600" />
+                          <span>GCash</span>
+                        </>
+                      ) : method.method === "BANK_TRANSFER" ? (
+                        <>
+                          <Building2 className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>Bank Transfer</span>
+                        </>
+                      ) : (
+                        <>
+                          <FileText className="w-3.5 h-3.5 text-purple-600" />
+                          <span>Check</span>
+                        </>
+                      )}
                     </span>
                     <span className="text-gray-400">({method.count} txns)</span>
                   </div>

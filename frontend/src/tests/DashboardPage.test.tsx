@@ -118,8 +118,8 @@ describe("DashboardPage Component (Phase 8 - Executive Dashboard & Operational K
       expect(screen.getByText("Accounts Receivable Aging")).toBeInTheDocument();
       expect(screen.getByText("Total: ₱177,650.00")).toBeInTheDocument();
       expect(screen.getByText("Payment Channels & Methods")).toBeInTheDocument();
-      expect(screen.getByText("💵 Cash")).toBeInTheDocument();
-      expect(screen.getByText("📱 GCash")).toBeInTheDocument();
+      expect(screen.getByText("Cash")).toBeInTheDocument();
+      expect(screen.getByText("GCash")).toBeInTheDocument();
     });
   });
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Receipt,
   RefreshCw,
@@ -30,6 +30,7 @@ export function BillingPage() {
   // State: Cycles
   const [cycles, setCycles] = useState<BillingCycle[]>([]);
   const [selectedCycleCode, setSelectedCycleCode] = useState<string>("");
+  const hasInitializedCycle = useRef(false);
 
   // State: Invoices Table
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -58,7 +59,8 @@ export function BillingPage() {
     try {
       const data = await api.listBillingCycles();
       setCycles(data);
-      if (data.length > 0 && !selectedCycleCode) {
+      if (!hasInitializedCycle.current && data.length > 0) {
+        hasInitializedCycle.current = true;
         // default to first active or open cycle
         const openCycle = data.find((c) => c.status === "OPEN") || data[0];
         if (openCycle) setSelectedCycleCode(openCycle.cycleCode);
@@ -66,7 +68,7 @@ export function BillingPage() {
     } catch (err) {
       console.error("Failed to load cycles", err);
     }
-  }, [selectedCycleCode]);
+  }, []);
 
   useEffect(() => {
     fetchCycles();
@@ -178,7 +180,14 @@ export function BillingPage() {
 
           {canGenerateBilling && (
             <button
-              onClick={() => handleOpenGenerate(selectedCycleCode || "2026-09")}
+              onClick={() => {
+                const targetCycle =
+                  selectedCycleCode ||
+                  cycles.find((c) => c.status === "OPEN")?.cycleCode ||
+                  cycles[0]?.cycleCode ||
+                  "2026-09";
+                handleOpenGenerate(targetCycle);
+              }}
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-md shadow-xs transition-colors cursor-pointer"
             >
               <Sparkles className="w-4 h-4" />

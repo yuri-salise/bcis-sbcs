@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Lock, User, AlertCircle, ArrowRight, ShieldCheck, KeyRound } from "lucide-react";
+import { Lock, User, AlertCircle, ArrowRight, KeyRound } from "lucide-react";
 import { useAuth } from "./AuthContext";
 
 export function LoginPage() {
@@ -44,8 +44,8 @@ export function LoginPage() {
       <div className="w-full max-w-md">
         {/* Brand Card Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#0F2747] text-white shadow-md mb-3">
-            <ShieldCheck className="w-6 h-6 text-[#2563EB]" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#0F2747] shadow-lg mb-3 border border-[#1E3A5F]">
+            <img src="/favicon.svg" alt="BCIS Logo" className="w-10 h-10 rounded-xl" />
           </div>
           <h1 className="text-2xl font-bold text-[#0F2747] tracking-tight">BCIS BILLING</h1>
           <p className="text-sm text-[#64748B] mt-1">

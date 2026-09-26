@@ -22,6 +22,7 @@ import {
   Clock,
   Archive,
   Layers,
+  X,
 } from "lucide-react";
 
 export const BackupPage: React.FC = () => {
@@ -586,9 +587,10 @@ export const BackupPage: React.FC = () => {
               </div>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
+                title="Close"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
@@ -688,9 +690,10 @@ export const BackupPage: React.FC = () => {
                   setSelectedBackupForRestore(null);
                   setRestoreConfirmText("");
                 }}
-                className="text-slate-400 hover:text-slate-600 text-sm font-semibold"
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-red-50 transition-colors"
+                title="Close"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 

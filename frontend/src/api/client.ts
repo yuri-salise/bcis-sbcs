@@ -284,7 +284,7 @@ export class ApiClient {
     const url = `${this.baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
     const headers = new Headers(options.headers);
 
-    if (!headers.has("Content-Type") && !(options.body instanceof FormData)) {
+    if (options.body && !headers.has("Content-Type") && !(options.body instanceof FormData)) {
       headers.set("Content-Type", "application/json");
     }
 
@@ -339,6 +339,7 @@ export class ApiClient {
     try {
       await this.request<{ status: string }>("/auth/logout", {
         method: "POST",
+        body: JSON.stringify({}),
       });
     } finally {
       this.setToken(null);
@@ -649,6 +650,7 @@ export class ApiClient {
   public async submitBatch(batchId: string): Promise<{ batch: CollectionBatch; status: string; message: string }> {
     return this.request<{ batch: CollectionBatch; status: string; message: string }>(`/collections/batches/${batchId}/submit`, {
       method: "POST",
+      body: JSON.stringify({}),
     });
   }
 
@@ -1076,6 +1078,7 @@ export class ApiClient {
   public async verifyBackup(id: string): Promise<VerifyBackupResult> {
     const res = await this.request<{ data: VerifyBackupResult }>(`/system/backups/${id}/verify`, {
       method: "POST",
+      body: JSON.stringify({}),
     });
     return res.data;
   }
@@ -1083,6 +1086,7 @@ export class ApiClient {
   public async restoreBackup(id: string): Promise<RestoreBackupResult> {
     const res = await this.request<{ data: RestoreBackupResult }>(`/system/backups/${id}/restore`, {
       method: "POST",
+      body: JSON.stringify({}),
     });
     return res.data;
   }

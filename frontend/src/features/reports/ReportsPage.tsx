@@ -1,5 +1,19 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
+  Calendar,
+  BarChart3,
+  Scale,
+  Clock,
+  FileText,
+  Award,
+  CreditCard,
+  Users,
+  RotateCcw,
+  ShieldCheck,
+  FileSpreadsheet,
+  FileDown,
+} from "lucide-react";
+import {
   api,
   type DailyCollectionReport,
   type MonthlyCollectionReport,
@@ -12,6 +26,8 @@ import {
   type PaymentReversalsReport,
   type AuditActivityReport,
 } from "../../api/client";
+import { SubscriberCombobox } from "../subscribers/SubscriberCombobox";
+import { SubscriberLedgerModal } from "../subscribers/SubscriberLedgerModal";
 
 export type ReportCategory =
   | "DAILY_COLLECTION"
@@ -41,6 +57,7 @@ export const ReportsPage: React.FC = () => {
   const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [soaSubscriberId, setSoaSubscriberId] = useState<string>("");
+  const [ledgerSubscriberId, setLedgerSubscriberId] = useState<string | null>(null);
 
   // Report Data States
   const [dailyData, setDailyData] = useState<DailyCollectionReport | null>(null);
@@ -179,17 +196,17 @@ export const ReportsPage: React.FC = () => {
     }
   };
 
-  const reportNavItems: Array<{ id: ReportCategory; label: string; icon: string }> = [
-    { id: "DAILY_COLLECTION", label: "Daily Collections", icon: "💵" },
-    { id: "MONTHLY_COLLECTION", label: "Monthly Collections", icon: "📅" },
-    { id: "BILLING_VS_COLLECTION", label: "Billing vs Collection", icon: "⚖️" },
-    { id: "AR_AGING", label: "AR Aging Analysis", icon: "⏱️" },
-    { id: "SOA", label: "Statement of Account", icon: "📄" },
-    { id: "COLLECTOR_PERFORMANCE", label: "Collector Performance", icon: "🛵" },
-    { id: "PAYMENT_METHOD_SUMMARY", label: "Payment Channels", icon: "💳" },
-    { id: "SUBSCRIBER_MASTER_LIST", label: "Subscriber Directory", icon: "👥" },
-    { id: "PAYMENT_REVERSALS", label: "Payment Reversals", icon: "🔄" },
-    { id: "AUDIT_ACTIVITY", label: "Compliance & Audit", icon: "🛡️" },
+  const reportNavItems: Array<{ id: ReportCategory; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+    { id: "DAILY_COLLECTION", label: "Daily Collections", icon: Calendar },
+    { id: "MONTHLY_COLLECTION", label: "Monthly Collections", icon: BarChart3 },
+    { id: "BILLING_VS_COLLECTION", label: "Billing vs Collection", icon: Scale },
+    { id: "AR_AGING", label: "AR Aging Analysis", icon: Clock },
+    { id: "SOA", label: "Statement of Account", icon: FileText },
+    { id: "COLLECTOR_PERFORMANCE", label: "Collector Performance", icon: Award },
+    { id: "PAYMENT_METHOD_SUMMARY", label: "Payment Channels", icon: CreditCard },
+    { id: "SUBSCRIBER_MASTER_LIST", label: "Subscriber Directory", icon: Users },
+    { id: "PAYMENT_REVERSALS", label: "Payment Reversals", icon: RotateCcw },
+    { id: "AUDIT_ACTIVITY", label: "Compliance & Audit", icon: ShieldCheck },
   ];
 
   return (
@@ -199,21 +216,24 @@ export const ReportsPage: React.FC = () => {
         <div className="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
           Financial & Audit Reports
         </div>
-        {reportNavItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveReport(item.id)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 text-xs font-medium rounded-lg text-left transition-colors ${
-              activeReport === item.id
-                ? "bg-primary text-white font-semibold shadow-sm"
-                : "text-gray-700 hover:bg-gray-100"
-            }`}
-            data-testid={`report-tab-${item.id}`}
-          >
-            <span>{item.icon}</span>
-            <span className="truncate">{item.label}</span>
-          </button>
-        ))}
+        {reportNavItems.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveReport(item.id)}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg text-left transition-all active:scale-[0.98] ${
+                activeReport === item.id
+                  ? "bg-blue-600 text-white font-semibold shadow-xs"
+                  : "text-gray-700 hover:bg-gray-100"
+              }`}
+              data-testid={`report-tab-${item.id}`}
+            >
+              <Icon className="w-4 h-4 shrink-0" />
+              <span className="truncate">{item.label}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Main Content Area */}
@@ -275,16 +295,30 @@ export const ReportsPage: React.FC = () => {
             )}
 
             {activeReport === "SOA" && (
-              <div className="flex items-center gap-2">
-                <label className="text-xs font-medium text-gray-600">Subscriber UUID:</label>
-                <input
-                  type="text"
-                  placeholder="Enter Subscriber UUID..."
-                  value={soaSubscriberId}
-                  onChange={(e) => setSoaSubscriberId(e.target.value)}
-                  className="w-64 px-2.5 py-1.5 text-xs border border-gray-300 rounded-md shadow-sm focus:ring-1 focus:ring-primary font-mono"
-                  data-testid="input-soa-subscriber-id"
-                />
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="w-64">
+                  <SubscriberCombobox
+                    value={null}
+                    status="ALL"
+                    placeholder="Search subscriber by name/account..."
+                    onChange={(sub) => {
+                      if (sub) {
+                        setSoaSubscriberId(sub.id);
+                      }
+                    }}
+                  />
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-gray-400">or ID:</span>
+                  <input
+                    type="text"
+                    placeholder="Enter Subscriber UUID..."
+                    value={soaSubscriberId}
+                    onChange={(e) => setSoaSubscriberId(e.target.value)}
+                    className="w-48 px-2.5 py-1.5 text-xs border border-gray-300 rounded-md shadow-xs focus:ring-1 focus:ring-primary font-mono"
+                    data-testid="input-soa-subscriber-id"
+                  />
+                </div>
               </div>
             )}
 
@@ -337,26 +371,29 @@ export const ReportsPage: React.FC = () => {
             <button
               onClick={() => handleExport("xlsx")}
               disabled={!!exporting}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-md shadow-sm disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-semibold rounded-lg shadow-xs disabled:opacity-50 transition-all cursor-pointer"
               data-testid="export-xlsx-btn"
             >
-              📊 {exporting === "xlsx" ? "Exporting..." : "Excel (XLSX)"}
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>{exporting === "xlsx" ? "Exporting..." : "Excel (XLSX)"}</span>
             </button>
             <button
               onClick={() => handleExport("pdf")}
               disabled={!!exporting}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-md shadow-sm disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-semibold rounded-lg shadow-xs disabled:opacity-50 transition-all cursor-pointer"
               data-testid="export-pdf-btn"
             >
-              📄 {exporting === "pdf" ? "Exporting..." : "PDF Doc"}
+              <FileDown className="w-3.5 h-3.5" />
+              <span>{exporting === "pdf" ? "Exporting..." : "PDF Doc"}</span>
             </button>
             <button
               onClick={() => handleExport("csv")}
               disabled={!!exporting}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-800 text-white text-xs font-semibold rounded-md shadow-sm disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-800 active:scale-95 text-white text-xs font-semibold rounded-lg shadow-xs disabled:opacity-50 transition-all cursor-pointer"
               data-testid="export-csv-btn"
             >
-              📑 {exporting === "csv" ? "Exporting..." : "CSV (BOM)"}
+              <FileText className="w-3.5 h-3.5" />
+              <span>{exporting === "csv" ? "Exporting..." : "CSV (BOM)"}</span>
             </button>
           </div>
         </div>
@@ -669,10 +706,18 @@ export const ReportsPage: React.FC = () => {
                   </table>
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                <div className="flex justify-end items-center gap-3 pt-4 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setLedgerSubscriberId(soaData.subscriber.id)}
+                    className="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-md text-xs font-semibold shadow-xs flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <FileText className="w-4 h-4" />
+                    <span>View Financial Ledger</span>
+                  </button>
                   <button
                     onClick={() => handleExport("pdf")}
-                    className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-md text-xs font-semibold shadow-sm"
+                    className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-md text-xs font-semibold shadow-sm cursor-pointer"
                   >
                     Print / Download PDF Statement
                   </button>
@@ -905,6 +950,12 @@ export const ReportsPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Subscriber Financial Ledger Modal */}
+      <SubscriberLedgerModal
+        subscriberId={ledgerSubscriberId}
+        onClose={() => setLedgerSubscriberId(null)}
+      />
     </div>
   );
 };

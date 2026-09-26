@@ -26,6 +26,8 @@ import {
   type CollectionArea,
 } from "../../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { SubscriberLedgerModal } from "../subscribers/SubscriberLedgerModal";
+import { SubscriberSoaModal } from "../subscribers/SubscriberSoaModal";
 
 type TabType = "aging" | "overdue" | "suspension" | "reconnections";
 
@@ -78,6 +80,8 @@ export function ReceivablesPage() {
   const [reconStatusFilter, setReconStatusFilter] = useState<string>("ALL");
 
   // Modals State
+  const [ledgerSubscriberId, setLedgerSubscriberId] = useState<string | null>(null);
+  const [soaSubscriberId, setSoaSubscriberId] = useState<string | null>(null);
   const [selectedCandidate, setSelectedCandidate] = useState<SuspensionCandidate | null>(null);
   const [showSuspendModal, setShowSuspendModal] = useState(false);
   const [suspendReason, setSuspendReason] = useState("NON_PAYMENT: Overdue balance exceeds policy threshold.");
@@ -598,16 +602,33 @@ export function ReceivablesPage() {
                             </span>
                           )}
                         </td>
-                        <td className="py-2.5 px-3 text-right">
-                          <button
-                            onClick={() => {
-                              setActiveTab("overdue");
-                              setSearch(row.subscriberAccountNumber);
-                            }}
-                            className="px-2.5 py-1 rounded border border-slate-200 hover:bg-slate-100 text-[11px] font-medium text-slate-700 transition-colors cursor-pointer"
-                          >
-                            Inspect Invoices
-                          </button>
+                        <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => {
+                                setActiveTab("overdue");
+                                setSearch(row.subscriberAccountNumber);
+                              }}
+                              className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-100 text-[11px] font-medium text-slate-700 transition-colors cursor-pointer"
+                              title="Inspect Overdue Invoices"
+                            >
+                              Invoices
+                            </button>
+                            <button
+                              onClick={() => setLedgerSubscriberId(row.subscriberId)}
+                              className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-100 text-[11px] font-medium text-slate-700 transition-colors cursor-pointer"
+                              title="View Financial Ledger"
+                            >
+                              Ledger
+                            </button>
+                            <button
+                              onClick={() => setSoaSubscriberId(row.subscriberId)}
+                              className="px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 border border-blue-200 text-[11px] font-semibold text-blue-700 transition-colors cursor-pointer"
+                              title="View Statement of Account (SOA)"
+                            >
+                              SOA
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -648,19 +669,20 @@ export function ReceivablesPage() {
                     <th className="py-2.5 px-3 font-semibold text-right">Balance Due</th>
                     <th className="py-2.5 px-3 font-semibold text-center">Days Overdue</th>
                     <th className="py-2.5 px-3 font-semibold text-center">Severity</th>
+                    <th className="py-2.5 px-3 font-semibold text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {loading ? (
                     <tr>
-                      <td colSpan={9} className="py-8 text-center text-slate-400">
+                      <td colSpan={10} className="py-8 text-center text-slate-400">
                         <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#2563EB] mb-2" />
                         <span>Loading overdue invoices...</span>
                       </td>
                     </tr>
                   ) : overdueItems.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="py-8 text-center text-slate-400">
+                      <td colSpan={10} className="py-8 text-center text-slate-400">
                         No overdue invoices found matching criteria.
                       </td>
                     </tr>
@@ -698,6 +720,24 @@ export function ReceivablesPage() {
                               1–30d Overdue
                             </span>
                           )}
+                        </td>
+                        <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => setLedgerSubscriberId(inv.subscriberId)}
+                              className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-100 text-[11px] font-medium text-slate-700 transition-colors cursor-pointer"
+                              title="View Subscriber Financial Ledger"
+                            >
+                              Ledger
+                            </button>
+                            <button
+                              onClick={() => setSoaSubscriberId(inv.subscriberId)}
+                              className="px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 border border-blue-200 text-[11px] font-semibold text-blue-700 transition-colors cursor-pointer"
+                              title="View Statement of Account (SOA)"
+                            >
+                              SOA
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -790,7 +830,21 @@ export function ReceivablesPage() {
                           </div>
                         </td>
                         <td className="py-2.5 px-3 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
+                          <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
+                            <button
+                              onClick={() => setLedgerSubscriberId(c.subscriberId)}
+                              className="px-2 py-1 rounded border border-slate-200 hover:bg-slate-100 text-[11px] font-medium text-slate-700 transition-colors cursor-pointer"
+                              title="View Financial Ledger"
+                            >
+                              Ledger
+                            </button>
+                            <button
+                              onClick={() => setSoaSubscriberId(c.subscriberId)}
+                              className="px-2 py-1 rounded bg-blue-50 hover:bg-blue-100 border border-blue-200 text-[11px] font-semibold text-blue-700 transition-colors cursor-pointer"
+                              title="View Statement of Account (SOA)"
+                            >
+                              SOA
+                            </button>
                             <button
                               onClick={() => handleViewHistory(c.serviceAccountId, c.subscriberDisplayName)}
                               className="p-1 text-slate-400 hover:text-slate-700 rounded transition-colors"
@@ -1215,6 +1269,27 @@ export function ReceivablesPage() {
           </div>
         </div>
       )}
+
+      {/* Reusable Subscriber Financial Ledger Modal */}
+      <SubscriberLedgerModal
+        subscriberId={ledgerSubscriberId}
+        onClose={() => setLedgerSubscriberId(null)}
+        onOpenSoa={(id) => {
+          setLedgerSubscriberId(null);
+          setSoaSubscriberId(id);
+        }}
+      />
+
+      {/* Reusable Subscriber Statement of Account (SOA) Modal */}
+      <SubscriberSoaModal
+        subscriberId={soaSubscriberId}
+        asOfDate={asOfDate}
+        onClose={() => setSoaSubscriberId(null)}
+        onOpenLedger={(id) => {
+          setSoaSubscriberId(null);
+          setLedgerSubscriberId(id);
+        }}
+      />
     </div>
   );
 }
