@@ -49,6 +49,7 @@ global.fetch = vi.fn().mockImplementation((url: string) => {
             "report.view",
             "report.export",
             "audit.view",
+            "backup.restore",
           ],
         }),
     });
@@ -84,6 +85,7 @@ global.fetch = vi.fn().mockImplementation((url: string) => {
             "report.view",
             "report.export",
             "audit.view",
+            "backup.restore",
           ],
         }),
     });
@@ -267,6 +269,94 @@ global.fetch = vi.fn().mockImplementation((url: string) => {
               collectorName: "Office Direct",
               batchNumber: "—",
               notes: "Walk-in cash payment",
+            },
+          ],
+        }),
+    });
+  }
+  if (url.includes("/system/database/integrity")) {
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve({
+          data: {
+            isHealthy: true,
+            issues: [],
+            stats: {
+              subscribers: 27,
+              activeAccounts: 27,
+              suspendedAccounts: 0,
+              invoices: 25,
+              openInvoices: 10,
+              postedPayments: 15,
+              reversedPayments: 0,
+              auditLogs: 150,
+              backupHistory: 2,
+            },
+            timestamp: new Date().toISOString(),
+          },
+        }),
+    });
+  }
+  if (url.includes("/verify")) {
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve({
+          data: {
+            id: "backup-1",
+            fileName: "bcis_backup_database_only_2026-09-26T01-00-00-000Z.json",
+            verified: true,
+            status: "VERIFIED",
+            sha256: "3ca503c8e3f3c435edb93b6ba7593c5615d77a38e1eec01c2284d8c53816dbc9",
+            tableCounts: { subscribers: 27, invoices: 25 },
+          },
+        }),
+    });
+  }
+  if (url.includes("/restore")) {
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve({
+          data: {
+            success: true,
+            backupId: "backup-1",
+            fileName: "bcis_backup_database_only_2026-09-26T01-00-00-000Z.json",
+            status: "RESTORE_TESTED",
+            tableCounts: { subscribers: 27, invoices: 25 },
+            restoredAt: new Date().toISOString(),
+          },
+        }),
+    });
+  }
+  if (url.includes("/system/backups")) {
+    return Promise.resolve({
+      ok: true,
+      status: 200,
+      json: () =>
+        Promise.resolve({
+          data: [
+            {
+              id: "backup-1",
+              backupType: "DATABASE_ONLY",
+              fileName: "bcis_backup_database_only_2026-09-26T01-00-00-000Z.json",
+              filePath: "backups/bcis_backup_database_only_2026-09-26T01-00-00-000Z.json",
+              startedAt: "2026-09-26T01:00:00.000Z",
+              completedAt: "2026-09-26T01:00:01.000Z",
+              status: "COMPLETED",
+              fileSizeBytes: 1048576,
+              sha256: "3ca503c8e3f3c435edb93b6ba7593c5615d77a38e1eec01c2284d8c53816dbc9",
+              tableCounts: { subscribers: 27, invoices: 25 },
+              createdBy: "user-123",
+              verifiedAt: "2026-09-26T01:05:00.000Z",
+              verificationStatus: "VERIFIED",
+              verificationNotes: "SHA-256 verified successfully",
+              notes: "Scheduled daily backup",
+              createdAt: "2026-09-26T01:00:00.000Z",
             },
           ],
         }),

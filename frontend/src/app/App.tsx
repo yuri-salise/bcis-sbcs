@@ -30,6 +30,7 @@ import { CollectionsPage } from "../features/collections/CollectionsPage";
 import { ReceivablesPage } from "../features/receivables/ReceivablesPage";
 import { DashboardPage } from "../features/dashboard/DashboardPage";
 import { ReportsPage } from "../features/reports/ReportsPage";
+import { BackupPage } from "../features/system/BackupPage";
 
 function AppContent() {
   const { user, roles, permissions, isAuthenticated, isLoading, logout, hasPermission } = useAuth();
@@ -107,6 +108,7 @@ function AppContent() {
     { id: "receivables", label: "Receivables", icon: AlertCircle, perm: "receivables.view" },
     { id: "services", label: "Services", icon: Layers, perm: "service.view" },
     { id: "reports", label: "Reports", icon: FileBarChart2, perm: "report.view" },
+    { id: "backup", label: "System & Backup", icon: Database, perm: "backup.restore" },
     { id: "administration", label: "Administration", icon: ShieldCheck, perm: "user.manage" },
   ];
 
@@ -336,6 +338,7 @@ function AppContent() {
             </div>
           )}
           {activeTab === "reports" && <ReportsPage />}
+          {activeTab === "backup" && <BackupPage />}
 
           {activeTab === "administration" && (
             <>
@@ -425,6 +428,7 @@ function AppContent() {
            activeTab !== "collections" &&
            activeTab !== "receivables" &&
            activeTab !== "reports" &&
+           activeTab !== "backup" &&
            activeTab !== "administration" && (
             <div className="p-12 bg-white border border-[#E2E8F0] rounded-lg text-center space-y-2">
               <h3 className="text-base font-bold text-[#0F172A] capitalize">{activeTab} Module</h3>

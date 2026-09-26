@@ -232,14 +232,33 @@ export class ApiError extends Error {
 }
 
 export class ApiClient {
-  private readonly baseUrl: string;
+  private baseUrl: string;
   private token: string | null = null;
 
   constructor(baseUrl?: string) {
-    this.baseUrl = baseUrl || (import.meta.env.VITE_API_BASE_URL as string) || "http://localhost:3001/api/v1";
+    const saved = typeof window !== "undefined" ? localStorage.getItem("bcis_api_base_url") : null;
+    this.baseUrl = baseUrl || saved || (import.meta.env.VITE_API_BASE_URL as string) || "http://localhost:3001/api/v1";
     if (typeof window !== "undefined") {
       this.token = localStorage.getItem("bcis_auth_token");
     }
+  }
+
+  public getBaseUrl(): string {
+    return this.baseUrl;
+  }
+
+  public setBaseUrl(url: string): void {
+    this.baseUrl = url.trim().replace(/\/+$/, "");
+    if (typeof window !== "undefined") {
+      localStorage.setItem("bcis_api_base_url", this.baseUrl);
+    }
+  }
+
+  public resetBaseUrl(): void {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("bcis_api_base_url");
+    }
+    this.baseUrl = (import.meta.env.VITE_API_BASE_URL as string) || "http://localhost:3001/api/v1";
   }
 
   public setToken(token: string | null): void {
@@ -1029,6 +1048,48 @@ export class ApiClient {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(downloadUrl);
+  }
+
+  // --- System, Security & Backup Endpoints (Phase 9 - AT-12) ---
+
+  public async listBackups(): Promise<BackupRecord[]> {
+    const res = await this.request<{ data: BackupRecord[] }>("/system/backups");
+    return res.data;
+  }
+
+  public async createBackup(params: {
+    type?: "FULL" | "DATABASE_ONLY";
+    notes?: string;
+  } = {}): Promise<BackupRecord> {
+    const res = await this.request<{ data: BackupRecord }>("/system/backups", {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
+    return res.data;
+  }
+
+  public async getBackupById(id: string): Promise<BackupRecord> {
+    const res = await this.request<{ data: BackupRecord }>(`/system/backups/${id}`);
+    return res.data;
+  }
+
+  public async verifyBackup(id: string): Promise<VerifyBackupResult> {
+    const res = await this.request<{ data: VerifyBackupResult }>(`/system/backups/${id}/verify`, {
+      method: "POST",
+    });
+    return res.data;
+  }
+
+  public async restoreBackup(id: string): Promise<RestoreBackupResult> {
+    const res = await this.request<{ data: RestoreBackupResult }>(`/system/backups/${id}/restore`, {
+      method: "POST",
+    });
+    return res.data;
+  }
+
+  public async checkDatabaseIntegrity(): Promise<DatabaseIntegrityReport> {
+    const res = await this.request<{ data: DatabaseIntegrityReport }>("/system/database/integrity");
+    return res.data;
   }
 }
 
@@ -2028,5 +2089,51 @@ export interface AuditActivityReport {
   }>;
 }
 
+export interface BackupRecord {
+  id: string;
+  backupType: "FULL" | "DATABASE_ONLY";
+  fileName: string;
+  filePath: string;
+  startedAt: string;
+  completedAt: string | null;
+  status: "IN_PROGRESS" | "COMPLETED" | "FAILED" | "RESTORE_TESTED";
+  fileSizeBytes: number | null;
+  sha256: string | null;
+  tableCounts: Record<string, number> | null;
+  createdBy: string | null;
+  verifiedAt: string | null;
+  verificationStatus: "PENDING" | "VERIFIED" | "FAILED";
+  verificationNotes: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+export interface DatabaseIntegrityReport {
+  isHealthy: boolean;
+  issues: string[];
+  stats: Record<string, number>;
+  timestamp: string;
+}
+
+export interface VerifyBackupResult {
+  id: string;
+  fileName: string;
+  verified: boolean;
+  status: "VERIFIED" | "FAILED";
+  sha256?: string;
+  error?: string;
+  tableCounts?: Record<string, number>;
+}
+
+export interface RestoreBackupResult {
+  success: boolean;
+  backupId: string;
+  fileName: string;
+  status: string;
+  tableCounts: Record<string, number>;
+  restoredAt: string;
+}
+
 export const api = new ApiClient();
+
 
