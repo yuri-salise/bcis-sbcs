@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, jsonb, index } from "drizzle-orm/pg-core";
 
 export const applicationSettings = pgTable("application_settings", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -8,17 +8,25 @@ export const applicationSettings = pgTable("application_settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-export const auditLogs = pgTable("audit_logs", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  occurredAt: timestamp("occurred_at", { withTimezone: true }).defaultNow().notNull(),
-  actorUserId: uuid("actor_user_id"),
-  action: text("action").notNull(),
-  entityType: text("entity_type").notNull(),
-  entityId: text("entity_id").notNull(),
-  requestId: text("request_id"),
-  reason: text("reason"),
-  oldValues: jsonb("old_values"),
-  newValues: jsonb("new_values"),
-  ipAddress: text("ip_address"),
-  metadata: jsonb("metadata"),
-});
+export const auditLogs = pgTable(
+  "audit_logs",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).defaultNow().notNull(),
+    actorUserId: uuid("actor_user_id"),
+    action: text("action").notNull(),
+    entityType: text("entity_type").notNull(),
+    entityId: text("entity_id").notNull(),
+    requestId: text("request_id"),
+    reason: text("reason"),
+    oldValues: jsonb("old_values"),
+    newValues: jsonb("new_values"),
+    ipAddress: text("ip_address"),
+    metadata: jsonb("metadata"),
+  },
+  (table) => [
+    index("audit_logs_occurred_at_idx").on(table.occurredAt),
+    index("audit_logs_actor_occurred_idx").on(table.actorUserId, table.occurredAt),
+    index("audit_logs_entity_occurred_idx").on(table.entityType, table.entityId, table.occurredAt),
+  ]
+);

@@ -106,7 +106,7 @@ export async function runSeeds() {
       "gcash.verify",
       "collection.view", "collection.manage", "collection.reconcile",
       "receivables.view",
-      "report.view",
+      "report.view", "report.export",
     ],
     AUDITOR: [
       "subscriber.view",
@@ -188,6 +188,13 @@ export async function runSeeds() {
       displayName: "Danilo Cruz (Technician)",
       email: "tech@bcis.local",
       roleCode: "TECHNICIAN",
+    },
+    {
+      username: "viewer",
+      passwordHash: defaultPasswordHash,
+      displayName: "Vicente Flores (Viewer)",
+      email: "viewer@bcis.local",
+      roleCode: "VIEWER",
     },
   ];
 

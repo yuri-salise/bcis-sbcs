@@ -1843,6 +1843,301 @@
           }
         }
       }
+    },
+    "/api/v1/reports/dashboard": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Retrieve executive dashboard KPIs and supporting trendlines",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/daily-collection": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Generate daily collection report with cashier and method breakdowns",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/daily-collection/export": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Export daily collection report to CSV, XLSX, or PDF",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/monthly-collection": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Generate monthly collection report with day-by-day aggregations",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/monthly-collection/export": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Export monthly collection report to CSV, XLSX, or PDF",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/billing-vs-collection": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Generate billing vs collection efficiency report across billing cycles",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/billing-vs-collection/export": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Export billing vs collection report to CSV, XLSX, or PDF",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/aging": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Generate comprehensive accounts receivable aging report",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/aging/export": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Export accounts receivable aging report to CSV, XLSX, or PDF",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/soa/{subscriberId}": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Generate official printable Subscriber Statement of Account (SOA)",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "subscriberId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/soa/{subscriberId}/export": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Export official Subscriber Statement of Account (SOA) to PDF or XLSX",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "subscriberId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/collector-performance": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Generate collector performance, collection, and remittance accuracy report",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/collector-performance/export": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Export collector performance report to CSV, XLSX, or PDF",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/payment-methods": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Generate payment method distribution summary",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/payment-methods/export": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Export payment method summary to CSV, XLSX, or PDF",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/subscribers-master": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Generate subscriber master list directory report",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/subscribers-master/export": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Export subscriber master list directory to CSV, XLSX, or PDF",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/payment-reversals": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Generate audited payment reversals and void transactions report",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/payment-reversals/export": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Export payment reversals report to CSV, XLSX, or PDF",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/audit-activity": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Generate immutable system audit activity trail report",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/reports/audit-activity/export": {
+      "get": {
+        "tags": [
+          "Reports & Dashboard"
+        ],
+        "description": "Export audit activity trail report to CSV, XLSX, or PDF",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
     }
   },
   "servers": [
