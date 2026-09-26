@@ -89,6 +89,8 @@ export async function runSeeds() {
       "receivables.view",
       "report.view", "report.export",
       "audit.view",
+      "user.manage",
+      "backup.restore",
     ],
     CASHIER: [
       "subscriber.view",

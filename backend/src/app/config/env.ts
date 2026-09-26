@@ -11,6 +11,7 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32).default("super-secret-development-jwt-key-replace-in-production-min-32-chars"),
   CORS_ORIGIN: z.string().default("http://localhost:5173,tauri://localhost,http://tauri.localhost"),
   UPLOAD_DIR: z.string().default("./uploads"),
+  BACKUP_DIR: z.string().default("./backups"),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 });
 

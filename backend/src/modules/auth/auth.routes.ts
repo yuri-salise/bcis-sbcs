@@ -1,6 +1,8 @@
 import type { FastifyPluginAsync } from "fastify";
 import { AuthService } from "./auth.service.js";
 import { authenticate, requirePermission } from "./auth.guard.js";
+import { checkRateLimit, resetRateLimit } from "./rate-limiter.js";
+import { AppError } from "../../app/errors/app-error.js";
 
 const loginBodySchema = {
   type: "object",
@@ -44,12 +46,27 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    async (request) => {
+    async (request, reply) => {
       const { username, password } = request.body as { username: string; password: string };
       const ip = request.ip;
       const userAgent = request.headers["user-agent"];
 
+      const rateLimitKey = `login:${ip}:${username.trim().toLowerCase()}`;
+      const rateCheck = checkRateLimit(rateLimitKey, 5, 60 * 1000);
+      if (!rateCheck.allowed) {
+        reply.header("Retry-After", String(rateCheck.retryAfter));
+        reply.header("X-RateLimit-Limit", "5");
+        reply.header("X-RateLimit-Remaining", "0");
+        throw new AppError(
+          `Too many login attempts. Please try again in ${rateCheck.retryAfter} seconds.`,
+          429,
+          "RATE_LIMIT_EXCEEDED",
+          { retryAfter: rateCheck.retryAfter }
+        );
+      }
+
       const result = await AuthService.login(username, password, ip, userAgent);
+      resetRateLimit(rateLimitKey);
       return result;
     }
   );

@@ -71,6 +71,13 @@ function getSequenceConfig(prefix: SequenceType): SequenceConfig {
  * 2. Self-healing: Automatically detects existing maximum numeric suffixes
  *    and ensures the sequence never falls behind or collides with existing records.
  */
+async function execSql(runner: any, query: string): Promise<any> {
+  if (runner && typeof runner.unsafe === "function") {
+    return runner.unsafe(query);
+  }
+  return runner.execute(sql.raw(query));
+}
+
 export async function getNextDocumentNumber(
   prefix: SequenceType,
   tx?: any
@@ -79,30 +86,30 @@ export async function getNextDocumentNumber(
   const { sequenceName, tableName, columnName } = getSequenceConfig(prefix);
   const year = new Date().getFullYear();
 
-  await runner.execute(sql.raw(`CREATE SEQUENCE IF NOT EXISTS ${sequenceName} START WITH 1;`));
+  await execSql(runner, `CREATE SEQUENCE IF NOT EXISTS ${sequenceName} START WITH 1;`);
 
   // Find current maximum numeric suffix from table to prevent any collision
-  const maxResult: any = await runner.execute(
-    sql.raw(
-      `SELECT COALESCE(MAX(CAST(SUBSTRING(${columnName} FROM '\\d+$') AS integer)), 0) AS max_num FROM ${tableName};`
-    )
+  const maxResult: any = await execSql(
+    runner,
+    `SELECT COALESCE(MAX(CAST(SUBSTRING(${columnName} FROM '\\d+$') AS integer)), 0) AS max_num FROM ${tableName};`
   );
   const maxRow = Array.isArray(maxResult) ? maxResult[0] : maxResult?.rows?.[0];
   const maxExisting = Number(maxRow?.max_num || 0);
 
   // Synchronize sequence if it is behind table records
-  const currResult: any = await runner.execute(
-    sql.raw(`SELECT last_value, is_called FROM ${sequenceName};`)
+  const currResult: any = await execSql(
+    runner,
+    `SELECT last_value, is_called FROM ${sequenceName};`
   );
   const currRow = Array.isArray(currResult) ? currResult[0] : currResult?.rows?.[0];
   const lastVal = Number(currRow?.last_value || 0);
   const isCalled = Boolean(currRow?.is_called);
 
   if (maxExisting > 0 && maxExisting >= (isCalled ? lastVal : 0)) {
-    await runner.execute(sql.raw(`SELECT setval('${sequenceName}', ${maxExisting}, true);`));
+    await execSql(runner, `SELECT setval('${sequenceName}', ${maxExisting}, true);`);
   }
 
-  const nextResult: any = await runner.execute(sql.raw(`SELECT nextval('${sequenceName}') AS val;`));
+  const nextResult: any = await execSql(runner, `SELECT nextval('${sequenceName}') AS val;`);
   const nextRow = Array.isArray(nextResult) ? nextResult[0] : nextResult?.rows?.[0];
   const val = Number(nextRow?.val ?? 1);
 
@@ -117,19 +124,33 @@ export async function setSequenceValue(
   const runner = tx || db;
   const { sequenceName, tableName, columnName } = getSequenceConfig(prefix);
 
-  await runner.execute(sql.raw(`CREATE SEQUENCE IF NOT EXISTS ${sequenceName} START WITH 1;`));
+  await execSql(runner, `CREATE SEQUENCE IF NOT EXISTS ${sequenceName} START WITH 1;`);
 
   // Ensure sequence never drops below existing table records
-  const maxResult: any = await runner.execute(
-    sql.raw(
-      `SELECT COALESCE(MAX(CAST(SUBSTRING(${columnName} FROM '\\d+$') AS integer)), 0) AS max_num FROM ${tableName};`
-    )
+  const maxResult: any = await execSql(
+    runner,
+    `SELECT COALESCE(MAX(CAST(SUBSTRING(${columnName} FROM '\\d+$') AS integer)), 0) AS max_num FROM ${tableName};`
   );
   const maxRow = Array.isArray(maxResult) ? maxResult[0] : maxResult?.rows?.[0];
   const maxExisting = Number(maxRow?.max_num || 0);
   const effectiveVal = Math.max(value, maxExisting);
 
   if (effectiveVal > 0) {
-    await runner.execute(sql.raw(`SELECT setval('${sequenceName}', ${effectiveVal}, true);`));
+    await execSql(runner, `SELECT setval('${sequenceName}', ${effectiveVal}, true);`);
+  }
+}
+
+export async function resyncAllSequences(tx?: any): Promise<void> {
+  const prefixes: SequenceType[] = [
+    "BCIS-SUB",
+    "BCIS-SA",
+    "BCIS-INV",
+    "BCIS-REC",
+    "BCIS-BATCH",
+    "BCIS-REMIT",
+    "BCIS-RECON",
+  ];
+  for (const prefix of prefixes) {
+    await setSequenceValue(prefix, 1, tx);
   }
 }

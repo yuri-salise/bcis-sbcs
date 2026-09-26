@@ -2138,6 +2138,112 @@
           }
         }
       }
+    },
+    "/api/v1/system/backups": {
+      "get": {
+        "tags": [
+          "System & Backup"
+        ],
+        "description": "List historical backups with size, checksum, and verification status",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "System & Backup"
+        ],
+        "description": "Generate a new cryptographic database/system backup",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/system/backups/{id}": {
+      "get": {
+        "tags": [
+          "System & Backup"
+        ],
+        "description": "Get detailed metadata for a specific backup",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/system/backups/{id}/verify": {
+      "post": {
+        "tags": [
+          "System & Backup"
+        ],
+        "description": "Verify backup SHA-256 checksum and schema manifest against disk storage",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/system/backups/{id}/restore": {
+      "post": {
+        "tags": [
+          "System & Backup"
+        ],
+        "description": "Restore entire database state and resynchronize sequences from approved backup",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "id",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/system/database/integrity": {
+      "get": {
+        "tags": [
+          "System & Backup"
+        ],
+        "description": "Run automated database integrity checks (orphans, balance drift, sequence health)",
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
     }
   },
   "servers": [

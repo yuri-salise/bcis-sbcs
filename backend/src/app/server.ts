@@ -15,6 +15,7 @@ import { gcashRoutes } from "../modules/gcash/gcash.routes.js";
 import { collectionsRoutes } from "../modules/collections/collections.routes.js";
 import { receivablesRoutes } from "../modules/receivables/receivables.routes.js";
 import { reportsRoutes } from "../modules/reports/reports.routes.js";
+import { backupRoutes } from "../modules/backup/backup.routes.js";
 
 export function buildServer(): FastifyInstance {
   const server = Fastify({
@@ -49,6 +50,16 @@ export function buildServer(): FastifyInstance {
     origin: env.CORS_ORIGIN.split(",").map((o) => o.trim()),
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  });
+
+  // Security Headers & Hardening Hook
+  server.addHook("onSend", async (_request, reply, payload) => {
+    reply.header("X-Content-Type-Options", "nosniff");
+    reply.header("X-Frame-Options", "DENY");
+    reply.header("X-XSS-Protection", "1; mode=block");
+    reply.header("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+    reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
+    return payload;
   });
 
   // OpenAPI / Swagger Documentation
@@ -149,6 +160,7 @@ export function buildServer(): FastifyInstance {
   server.register(collectionsRoutes, { prefix: "/api/v1" });
   server.register(receivablesRoutes, { prefix: "/api/v1" });
   server.register(reportsRoutes, { prefix: "/api/v1" });
+  server.register(backupRoutes, { prefix: "/api/v1" });
 
   return server;
 }

@@ -23,6 +23,8 @@ yarn-debug.log*
 pnpm-debug.log*
 uploads/
 .drizzle/
+backups/
+**/backups/
 
 # Desktop / Tauri build artifacts
 src-tauri/target/
