@@ -28,6 +28,8 @@ import { PaymentsPage } from "../features/payments/PaymentsPage";
 import { GcashVerificationPage } from "../features/gcash/GcashVerificationPage";
 import { CollectionsPage } from "../features/collections/CollectionsPage";
 import { ReceivablesPage } from "../features/receivables/ReceivablesPage";
+import { DashboardPage } from "../features/dashboard/DashboardPage";
+import { ReportsPage } from "../features/reports/ReportsPage";
 
 function AppContent() {
   const { user, roles, permissions, isAuthenticated, isLoading, logout, hasPermission } = useAuth();
@@ -238,6 +240,104 @@ function AppContent() {
           {activeTab === "receivables" && <ReceivablesPage />}
 
           {activeTab === "dashboard" && (
+            <div className="space-y-6">
+              <DashboardPage />
+
+              {/* Subsystem Health Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                {/* API Server Card */}
+                <div className="p-5 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded bg-blue-50 text-[#2563EB]">
+                        <Server className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-[#0F172A]">Fastify API Server</h4>
+                        <p className="text-xs text-[#64748B]">Port 3001 &bull; REST API</p>
+                      </div>
+                    </div>
+                    {isConnected ? (
+                      <CheckCircle2 className="w-5 h-5 text-[#059669]" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-[#DC2626]" />
+                    )}
+                  </div>
+                  <div className="text-xs text-[#64748B] pt-2 border-t border-[#F1F5F9] space-y-1">
+                    <div className="flex justify-between">
+                      <span>Status:</span>
+                      <span className="font-semibold text-[#0F172A]">{health?.status || "disconnected"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Uptime:</span>
+                      <span className="font-mono text-[#0F172A]">
+                        {health ? `${Math.floor(health.uptime)}s` : "0s"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PostgreSQL Card */}
+                <div className="p-5 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded bg-indigo-50 text-indigo-600">
+                        <Database className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-[#0F172A]">PostgreSQL 17</h4>
+                        <p className="text-xs text-[#64748B]">Port 5432 &bull; bcis_db</p>
+                      </div>
+                    </div>
+                    {isDbReady ? (
+                      <CheckCircle2 className="w-5 h-5 text-[#059669]" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-[#DC2626]" />
+                    )}
+                  </div>
+                  <div className="text-xs text-[#64748B] pt-2 border-t border-[#F1F5F9] space-y-1">
+                    <div className="flex justify-between">
+                      <span>State:</span>
+                      <span className="font-semibold text-[#0F172A]">{readiness?.database || "offline"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Client Direct DB Access:</span>
+                      <span className="font-semibold text-emerald-600">Blocked (Forbidden)</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Security Boundary Card */}
+                <div className="p-5 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded bg-emerald-50 text-[#059669]">
+                        <ShieldCheck className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-[#0F172A]">Session Security</h4>
+                        <p className="text-xs text-[#64748B]">Argon2id &bull; SHA-256 Tokens</p>
+                      </div>
+                    </div>
+                    <CheckCircle2 className="w-5 h-5 text-[#059669]" />
+                  </div>
+                  <div className="text-xs text-[#64748B] pt-2 border-t border-[#F1F5F9] space-y-1">
+                    <div className="flex justify-between">
+                      <span>Lockout Policy:</span>
+                      <span className="font-semibold text-[#0F172A]">5 Fails &rarr; 15 min lock</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Audit Trail:</span>
+                      <span className="font-semibold text-emerald-600">Immutable Enabled</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {activeTab === "reports" && <ReportsPage />}
+
+          {activeTab === "administration" && (
             <>
               {/* Welcome Banner */}
               <div className="p-6 bg-white border border-[#E2E8F0] rounded-lg shadow-xs flex items-center justify-between">
@@ -314,100 +414,18 @@ function AppContent() {
             )}
           </div>
 
-          {/* Subsystem Health Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {/* API Server Card */}
-            <div className="p-5 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded bg-blue-50 text-[#2563EB]">
-                    <Server className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-[#0F172A]">Fastify API Server</h4>
-                    <p className="text-xs text-[#64748B]">Port 3001 &bull; REST API</p>
-                  </div>
-                </div>
-                {isConnected ? (
-                  <CheckCircle2 className="w-5 h-5 text-[#059669]" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-[#DC2626]" />
-                )}
-              </div>
-              <div className="text-xs text-[#64748B] pt-2 border-t border-[#F1F5F9] space-y-1">
-                <div className="flex justify-between">
-                  <span>Status:</span>
-                  <span className="font-semibold text-[#0F172A]">{health?.status || "disconnected"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Uptime:</span>
-                  <span className="font-mono text-[#0F172A]">
-                    {health ? `${Math.floor(health.uptime)}s` : "0s"}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* PostgreSQL Card */}
-            <div className="p-5 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded bg-indigo-50 text-indigo-600">
-                    <Database className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-[#0F172A]">PostgreSQL 17</h4>
-                    <p className="text-xs text-[#64748B]">Port 5432 &bull; bcis_db</p>
-                  </div>
-                </div>
-                {isDbReady ? (
-                  <CheckCircle2 className="w-5 h-5 text-[#059669]" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-[#DC2626]" />
-                )}
-              </div>
-              <div className="text-xs text-[#64748B] pt-2 border-t border-[#F1F5F9] space-y-1">
-                <div className="flex justify-between">
-                  <span>State:</span>
-                  <span className="font-semibold text-[#0F172A]">{readiness?.database || "offline"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Client Direct DB Access:</span>
-                  <span className="font-semibold text-emerald-600">Blocked (Forbidden)</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Security Boundary Card */}
-            <div className="p-5 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded bg-emerald-50 text-[#059669]">
-                    <ShieldCheck className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-semibold text-[#0F172A]">Session Security</h4>
-                    <p className="text-xs text-[#64748B]">Argon2id &bull; SHA-256 Tokens</p>
-                  </div>
-                </div>
-                <CheckCircle2 className="w-5 h-5 text-[#059669]" />
-              </div>
-              <div className="text-xs text-[#64748B] pt-2 border-t border-[#F1F5F9] space-y-1">
-                <div className="flex justify-between">
-                  <span>Lockout Policy:</span>
-                  <span className="font-semibold text-[#0F172A]">5 Fails &rarr; 15 min lock</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Audit Trail:</span>
-                  <span className="font-semibold text-emerald-600">Immutable Enabled</span>
-                </div>
-              </div>
-            </div>
-          </div>
             </>
           )}
 
-          {activeTab !== "dashboard" && activeTab !== "subscribers" && activeTab !== "billing" && activeTab !== "payments" && activeTab !== "gcash" && activeTab !== "collections" && (
+          {activeTab !== "dashboard" &&
+           activeTab !== "subscribers" &&
+           activeTab !== "billing" &&
+           activeTab !== "payments" &&
+           activeTab !== "gcash" &&
+           activeTab !== "collections" &&
+           activeTab !== "receivables" &&
+           activeTab !== "reports" &&
+           activeTab !== "administration" && (
             <div className="p-12 bg-white border border-[#E2E8F0] rounded-lg text-center space-y-2">
               <h3 className="text-base font-bold text-[#0F172A] capitalize">{activeTab} Module</h3>
               <p className="text-xs text-[#64748B] max-w-md mx-auto">

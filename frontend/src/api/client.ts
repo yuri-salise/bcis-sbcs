@@ -827,6 +827,209 @@ export class ApiClient {
   public async listTechnicians(): Promise<{ data: TechnicianUser[] }> {
     return this.request<{ data: TechnicianUser[] }>(`/receivables/technicians`);
   }
+
+  // --- Phase 8: Reports, General Ledger, Audit Trails & Compliance ---
+
+  public async getDashboardMetrics(): Promise<DashboardMetrics> {
+    return this.request<DashboardMetrics>("/reports/dashboard");
+  }
+
+  public async getDailyCollectionReport(params: {
+    date?: string;
+    collectionAreaId?: string;
+    paymentMethod?: string;
+    cashierUserId?: string;
+  } = {}): Promise<DailyCollectionReport> {
+    const searchParams = new URLSearchParams();
+    if (params.date) searchParams.set("date", params.date);
+    if (params.collectionAreaId) searchParams.set("collectionAreaId", params.collectionAreaId);
+    if (params.paymentMethod) searchParams.set("paymentMethod", params.paymentMethod);
+    if (params.cashierUserId) searchParams.set("cashierUserId", params.cashierUserId);
+    return this.request<DailyCollectionReport>(`/reports/daily-collection?${searchParams.toString()}`);
+  }
+
+  public async getMonthlyCollectionReport(params: {
+    yearMonth?: string;
+    collectionAreaId?: string;
+  } = {}): Promise<MonthlyCollectionReport> {
+    const searchParams = new URLSearchParams();
+    if (params.yearMonth) searchParams.set("yearMonth", params.yearMonth);
+    if (params.collectionAreaId) searchParams.set("collectionAreaId", params.collectionAreaId);
+    return this.request<MonthlyCollectionReport>(`/reports/monthly-collection?${searchParams.toString()}`);
+  }
+
+  public async getBillingVsCollectionReport(params: {
+    year?: string | number;
+  } = {}): Promise<BillingVsCollectionReport> {
+    const searchParams = new URLSearchParams();
+    if (params.year) searchParams.set("year", params.year.toString());
+    return this.request<BillingVsCollectionReport>(`/reports/billing-vs-collection?${searchParams.toString()}`);
+  }
+
+  public async getFullAgingReport(params: {
+    asOfDate?: string;
+    collectionAreaId?: string;
+  } = {}): Promise<FullAgingReport> {
+    const searchParams = new URLSearchParams();
+    if (params.asOfDate) searchParams.set("asOfDate", params.asOfDate);
+    if (params.collectionAreaId) searchParams.set("collectionAreaId", params.collectionAreaId);
+    return this.request<FullAgingReport>(`/reports/aging?${searchParams.toString()}`);
+  }
+
+  public async getSubscriberSOA(subscriberId: string, asOfDate?: string): Promise<SubscriberSOA> {
+    const searchParams = new URLSearchParams();
+    if (asOfDate) searchParams.set("asOfDate", asOfDate);
+    return this.request<SubscriberSOA>(`/reports/soa/${subscriberId}?${searchParams.toString()}`);
+  }
+
+  public async getCollectorPerformanceReport(params: {
+    startDate?: string;
+    endDate?: string;
+    collectorId?: string;
+  } = {}): Promise<CollectorPerformanceReport> {
+    const searchParams = new URLSearchParams();
+    if (params.startDate) searchParams.set("startDate", params.startDate);
+    if (params.endDate) searchParams.set("endDate", params.endDate);
+    if (params.collectorId) searchParams.set("collectorId", params.collectorId);
+    return this.request<CollectorPerformanceReport>(`/reports/collector-performance?${searchParams.toString()}`);
+  }
+
+  public async getPaymentMethodSummary(params: {
+    startDate?: string;
+    endDate?: string;
+  } = {}): Promise<PaymentMethodSummaryReport> {
+    const searchParams = new URLSearchParams();
+    if (params.startDate) searchParams.set("startDate", params.startDate);
+    if (params.endDate) searchParams.set("endDate", params.endDate);
+    return this.request<PaymentMethodSummaryReport>(`/reports/payment-methods?${searchParams.toString()}`);
+  }
+
+  public async getSubscriberMasterList(params: {
+    status?: string;
+    collectionAreaId?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<SubscriberMasterListReport> {
+    const searchParams = new URLSearchParams();
+    if (params.status) searchParams.set("status", params.status);
+    if (params.collectionAreaId) searchParams.set("collectionAreaId", params.collectionAreaId);
+    if (params.search) searchParams.set("search", params.search);
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+    return this.request<SubscriberMasterListReport>(`/reports/subscribers-master?${searchParams.toString()}`);
+  }
+
+  public async getPaymentReversalsReport(params: {
+    startDate?: string;
+    endDate?: string;
+  } = {}): Promise<PaymentReversalsReport> {
+    const searchParams = new URLSearchParams();
+    if (params.startDate) searchParams.set("startDate", params.startDate);
+    if (params.endDate) searchParams.set("endDate", params.endDate);
+    return this.request<PaymentReversalsReport>(`/reports/payment-reversals?${searchParams.toString()}`);
+  }
+
+  public async getAuditActivityReport(params: {
+    startDate?: string;
+    endDate?: string;
+    actorUserId?: string;
+    entityType?: string;
+    action?: string;
+    page?: number;
+    limit?: number;
+  } = {}): Promise<AuditActivityReport> {
+    const searchParams = new URLSearchParams();
+    if (params.startDate) searchParams.set("startDate", params.startDate);
+    if (params.endDate) searchParams.set("endDate", params.endDate);
+    if (params.actorUserId) searchParams.set("actorUserId", params.actorUserId);
+    if (params.entityType) searchParams.set("entityType", params.entityType);
+    if (params.action) searchParams.set("action", params.action);
+    if (params.page) searchParams.set("page", params.page.toString());
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+    return this.request<AuditActivityReport>(`/reports/audit-activity?${searchParams.toString()}`);
+  }
+
+  public async downloadReportFile(
+    reportType: string,
+    format: "xlsx" | "pdf" | "csv",
+    params: Record<string, any> = {}
+  ): Promise<void> {
+    let endpoint = "";
+    const searchParams = new URLSearchParams();
+    searchParams.set("format", format);
+
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined && value !== null && key !== "subscriberId") {
+        searchParams.set(key, String(value));
+      }
+    }
+
+    switch (reportType) {
+      case "DAILY_COLLECTION":
+        endpoint = `/reports/daily-collection/export?${searchParams.toString()}`;
+        break;
+      case "MONTHLY_COLLECTION":
+        endpoint = `/reports/monthly-collection/export?${searchParams.toString()}`;
+        break;
+      case "BILLING_VS_COLLECTION":
+        endpoint = `/reports/billing-vs-collection/export?${searchParams.toString()}`;
+        break;
+      case "AR_AGING":
+        endpoint = `/reports/aging/export?${searchParams.toString()}`;
+        break;
+      case "SOA":
+        endpoint = `/reports/soa/${params.subscriberId}/export?${searchParams.toString()}`;
+        break;
+      case "COLLECTOR_PERFORMANCE":
+        endpoint = `/reports/collector-performance/export?${searchParams.toString()}`;
+        break;
+      case "PAYMENT_METHOD_SUMMARY":
+        endpoint = `/reports/payment-methods/export?${searchParams.toString()}`;
+        break;
+      case "SUBSCRIBER_MASTER_LIST":
+        endpoint = `/reports/subscribers-master/export?${searchParams.toString()}`;
+        break;
+      case "PAYMENT_REVERSALS":
+        endpoint = `/reports/payment-reversals/export?${searchParams.toString()}`;
+        break;
+      case "AUDIT_ACTIVITY":
+        endpoint = `/reports/audit-activity/export?${searchParams.toString()}`;
+        break;
+      default:
+        throw new Error(`Unsupported export report type: ${reportType}`);
+    }
+
+    const url = `${this.baseUrl}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
+    const headers = new Headers();
+    if (this.token) {
+      headers.set("Authorization", `Bearer ${this.token}`);
+    }
+
+    const response = await fetch(url, { headers });
+    if (!response.ok) {
+      throw new Error(`Failed to download report: ${response.statusText}`);
+    }
+
+    const blob = await response.blob();
+    const contentDisposition = response.headers.get("content-disposition");
+    let filename = `BCIS-Report-${reportType}.${format}`;
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="?([^";]+)"?/);
+      if (match && match[1]) {
+        filename = match[1];
+      }
+    }
+
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+  }
 }
 
 export interface BillingCycle {
@@ -1437,4 +1640,393 @@ export interface TechnicianUser {
   username: string;
 }
 
+// --- Phase 8: Reports, General Ledger, Audit Trails & Compliance Interfaces ---
+
+export interface DashboardMetrics {
+  kpis: {
+    currentReceivable: string;
+    overdueReceivable: string;
+    todayCollection: string;
+    currentBilling: string;
+    pendingGcashCount: number;
+    reconciliationExceptionsCount: number;
+  };
+  supporting: {
+    billingVsCollectionTrend: Array<{
+      cycleId: string;
+      cycleCode: string;
+      period: string;
+      billedAmount: string;
+      collectedAmount: string;
+      billedNumber: string;
+      collectedNumber: string;
+    }>;
+    paymentMethodBreakdown: Array<{
+      method: string;
+      amount: string;
+      count: number;
+      percentage: number;
+    }>;
+    agingSummary: {
+      totalReceivable: string;
+      current: { amount: string; count: number; percentage: number };
+      days1to30: { amount: string; count: number; percentage: number };
+      days31to60: { amount: string; count: number; percentage: number };
+      days61to90: { amount: string; count: number; percentage: number };
+      days90Plus: { amount: string; count: number; percentage: number };
+    };
+    topCollectors: Array<{
+      id: string;
+      name: string;
+      code: string;
+      areaName: string;
+      collectedThisMonth: string;
+      batchesCount: number;
+      efficiencyPercentage: number;
+    }>;
+    delinquencyAlerts: {
+      overdueInvoicesCount: number;
+      daysOverdue30PlusCount: number;
+    };
+    recentPayments: Array<{
+      id: string;
+      receiptNumber: string;
+      paymentDate: string;
+      amount: string;
+      paymentMethod: string;
+      subscriberName: string;
+      collectorName: string;
+    }>;
+  };
+  asOfDate: string;
+}
+
+export interface DailyCollectionReport {
+  reportType: "DAILY_COLLECTION";
+  date: string;
+  totalCollected: string;
+  rawTotalCollected: string;
+  totalTransactions: number;
+  byPaymentMethod: Array<{
+    method: string;
+    amount: string;
+    count: number;
+    percentage: number;
+  }>;
+  byCashier: Array<{
+    cashierId: string;
+    cashierName: string;
+    amount: string;
+    count: number;
+  }>;
+  byCollector: Array<{
+    collectorId: string;
+    collectorName: string;
+    amount: string;
+    count: number;
+  }>;
+  items: Array<{
+    id: string;
+    receiptNumber: string;
+    paymentDate: string;
+    createdAt: string;
+    subscriberAccountNumber: string;
+    subscriberDisplayName: string;
+    paymentMethod: string;
+    referenceNumber: string;
+    amount: string;
+    rawAmount: string;
+    cashierName: string;
+    collectorName: string;
+    batchNumber: string;
+    notes: string;
+  }>;
+}
+
+export interface MonthlyCollectionReport {
+  reportType: "MONTHLY_COLLECTION";
+  yearMonth: string;
+  startDate: string;
+  endDate: string;
+  totalCollected: string;
+  rawTotalCollected: string;
+  totalTransactions: number;
+  dailyAverage: string;
+  highestDay: {
+    date: string;
+    amount: string;
+  };
+  byPaymentMethod: Array<{
+    method: string;
+    amount: string;
+    count: number;
+    percentage: number;
+  }>;
+  days: Array<{
+    date: string;
+    amount: string;
+    rawAmount: string;
+    transactionsCount: number;
+  }>;
+}
+
+export interface BillingVsCollectionReport {
+  reportType: "BILLING_VS_COLLECTION";
+  year: string | number;
+  overall: {
+    totalBilled: string;
+    rawTotalBilled: string;
+    totalCollected: string;
+    rawTotalCollected: string;
+    outstandingBalance: string;
+    rawOutstandingBalance: string;
+    collectionEfficiency: number;
+    invoicesCount: number;
+    paidInvoicesCount: number;
+  };
+  cycles: Array<{
+    cycleId: string;
+    cycleCode: string;
+    startDate: string;
+    endDate: string;
+    dueDate: string;
+    status: string;
+    invoicesCount: number;
+    paidInvoicesCount: number;
+    totalBilled: string;
+    rawTotalBilled: string;
+    totalCollected: string;
+    rawTotalCollected: string;
+    outstandingBalance: string;
+    rawOutstandingBalance: string;
+    collectionEfficiency: number;
+  }>;
+}
+
+export interface FullAgingReport {
+  reportType: "AR_AGING";
+  asOfDate: string;
+  summary: AgingReportSummary;
+  byArea: Array<{
+    areaId: string;
+    areaName: string;
+    current: string;
+    days1to30: string;
+    days31to60: string;
+    days61to90: string;
+    days90Plus: string;
+    total: string;
+  }>;
+  subscribers: Array<{
+    subscriberId: string;
+    subscriberAccountNumber: string;
+    displayName: string;
+    mobile: string;
+    areaName: string;
+    current: string;
+    days1to30: string;
+    days31to60: string;
+    days61to90: string;
+    days90Plus: string;
+    totalDue: string;
+    maxDaysPastDue: number;
+  }>;
+}
+
+export interface SubscriberSOA {
+  statementNumber: string;
+  statementDate: string;
+  company: {
+    name: string;
+    address: string;
+    contactNumber: string;
+    email: string;
+    tin: string;
+  };
+  subscriber: {
+    id: string;
+    accountNumber: string;
+    displayName: string;
+    address: string;
+    mobileNumber: string;
+    email: string | null;
+    status: string;
+  };
+  serviceAccounts: Array<{
+    id: string;
+    serviceAccountNumber: string;
+    planName: string;
+    monthlyRate: string;
+    area: string;
+    collector: string;
+    status: string;
+  }>;
+  financialSummary: {
+    previousBalance: string;
+    currentCharges: string;
+    totalAmountDue: string;
+    rawTotalAmountDue: string;
+    dueDate: string;
+    aging: {
+      current: string;
+      days1to30: string;
+      days31to60: string;
+      days61to90: string;
+      days90Plus: string;
+    };
+  };
+  invoices: Array<{
+    invoiceNumber: string;
+    invoiceDate: string;
+    dueDate: string;
+    cycleCode: string;
+    serviceAccountNumber: string;
+    totalAmount: string;
+    balanceDue: string;
+    status: string;
+  }>;
+  payments: Array<{
+    receiptNumber: string;
+    paymentDate: string;
+    amount: string;
+    paymentMethod: string;
+    referenceNumber: string;
+  }>;
+  ledger: Array<{
+    entryNo: number;
+    postedAt: string;
+    referenceType: string;
+    description: string;
+    debitAmount: string;
+    creditAmount: string;
+    runningBalance: string;
+  }>;
+}
+
+export interface CollectorPerformanceReport {
+  reportType: "COLLECTOR_PERFORMANCE";
+  startDate: string;
+  endDate: string;
+  overall: {
+    totalBatches: number;
+    totalExpected: string;
+    rawTotalExpected: string;
+    totalCollected: string;
+    rawTotalCollected: string;
+    totalRemitted: string;
+    rawTotalRemitted: string;
+    totalShortage: string;
+    totalOverage: string;
+    overallEfficiency: number;
+  };
+  collectors: Array<{
+    collectorId: string;
+    collectorCode: string;
+    name: string;
+    contactNumber: string;
+    assignedArea: string;
+    batchesCount: number;
+    reconciledBatchesCount: number;
+    expectedCash: string;
+    rawExpectedCash: string;
+    collectedCash: string;
+    rawCollectedCash: string;
+    remittedCash: string;
+    rawRemittedCash: string;
+    shortageAmount: string;
+    overageAmount: string;
+    collectionEfficiency: number;
+    remittanceAccuracy: number;
+    recentBatches: Array<{
+      batchNumber: string;
+      date: string;
+      status: string;
+      collected: string;
+      remitted: string;
+      difference: string;
+    }>;
+  }>;
+}
+
+export interface PaymentMethodSummaryReport {
+  reportType: "PAYMENT_METHOD_SUMMARY";
+  startDate: string;
+  endDate: string;
+  totalAmount: string;
+  rawTotalAmount: string;
+  totalTransactions: number;
+  methods: Array<{
+    method: string;
+    amount: string;
+    rawAmount: string;
+    count: number;
+    percentage: number;
+    averageAmount: string;
+  }>;
+}
+
+export interface SubscriberMasterListReport {
+  reportType: "SUBSCRIBER_MASTER_LIST";
+  pagination: PaginationInfo;
+  items: Array<{
+    id: string;
+    accountNumber: string;
+    displayName: string;
+    contactNumber: string;
+    primaryArea: string;
+    primaryPlan: string;
+    serviceAccountsCount: number;
+    balanceDue: string;
+    rawBalanceDue: string;
+    status: string;
+    registeredDate: string;
+  }>;
+}
+
+export interface PaymentReversalsReport {
+  reportType: "PAYMENT_REVERSALS";
+  startDate: string;
+  endDate: string;
+  totalReversedAmount: string;
+  rawTotalReversedAmount: string;
+  totalCount: number;
+  items: Array<{
+    id: string;
+    paymentNumber: string;
+    receiptNumber: string;
+    paymentDate: string;
+    amount: string;
+    rawAmount: string;
+    paymentMethod: string;
+    referenceNumber: string;
+    subscriberAccountNumber: string;
+    subscriberDisplayName: string;
+    reversedAt: string;
+    reversedByName: string;
+    reversalReason: string;
+  }>;
+}
+
+export interface AuditActivityReport {
+  reportType: "AUDIT_ACTIVITY";
+  pagination: PaginationInfo;
+  items: Array<{
+    id: string;
+    occurredAt: string;
+    actorUserId: string | null;
+    actorName: string;
+    actorUsername: string;
+    action: string;
+    entityType: string;
+    entityId: string | null;
+    requestId: string | null;
+    reason: string;
+    ipAddress: string;
+    metadata: any;
+    oldValues: any;
+    newValues: any;
+  }>;
+}
+
 export const api = new ApiClient();
+
