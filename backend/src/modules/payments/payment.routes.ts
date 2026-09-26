@@ -9,17 +9,30 @@ const PreviewAllocationSchema = z.object({
   amount: z.string().min(1),
 });
 
-const CreatePaymentBodySchema = z.object({
-  subscriberId: z.string().uuid(),
-  serviceAccountId: z.string().uuid().optional(),
-  paymentDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  paymentMethod: z.enum(["CASH", "GCASH", "BANK_TRANSFER", "CHECK", "OTHER"]),
-  referenceNumber: z.string().max(64).optional(),
-  amountPaid: z.string().regex(/^\d+(\.\d{1,2})?$/),
-  tenderedAmount: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
-  collectorId: z.string().uuid().optional(),
-  notes: z.string().max(500).optional(),
-});
+const CreatePaymentBodySchema = z
+  .object({
+    subscriberId: z.string().uuid(),
+    serviceAccountId: z.string().uuid().optional(),
+    paymentDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    paymentMethod: z.enum(["CASH", "GCASH", "BANK_TRANSFER", "CHECK", "OTHER"]),
+    referenceNumber: z.string().max(64).optional(),
+    amountPaid: z.string().regex(/^\d+(\.\d{1,2})?$/),
+    tenderedAmount: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+    collectorId: z.string().uuid().optional(),
+    notes: z.string().max(500).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.paymentMethod === "GCASH" && (!data.referenceNumber || !data.referenceNumber.trim())) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "GCash reference number is strictly required for GCash transactions (AT-05)",
+      path: ["referenceNumber"],
+    }
+  );
 
 const ReversePaymentBodySchema = z.object({
   reason: z.string().min(5, "Reversal reason must be at least 5 characters"),

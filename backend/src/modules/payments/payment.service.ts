@@ -3,6 +3,7 @@ import { db } from "../../db/db.js";
 import {
   payments,
   paymentAllocations,
+  paymentProofs,
   invoices,
   billingCycles,
   ledgerEntries,
@@ -198,6 +199,23 @@ export class PaymentService {
       if (existingRef) {
         throw new Error(
           `Duplicate payment reference '${trimmedRef}'. A non-reversed payment with Receipt #${existingRef.receiptNumber} already exists with this reference.`
+        );
+      }
+
+      const [existingProof] = await q
+        .select({ id: paymentProofs.id, referenceNumber: paymentProofs.referenceNumber })
+        .from(paymentProofs)
+        .where(
+          and(
+            eq(paymentProofs.referenceNumber, trimmedRef),
+            eq(paymentProofs.verificationStatus, "VERIFIED")
+          )
+        )
+        .limit(1);
+
+      if (existingProof) {
+        throw new Error(
+          `Duplicate payment reference '${trimmedRef}'. A verified GCash proof (ID: ${existingProof.id}) already exists with this reference (AT-05).`
         );
       }
     }

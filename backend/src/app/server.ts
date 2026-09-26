@@ -37,6 +37,26 @@ export function buildServer(): FastifyInstance {
   // Sensible defaults
   server.register(sensible);
 
+  // Graceful empty JSON request body parser
+  // Prevents FST_ERR_CTP_EMPTY_JSON_BODY on bodyless POST/PUT requests with Content-Type: application/json
+  server.addContentTypeParser(
+    "application/json",
+    { parseAs: "string" },
+    (_req, body: string, done) => {
+      if (!body || body.trim() === "") {
+        done(null, {});
+        return;
+      }
+      try {
+        const json = JSON.parse(body);
+        done(null, json);
+      } catch (err: any) {
+        err.statusCode = 400;
+        done(err, undefined);
+      }
+    }
+  );
+
   // Multipart file upload support for payment proof attachments
   server.register(multipart, {
     limits: {

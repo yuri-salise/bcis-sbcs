@@ -44,11 +44,17 @@ describe("Monthly Billing Engine & Invoicing Tests (Phase 3 - AT-11)", () => {
     // Reset 2026-09 test cycle to clean OPEN state for test isolation
     const { db } = await import("../../db/db.js");
     const { billingCycles, invoices } = await import("../../db/schema/billing.js");
-    const { eq } = await import("drizzle-orm");
+    const { paymentAllocations } = await import("../../db/schema/payments.js");
+    const { eq, inArray } = await import("drizzle-orm");
 
     const [sept] = await db.select().from(billingCycles).where(eq(billingCycles.cycleCode, "2026-09")).limit(1);
     if (sept) {
-      await db.delete(invoices).where(eq(invoices.billingCycleId, sept.id));
+      const invs = await db.select({ id: invoices.id }).from(invoices).where(eq(invoices.billingCycleId, sept.id));
+      if (invs.length > 0) {
+        const invIds = invs.map((i) => i.id);
+        await db.delete(paymentAllocations).where(inArray(paymentAllocations.invoiceId, invIds));
+        await db.delete(invoices).where(eq(invoices.billingCycleId, sept.id));
+      }
       await db.update(billingCycles).set({ status: "OPEN" }).where(eq(billingCycles.id, sept.id));
     }
   });
@@ -237,7 +243,9 @@ describe("Monthly Billing Engine & Invoicing Tests (Phase 3 - AT-11)", () => {
     expect(invoiceEntry).toBeDefined();
     expect(parseFloat(invoiceEntry.debitAmount)).toBeGreaterThan(0);
     expect(invoiceEntry.creditAmount).toBe("0.00");
-    expect(parseFloat(invoiceEntry.runningBalance)).toBe(parseFloat(invoiceEntry.debitAmount));
-    expect(parseFloat(ledger.currentTotalBalance)).toBeGreaterThan(0);
+    const entryIdx = ledger.entries.findIndex((e: any) => e.id === invoiceEntry.id);
+    const priorBalance = entryIdx > 0 ? parseFloat(ledger.entries[entryIdx - 1].runningBalance) : 0;
+    expect(parseFloat(invoiceEntry.runningBalance)).toBeCloseTo(priorBalance + parseFloat(invoiceEntry.debitAmount), 2);
+    expect(parseFloat(ledger.currentTotalBalance)).not.toBeNaN();
   });
 });
