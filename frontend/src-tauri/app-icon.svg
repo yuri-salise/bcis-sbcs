@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#059669" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded App Background -->
+  <rect width="512" height="512" rx="112" fill="url(#bg)" />
+
+  <!-- Outer Ring Accent -->
+  <rect x="24" y="24" width="464" height="464" rx="96" fill="none" stroke="url(#accent)" stroke-width="6" opacity="0.35" />
+
+  <!-- Shield / Document Base -->
+  <path d="M156 128 H356 C374 128 388 142 388 160 V332 C388 380 256 424 256 424 C256 424 124 380 124 332 V160 C124 142 138 128 156 128 Z"
+        fill="#1e293b" stroke="url(#accent)" stroke-width="12" stroke-linejoin="round" />
+
+  <!-- Signal / Broadcast Waves -->
+  <path d="M184 210 A104 104 0 0 1 328 210" fill="none" stroke="url(#accent)" stroke-width="14" stroke-linecap="round" />
+  <path d="M212 246 A64 64 0 0 1 300 246" fill="none" stroke="url(#glow)" stroke-width="12" stroke-linecap="round" />
+
+  <!-- Center Node / Core -->
+  <circle cx="256" cy="286" r="22" fill="url(#accent)" />
+
+  <!-- Currency / Ledger Inset Symbol -->
+  <path d="M236 338 H276 M256 322 V366" stroke="#f8fafc" stroke-width="8" stroke-linecap="round" />
+
+  <!-- Brand Typography / Subtitle -->
+  <text x="256" y="468" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="34" font-weight="800" fill="#38bdf8" letter-spacing="4">BCIS</text>
+</svg>
