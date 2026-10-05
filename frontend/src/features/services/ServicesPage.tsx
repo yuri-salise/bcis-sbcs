@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Clock,
   AlertCircle,
+  Plus,
 } from "lucide-react";
 import {
   api,
@@ -21,6 +22,7 @@ import {
   type Collector,
 } from "../../api/client";
 import { cn, formatMoney } from "../../lib/utils";
+import { AddServicePlanModal } from "./AddServicePlanModal";
 
 type ServiceTab = "plans" | "areas" | "policies";
 type TypeFilter = "ALL" | "INTERNET" | "CABLE" | "COMBO";
@@ -32,6 +34,8 @@ export const ServicesPage: React.FC = () => {
   const [collectors, setCollectors] = useState<Collector[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -264,6 +268,14 @@ export const ServicesPage: React.FC = () => {
                   {t === "ALL" ? "All Packages" : t === "INTERNET" ? "Fiber Internet" : t === "CABLE" ? "Cable TV" : "Combo Bundles"}
                 </button>
               ))}
+              
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-md shadow-2xs hover:bg-blue-700 transition-colors cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add Plan
+              </button>
             </div>
           )}
         </div>
@@ -543,6 +555,15 @@ export const ServicesPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      <AddServicePlanModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={(newPlan) => {
+          setPlans((prev) => [...prev, newPlan]);
+          loadData(); // optional reload to get fully populated relations
+        }}
+      />
     </div>
   );
 };

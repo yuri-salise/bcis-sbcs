@@ -149,6 +149,7 @@ export interface Subscriber {
   addresses?: Address[];
   serviceAccounts?: ServiceAccount[];
   serviceAccountsCount?: number;
+  totalBalanceDue?: string;
 }
 
 export interface PaginatedResult<T> {
@@ -412,6 +413,13 @@ export class ApiClient {
 
   public async listServicePlans(): Promise<ServicePlan[]> {
     return this.request<ServicePlan[]>("/service-plans");
+  }
+
+  public async createServicePlan(payload: any): Promise<ServicePlan> {
+    return this.request<ServicePlan>("/service-plans", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   }
 
   public async listCollectionAreas(): Promise<CollectionArea[]> {
@@ -1828,10 +1836,14 @@ export interface MonthlyCollectionReport {
     percentage: number;
   }>;
   days: Array<{
+    dayNumber: number;
     date: string;
-    amount: string;
-    rawAmount: string;
-    transactionsCount: number;
+    totalAmount: string;
+    rawTotalAmount: string;
+    transactionCount: number;
+    cashAmount: string;
+    nonCashAmount: string;
+    cumulativeAmount: string;
   }>;
 }
 
