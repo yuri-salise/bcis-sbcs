@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   ShieldAlert,
   Clock,
+  Layers,
 } from "lucide-react";
 import {
   api,
@@ -23,6 +24,7 @@ import {
   type PaymentMethod,
   type Subscriber,
   type PaymentAllocationPreviewResult,
+  type SubscriberSOA,
 } from "../../api/client";
 import { SubscriberCombobox } from "../subscribers/SubscriberCombobox";
 import { useAuth } from "../auth/AuthContext";
@@ -76,6 +78,27 @@ export function PaymentsPage() {
   // State: Allocation Preview
   const [previewResult, setPreviewResult] = useState<PaymentAllocationPreviewResult | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [soaData, setSoaData] = useState<SubscriberSOA | null>(null);
+
+  useEffect(() => {
+    if (selectedSub) {
+      if (typeof api.getSubscriberSOA === "function") {
+        api
+          .getSubscriberSOA(selectedSub.id)
+          .then((res) => {
+            if (res && res.financialSummary) {
+              setSoaData(res);
+            }
+          })
+          .catch((err) => {
+            console.error(err);
+            setSoaData(null);
+          });
+      }
+    } else {
+      setSoaData(null);
+    }
+  }, [selectedSub]);
 
   // Fetch Payments List
   const fetchPayments = useCallback(async () => {
@@ -944,6 +967,50 @@ export function PaymentsPage() {
               required
               autoFocus
             />
+
+            {soaData?.financialSummary && (
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                  <span className="flex items-center gap-1.5"><Layers className="w-4 h-4 text-blue-600" />Subscriber Account Snapshot</span>
+                  <span className={cn("px-2 py-0.5 rounded-full font-bold", parseFloat(soaData.financialSummary.rawTotalAmountDue || "0") > 0 ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700")}>
+                    Total Due: {soaData.financialSummary.totalAmountDue || "₱0.00"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <span className="text-slate-500 mb-1 block">Subscribed Services:</span>
+                    <ul className="space-y-1.5">
+                      {(soaData.serviceAccounts || []).filter(sa => sa.status !== "TERMINATED" && sa.status !== "DISCONNECTED").map(sa => (
+                         <li key={sa.id} className={cn("flex justify-between items-center p-2 border rounded shadow-xs", sa.status === "SUSPENDED" ? "bg-slate-50 border-slate-200" : "bg-white border-slate-200")}>
+                           <div>
+                             <p className={cn("font-semibold leading-tight flex items-center gap-1.5", sa.status === "SUSPENDED" ? "text-slate-500" : "text-slate-700")}>
+                               {sa.planName}
+                               {sa.status === "SUSPENDED" && (
+                                 <span className="px-1.5 py-0.5 rounded-[4px] bg-amber-100 text-amber-700 text-[9px] uppercase tracking-wider font-bold">Suspended</span>
+                               )}
+                             </p>
+                             <p className="text-[10px] text-slate-400 font-mono mt-0.5">{sa.serviceAccountNumber}</p>
+                           </div>
+                           <span className={cn("font-mono font-bold", sa.status === "SUSPENDED" ? "text-slate-400" : "text-blue-600")}>{sa.monthlyRate}</span>
+                         </li>
+                      ))}
+                      {(soaData.serviceAccounts || []).filter(sa => sa.status !== "TERMINATED" && sa.status !== "DISCONNECTED").length === 0 && (
+                        <li className="text-slate-500 italic p-2 border border-slate-100 rounded bg-white">No current services.</li>
+                      )}
+                    </ul>
+                  </div>
+                  <div>
+                     <span className="text-slate-500 mb-1 block">Arrears / Aging:</span>
+                     <div className="bg-white p-2.5 border border-slate-200 rounded shadow-xs space-y-1.5 font-medium">
+                       <div className="flex justify-between items-center"><span className="text-slate-600">Current:</span> <span className="font-mono text-emerald-600">{soaData.financialSummary.aging?.current || "₱0.00"}</span></div>
+                       <div className="flex justify-between items-center"><span className="text-slate-600">1-30 Days Overdue:</span> <span className="font-mono text-amber-600">{soaData.financialSummary.aging?.days1to30 || "₱0.00"}</span></div>
+                       <div className="flex justify-between items-center"><span className="text-slate-600">31-60 Days Overdue:</span> <span className="font-mono text-orange-600">{soaData.financialSummary.aging?.days31to60 || "₱0.00"}</span></div>
+                       <div className="flex justify-between items-center"><span className="text-slate-600">60+ Days Overdue:</span> <span className="font-mono text-rose-600">{soaData.financialSummary.aging?.days90Plus || "₱0.00"}</span></div>
+                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

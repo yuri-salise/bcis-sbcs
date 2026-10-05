@@ -20,13 +20,6 @@ interface SubscriberSoaModalProps {
   onOpenLedger?: (subscriberId: string) => void;
 }
 
-function formatMoney(amount: string | number | undefined): string {
-  if (amount === undefined || amount === null) return "₱0.00";
-  const num = typeof amount === "number" ? amount : parseFloat(amount.toString().replace(/,/g, ""));
-  if (isNaN(num)) return "₱0.00";
-  return `₱${num.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
 export function SubscriberSoaModal({
   subscriberId,
   asOfDate,
@@ -356,7 +349,7 @@ export function SubscriberSoaModal({
                           <td className="py-2 px-3 font-medium text-slate-900">{sa.planName}</td>
                           <td className="py-2 px-3 text-slate-600">{sa.area}</td>
                           <td className="py-2 px-3 text-right font-mono font-medium text-slate-900">
-                            {formatMoney(sa.monthlyRate)}
+                            {sa.monthlyRate}
                           </td>
                           <td className="py-2 px-3 text-center">
                             <span

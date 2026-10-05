@@ -16,6 +16,7 @@ import {
   Lock,
   FileText,
   ExternalLink,
+  AlertCircle,
 } from "lucide-react";
 import {
   api,
@@ -278,8 +279,10 @@ export function SubscribersPage() {
                   </td>
                 </tr>
               ) : (
-                subscribers.map((sub) => (
-                  <tr key={sub.id} className="hover:bg-slate-50 transition-colors">
+                subscribers.map((sub) => {
+                  const hasUnpaidBills = parseFloat(sub.totalBalanceDue || "0") > 0;
+                  return (
+                  <tr key={sub.id} className={cn("transition-colors", hasUnpaidBills ? "bg-rose-50/40 hover:bg-rose-50/80" : "hover:bg-slate-50")}>
                     <td className="py-3 px-4 font-mono font-medium text-blue-600">
                       <button
                         onClick={() => openSubscriberDrawer(sub.id)}
@@ -289,11 +292,19 @@ export function SubscribersPage() {
                       </button>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="font-medium text-slate-900">
-                        {sub.lastName}, {sub.firstName} {sub.middleName ? `${sub.middleName[0]}.` : ""}
+                      <div className="flex items-center gap-2">
+                        <div className="font-medium text-slate-900">
+                          {sub.lastName}, {sub.firstName} {sub.middleName ? `${sub.middleName[0]}.` : ""}
+                        </div>
+                        {hasUnpaidBills && (
+                          <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200" title={`Unpaid Balance: ₱${sub.totalBalanceDue}`}>
+                            <AlertCircle className="w-3 h-3" />
+                            Overdue
+                          </span>
+                        )}
                       </div>
                       {sub.businessName && (
-                        <div className="text-[11px] text-slate-500 flex items-center gap-1">
+                        <div className="text-[11px] text-slate-500 flex items-center gap-1 mt-0.5">
                           <span className="italic">{sub.businessName}</span>
                         </div>
                       )}
@@ -357,7 +368,8 @@ export function SubscribersPage() {
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -945,6 +957,13 @@ function CreateSubscriberModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const formatPhoneNumber = (val: string) => {
+    const digits = val.replace(/\D/g, "");
+    if (digits.length <= 4) return digits;
+    if (digits.length <= 7) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+    return `${digits.slice(0, 4)}-${digits.slice(4, 7)}-${digits.slice(7, 11)}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -1049,8 +1068,9 @@ function CreateSubscriberModal({
                   type="text"
                   required
                   placeholder="0917-123-4567"
+                  maxLength={13}
                   value={formData.primaryContactNumber}
-                  onChange={(e) => setFormData({ ...formData, primaryContactNumber: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, primaryContactNumber: formatPhoneNumber(e.target.value) })}
                   className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden font-mono"
                 />
               </div>
@@ -1059,9 +1079,10 @@ function CreateSubscriberModal({
                 <label className="block font-medium text-slate-900 mb-1">Secondary Contact Number</label>
                 <input
                   type="text"
-                  placeholder="088-813-1234"
+                  placeholder="0918-123-4567"
+                  maxLength={13}
                   value={formData.secondaryContactNumber || ""}
-                  onChange={(e) => setFormData({ ...formData, secondaryContactNumber: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, secondaryContactNumber: formatPhoneNumber(e.target.value) })}
                   className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden font-mono"
                 />
               </div>
@@ -1198,8 +1219,12 @@ function AddServiceAccountModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const matchedArea = areas.find(
+    (a) => a.name.toLowerCase() === subscriber.primaryAddress?.barangay?.toLowerCase()
+  );
+
   const [selectedPlanId, setSelectedPlanId] = useState<string>(plans[0]?.id || "");
-  const [selectedAreaId, setSelectedAreaId] = useState<string>(areas[0]?.id || "");
+  const [selectedAreaId, setSelectedAreaId] = useState<string>(matchedArea ? matchedArea.id : areas[0]?.id || "");
   const [selectedCollectorId, setSelectedCollectorId] = useState<string>(collectors[0]?.id || "");
   const [billingDay, setBillingDay] = useState(1);
   const [dueDay, setDueDay] = useState(15);
@@ -1289,17 +1314,23 @@ function AddServiceAccountModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block font-medium text-slate-900 mb-1">Collection Area</label>
-              <select
-                value={selectedAreaId}
-                onChange={(e) => setSelectedAreaId(e.target.value)}
-                className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden"
-              >
-                {areas.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {a.name}
-                  </option>
-                ))}
-              </select>
+              {matchedArea ? (
+                <div className="w-full px-3 py-1.5 border border-emerald-200 bg-emerald-50 text-emerald-800 rounded font-medium cursor-not-allowed">
+                  {matchedArea.name} (Auto-synced)
+                </div>
+              ) : (
+                <select
+                  value={selectedAreaId}
+                  onChange={(e) => setSelectedAreaId(e.target.value)}
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden"
+                >
+                  {areas.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>
