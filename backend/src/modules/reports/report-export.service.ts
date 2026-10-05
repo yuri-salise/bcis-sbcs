@@ -218,9 +218,30 @@ export class ReportExportService {
         a.reason || "—",
         a.ipAddress,
       ]);
+    } else if (reportType === "SOA") {
+      filename = `BCIS-StatementOfAccount-${data.subscriber?.accountNumber || "SOA"}-${data.statementDate || dateStamp}.csv`;
+      headers = ["Entry #", "Date", "Reference Type", "Description", "Debit (PHP)", "Credit (PHP)", "Running Balance (PHP)"];
+      rows = (data.ledger || []).map((e: any) => [
+        e.entryNo,
+        e.postedAt,
+        e.referenceType,
+        e.description,
+        e.debitAmount,
+        e.creditAmount,
+        e.runningBalance,
+      ]);
     } else {
-      headers = ["Data"];
-      rows = [[JSON.stringify(data)]];
+      const list = data.items || data.cycles || data.days || data.collectors || data.methods || [];
+      if (Array.isArray(list) && list.length > 0) {
+        const keys = Object.keys(list[0]).filter((k) => typeof list[0][k] !== "object" && k !== "id");
+        headers = keys.map((k) => k.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()));
+        rows = list.map((item: any) => keys.map((k) => item[k] ?? ""));
+      } else {
+        headers = ["Field", "Value"];
+        rows = Object.entries(data || {})
+          .filter(([_, v]) => typeof v !== "object")
+          .map(([k, v]) => [k.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()), String(v ?? "")]);
+      }
     }
 
     const buffer = toCsvBuffer(headers, rows);
@@ -366,15 +387,49 @@ export class ReportExportService {
         { header: "Reason", key: "reversalReason", width: 30 },
       ];
       tableRows = data.items || [];
-    } else {
+    } else if (reportType === "SOA") {
+      columns = [
+        { header: "Entry #", key: "entryNo", width: 10 },
+        { header: "Posted Date", key: "postedAt", width: 16 },
+        { header: "Reference Type", key: "referenceType", width: 20 },
+        { header: "Description", key: "description", width: 36 },
+        { header: "Debit", key: "debitAmount", width: 16 },
+        { header: "Credit", key: "creditAmount", width: 16 },
+        { header: "Running Balance", key: "runningBalance", width: 18 },
+      ];
+      tableRows = data.ledger || [];
+    } else if (reportType === "AUDIT_ACTIVITY") {
       columns = [
         { header: "Timestamp", key: "occurredAt", width: 24 },
         { header: "Action", key: "action", width: 20 },
         { header: "Entity", key: "entityType", width: 20 },
         { header: "Actor", key: "actorName", width: 24 },
         { header: "Reason", key: "reason", width: 30 },
+        { header: "IP Address", key: "ipAddress", width: 18 },
       ];
       tableRows = data.items || [];
+    } else {
+      const list = data.items || data.cycles || data.days || data.collectors || data.methods || [];
+      if (Array.isArray(list) && list.length > 0) {
+        const keys = Object.keys(list[0]).filter((k) => typeof list[0][k] !== "object" && k !== "id");
+        columns = keys.slice(0, 8).map((k) => ({
+          header: k.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()),
+          key: k,
+          width: 20,
+        }));
+        tableRows = list;
+      } else {
+        columns = [
+          { header: "Field", key: "field", width: 25 },
+          { header: "Value", key: "value", width: 35 },
+        ];
+        tableRows = Object.entries(data || {})
+          .filter(([_, v]) => typeof v !== "object")
+          .map(([k, v]) => ({
+            field: k.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()),
+            value: String(v ?? "—"),
+          }));
+      }
     }
 
     // Set Header row
@@ -653,8 +708,12 @@ export class ReportExportService {
     let headers: string[] = [];
     let tableRows: any[][] = [];
     let widths: string[] = [];
+    let reportTitle = `Report: ${reportType.replace(/_/g, " ")}`;
+    let reportSub = `Generated: ${new Date().toLocaleString()}`;
 
     if (reportType === "DAILY_COLLECTION") {
+      reportTitle = "DAILY COLLECTION REPORT";
+      reportSub = `Collection Date: ${data.date || "—"} | Total Collected: ${data.totalCollected || "₱0.00"} (${data.totalTransactions || 0} transactions)`;
       headers = ["Receipt #", "Date", "Subscriber Name", "Method", "Ref #", "Amount (PHP)", "Cashier"];
       widths = ["auto", "auto", "*", "auto", "auto", "auto", "auto"];
       tableRows = (data.items || []).map((i: any) => [
@@ -662,11 +721,13 @@ export class ReportExportService {
         { text: i.paymentDate },
         { text: i.subscriberDisplayName },
         { text: i.paymentMethod },
-        { text: i.referenceNumber },
+        { text: i.referenceNumber || "—" },
         { text: i.amount, alignment: "right" },
-        { text: i.cashierName },
+        { text: i.cashierName || "—" },
       ]);
     } else if (reportType === "MONTHLY_COLLECTION") {
+      reportTitle = "MONTHLY COLLECTION REPORT";
+      reportSub = `Month Period: ${data.yearMonth || "—"} | Total Collected: ${data.totalCollected || "₱0.00"} | Daily Average: ${data.dailyAverage || "₱0.00"}`;
       headers = ["Day", "Date", "Txns", "Cash", "Non-Cash", "Total (PHP)", "Cumulative"];
       widths = ["auto", "auto", "auto", "auto", "auto", "*", "auto"];
       tableRows = (data.days || []).map((d: any) => [
@@ -679,6 +740,8 @@ export class ReportExportService {
         { text: d.cumulativeAmount, alignment: "right" },
       ]);
     } else if (reportType === "BILLING_VS_COLLECTION") {
+      reportTitle = "BILLING VS COLLECTION REPORT";
+      reportSub = `Fiscal Year: ${data.year || "—"} | Total Billed: ${data.overall?.totalBilled || "₱0.00"} | Total Collected: ${data.overall?.totalCollected || "₱0.00"} | Overall Efficiency: ${data.overall?.collectionEfficiency || 0}%`;
       headers = ["Cycle Code", "Period", "Billed (PHP)", "Collected (PHP)", "Outstanding", "Efficiency"];
       widths = ["auto", "*", "auto", "auto", "auto", "auto"];
       tableRows = (data.cycles || []).map((c: any) => [
@@ -690,35 +753,147 @@ export class ReportExportService {
         { text: `${c.collectionEfficiency}%`, alignment: "center", bold: true },
       ]);
     } else if (reportType === "AR_AGING") {
-      headers = ["Account #", "Subscriber", "Current", "1-30 Days", "31-60 Days", "61-90 Days", "90+ Days", "Total Due"];
-      widths = ["auto", "*", "auto", "auto", "auto", "auto", "auto", "auto"];
+      reportTitle = "ACCOUNTS RECEIVABLE AGING ANALYSIS";
+      reportSub = `As of Date: ${data.asOfDate || "—"} | Total Receivable: ${data.summary?.totalReceivable || "₱0.00"}`;
+      headers = ["Account #", "Subscriber", "Area", "Current", "1-30 Days", "31-60 Days", "61-90 Days", "90+ Days", "Total Due"];
+      widths = ["auto", "*", "auto", "auto", "auto", "auto", "auto", "auto", "auto"];
       tableRows = (data.subscribers || []).map((s: any) => [
-        { text: s.subscriberAccountNumber },
-        { text: s.displayName },
-        { text: s.current, alignment: "right" },
-        { text: s.days1to30, alignment: "right" },
-        { text: s.days31to60, alignment: "right" },
-        { text: s.days61to90, alignment: "right" },
-        { text: s.days90Plus, alignment: "right" },
-        { text: s.totalDue, alignment: "right", bold: true },
+        { text: s.subscriberAccountNumber || "—" },
+        { text: s.displayName || "—" },
+        { text: s.areaName || "—" },
+        { text: s.current || "₱0.00", alignment: "right" },
+        { text: s.days1to30 || "₱0.00", alignment: "right" },
+        { text: s.days31to60 || "₱0.00", alignment: "right" },
+        { text: s.days61to90 || "₱0.00", alignment: "right" },
+        { text: s.days90Plus || "₱0.00", alignment: "right" },
+        { text: s.totalDue || "₱0.00", alignment: "right", bold: true },
+      ]);
+    } else if (reportType === "COLLECTOR_PERFORMANCE") {
+      reportTitle = "FIELD COLLECTOR PERFORMANCE REPORT";
+      reportSub = `Period: ${data.startDate || "—"} to ${data.endDate || "—"} | Batches Handled: ${data.overall?.totalBatches || 0} | Total Collected: ${data.overall?.totalCollected || "₱0.00"} | Remitted: ${data.overall?.totalRemitted || "₱0.00"}`;
+      headers = ["Code", "Collector Name", "Batches", "Expected", "Collected", "Remitted", "Shortage", "Efficiency", "Accuracy"];
+      widths = ["auto", "*", "auto", "auto", "auto", "auto", "auto", "auto", "auto"];
+      tableRows = (data.collectors || []).map((c: any) => [
+        { text: c.collectorCode || "—", bold: true },
+        { text: c.name || "—" },
+        { text: String(c.batchesCount ?? 0), alignment: "center" },
+        { text: c.expectedCash || "₱0.00", alignment: "right" },
+        { text: c.collectedCash || "₱0.00", alignment: "right", bold: true },
+        { text: c.remittedCash || "₱0.00", alignment: "right" },
+        { text: c.shortageAmount || "₱0.00", alignment: "right" },
+        { text: `${c.collectionEfficiency ?? 0}%`, alignment: "center" },
+        { text: `${c.remittanceAccuracy ?? 0}%`, alignment: "center", bold: true },
+      ]);
+    } else if (reportType === "PAYMENT_METHOD_SUMMARY") {
+      reportTitle = "PAYMENT CHANNELS & METHODS SUMMARY";
+      reportSub = `Period: ${data.startDate || "—"} to ${data.endDate || "—"} | Total Volume: ${data.totalAmount || "₱0.00"} (${data.totalTransactions || 0} transactions)`;
+      headers = ["Payment Channel", "Transactions", "Volume Share %", "Average Ticket", "Total Volume (PHP)"];
+      widths = ["*", "auto", "auto", "auto", "auto"];
+      tableRows = (data.methods || []).map((m: any) => [
+        { text: m.method, bold: true },
+        { text: String(m.count ?? 0), alignment: "center" },
+        { text: `${m.percentage ?? 0}%`, alignment: "center" },
+        { text: m.averageAmount || "₱0.00", alignment: "right" },
+        { text: m.amount || "₱0.00", alignment: "right", bold: true },
+      ]);
+    } else if (reportType === "SUBSCRIBER_MASTER_LIST") {
+      reportTitle = "SUBSCRIBER DIRECTORY MASTER LIST";
+      reportSub = `Total Subscribers: ${data.pagination?.total ?? (data.items || []).length} | Active Master Directory`;
+      headers = ["Account #", "Subscriber Name", "Contact #", "Primary Area", "Plan", "Status", "Balance Due"];
+      widths = ["auto", "*", "auto", "auto", "auto", "auto", "auto"];
+      tableRows = (data.items || []).map((s: any) => [
+        { text: s.accountNumber || "—", bold: true },
+        { text: s.displayName || "—" },
+        { text: s.contactNumber || "—" },
+        { text: s.primaryArea || "—" },
+        { text: s.primaryPlan || "Standard Plan" },
+        { text: s.status || "ACTIVE", alignment: "center" },
+        { text: s.balanceDue || "₱0.00", alignment: "right", bold: true },
+      ]);
+    } else if (reportType === "PAYMENT_REVERSALS") {
+      reportTitle = "AUDITED PAYMENT REVERSALS & VOIDS";
+      reportSub = `Period: ${data.startDate || "—"} to ${data.endDate || "—"} | Total Reversed: ${data.totalReversedAmount || "₱0.00"} (${data.totalCount || 0} reversals)`;
+      headers = ["Receipt #", "Payment Date", "Subscriber", "Method", "Amount (PHP)", "Reversed At", "Supervisor", "Reason"];
+      widths = ["auto", "auto", "*", "auto", "auto", "auto", "auto", "*"];
+      tableRows = (data.items || []).map((r: any) => [
+        { text: r.receiptNumber || r.paymentNumber || "—", bold: true },
+        { text: r.paymentDate || "—" },
+        { text: r.subscriberDisplayName || "—" },
+        { text: r.paymentMethod || "—" },
+        { text: r.amount || "₱0.00", alignment: "right", bold: true },
+        { text: r.reversedAt ? r.reversedAt.slice(0, 10) : "—" },
+        { text: r.reversedByName || "Supervisor" },
+        { text: r.reversalReason || "No explanation recorded" },
+      ]);
+    } else if (reportType === "AUDIT_ACTIVITY") {
+      reportTitle = "SYSTEM AUDIT ACTIVITY & COMPLIANCE TRAIL";
+      reportSub = `Total Records: ${data.pagination?.total ?? (data.items || []).length} | Immutable Security Log`;
+      headers = ["Timestamp", "Actor", "Action", "Entity Type", "Entity / Ref ID", "Reason / Notes", "IP Address"];
+      widths = ["auto", "auto", "auto", "auto", "auto", "*", "auto"];
+      tableRows = (data.items || []).map((a: any) => [
+        { text: a.occurredAt ? a.occurredAt.replace("T", " ").slice(0, 19) : "—" },
+        { text: `${a.actorName || "System"}${a.actorUsername ? ` (${a.actorUsername})` : ""}`, bold: true },
+        { text: a.action || "—" },
+        { text: a.entityType || "—" },
+        { text: a.entityId ? a.entityId.slice(0, 8) : a.requestId ? a.requestId.slice(0, 8) : "—" },
+        { text: a.reason || "—" },
+        { text: a.ipAddress || "—" },
       ]);
     } else {
-      headers = ["Item", "Details"];
-      widths = ["30%", "70%"];
-      tableRows = (data.items || []).slice(0, 50).map((it: any) => [
-        { text: it.id || it.receiptNumber || it.name || "Item" },
-        { text: JSON.stringify(it) },
-      ]);
+      const list = data.items || data.cycles || data.days || data.collectors || data.methods || [];
+      if (Array.isArray(list) && list.length > 0) {
+        const keys = Object.keys(list[0]).filter((k) => typeof list[0][k] !== "object" && k !== "id");
+        headers = keys.slice(0, 7).map((k) => k.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()));
+        widths = headers.map(() => "auto");
+        tableRows = list.slice(0, 200).map((item: any) =>
+          keys.slice(0, 7).map((k) => ({ text: String(item[k] ?? "—") }))
+        );
+      } else {
+        headers = ["Field", "Details"];
+        widths = ["35%", "65%"];
+        tableRows = Object.entries(data || {})
+          .filter(([_, v]) => typeof v !== "object")
+          .map(([k, v]) => [
+            { text: k.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()), bold: true },
+            { text: String(v ?? "—") },
+          ]);
+      }
     }
 
     return {
       pageOrientation: "landscape",
       pageSize: "A4",
       pageMargins: [28, 28, 28, 28],
+      footer: (currentPage: number, pageCount: number) => ({
+        columns: [
+          { text: "BUKIDNON CABLE & INTERNET SERVICES — CONFIDENTIAL OFFICIAL REPORT", alignment: "left", fontSize: 7, color: "#94A3B8" },
+          { text: `Page ${currentPage} of ${pageCount}`, alignment: "right", fontSize: 8, color: "#64748B" },
+        ],
+        margin: [28, 10, 28, 0],
+      }),
       content: [
-        { text: "BUKIDNON CABLE & INTERNET SERVICES", style: "header" },
-        { text: `Report: ${reportType.replace(/_/g, " ")}`, style: "title" },
-        { text: `Generated: ${new Date().toLocaleString()}`, style: "subHeader" },
+        {
+          columns: [
+            {
+              width: "*",
+              stack: [
+                { text: "BUKIDNON CABLE & INTERNET SERVICES", style: "header" },
+                { text: reportTitle, style: "title" },
+                { text: reportSub, style: "subHeader" },
+              ],
+            },
+            {
+              width: "auto",
+              alignment: "right",
+              stack: [
+                { text: "OFFICIAL EXPORT", style: "badge" },
+                { text: `Printed: ${new Date().toLocaleString()}`, style: "subHeader" },
+              ],
+            },
+          ],
+        },
+        { text: "", margin: [0, 4, 0, 4] },
+        { canvas: [{ type: "line", x1: 0, y1: 0, x2: 785, y2: 0, lineWidth: 1.5, lineColor: "#0F2747" }] },
         { text: "", margin: [0, 6, 0, 6] },
         {
           table: {
@@ -734,9 +909,10 @@ export class ReportExportService {
       ],
       styles: {
         header: { fontSize: 12, bold: true, color: "#0F2747" },
-        title: { fontSize: 13, bold: true, color: "#2563EB" },
+        title: { fontSize: 14, bold: true, color: "#2563EB", margin: [0, 2, 0, 2] },
         subHeader: { fontSize: 8, color: "#64748B" },
-        tableHeader: { fontSize: 8, bold: true, color: "#0F2747" },
+        badge: { fontSize: 9, bold: true, color: "#059669" },
+        tableHeader: { fontSize: 8, bold: true, color: "#0F2747", fillColor: "#F1F5F9" },
       },
     };
   }

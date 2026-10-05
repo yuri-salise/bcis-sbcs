@@ -403,6 +403,34 @@ describe("Reports, General Ledger, Audit Trails & Compliance Tests (Phase 8 - AT
       expect(res.headers["content-disposition"]).toContain("BCIS-SOA-");
       expect(res.rawPayload.subarray(0, 5).toString("utf-8")).toBe("%PDF-");
     });
+
+    it("exports collector performance, payment methods, master list, reversals, and audit PDF documents without raw JSON", async () => {
+      const endpoints = [
+        "/api/v1/reports/collector-performance/export?format=pdf",
+        "/api/v1/reports/payment-methods/export?format=pdf",
+        "/api/v1/reports/subscribers-master/export?format=pdf",
+        "/api/v1/reports/payment-reversals/export?format=pdf",
+        "/api/v1/reports/audit-activity/export?format=pdf",
+      ];
+
+      for (const endpoint of endpoints) {
+        const res = await server.inject({
+          method: "GET",
+          url: endpoint,
+          headers: { authorization: `Bearer ${adminToken}` },
+        });
+
+        expect(res.statusCode).toBe(200);
+        expect(res.headers["content-type"]).toContain("application/pdf");
+        expect(res.rawPayload.subarray(0, 5).toString("utf-8")).toBe("%PDF-");
+
+        // Verify PDF doesn't contain raw JSON stringified dumps in text
+        const pdfText = res.rawPayload.toString("utf-8");
+        expect(pdfText).not.toContain('{"collectorCode"');
+        expect(pdfText).not.toContain('{"accountNumber"');
+        expect(pdfText).not.toContain('{"receiptNumber"');
+      }
+    });
   });
 
   // ==========================================
