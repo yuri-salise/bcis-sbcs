@@ -58,7 +58,18 @@ describe("ReportsPage Component (Phase 8 - Reports, Multi-Format Exports & SOA)"
     dailyAverage: "₱8,166.67",
     highestDay: { date: "2026-09-15", amount: "₱25,400.00" },
     byPaymentMethod: [{ method: "CASH", amount: "₱245,000.00", count: 180, percentage: 100 }],
-    days: [{ date: "2026-09-15", amount: "₱25,400.00", rawAmount: "25400.00", transactionsCount: 15 }],
+    days: [
+      {
+        dayNumber: 15,
+        date: "2026-09-15",
+        totalAmount: "₱25,400.00",
+        rawTotalAmount: "25400.00",
+        transactionCount: 15,
+        cashAmount: "₱25,400.00",
+        nonCashAmount: "₱0.00",
+        cumulativeAmount: "₱25,400.00",
+      },
+    ],
   };
 
   const mockBvcReport: BillingVsCollectionReport = {

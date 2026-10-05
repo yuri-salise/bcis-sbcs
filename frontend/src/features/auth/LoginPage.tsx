@@ -45,7 +45,7 @@ export function LoginPage() {
         {/* Brand Card Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-slate-950 shadow-lg mb-3 border border-slate-800">
-            <img src="/favicon.svg" alt="BCIS Logo" className="w-10 h-10 rounded-xl" />
+            <img src="/logo.png" alt="BCIS Logo" className="w-10 h-10 rounded-xl" />
           </div>
           <h1 className="text-2xl font-bold text-slate-950 tracking-tight">BCIS BILLING</h1>
           <p className="text-sm text-slate-500 mt-1">

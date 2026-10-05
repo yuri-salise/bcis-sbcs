@@ -543,8 +543,8 @@ export const ReportsPage: React.FC = () => {
                   {(monthlyData?.days || []).map((day) => (
                     <tr key={day.date} className="hover:bg-gray-50">
                       <td className="px-4 py-2.5 font-medium text-gray-900">{day.date}</td>
-                      <td className="px-4 py-2.5 text-right text-gray-600">{day.transactionsCount}</td>
-                      <td className="px-4 py-2.5 text-right font-bold text-emerald-600">{day.amount}</td>
+                      <td className="px-4 py-2.5 text-right text-gray-600">{day.transactionCount}</td>
+                      <td className="px-4 py-2.5 text-right font-bold text-emerald-600">{day.totalAmount}</td>
                     </tr>
                   ))}
                 </tbody>
