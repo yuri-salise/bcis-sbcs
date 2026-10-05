@@ -3,6 +3,10 @@ name = "bcis-desktop"
 version = "1.0.0"
 description = "BCIS Subscription Billing and Collection System Desktop Client"
 edition = "2021"
+build = "build.rs"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(mobile)'] }
 
 [lib]
 name = "bcis_desktop_lib"
