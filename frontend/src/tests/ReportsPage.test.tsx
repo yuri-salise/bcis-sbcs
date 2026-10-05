@@ -10,6 +10,7 @@ import {
   type FullAgingReport,
   type SubscriberSOA,
   type CollectorPerformanceReport,
+  type AuditActivityReport,
 } from "../api/client";
 
 function renderWithAuth(ui: React.ReactNode) {
@@ -225,6 +226,29 @@ describe("ReportsPage Component (Phase 8 - Reports, Multi-Format Exports & SOA)"
     ],
   };
 
+  const mockAuditReport: AuditActivityReport = {
+    reportType: "AUDIT_ACTIVITY",
+    pagination: { page: 1, limit: 50, total: 1, totalPages: 1 },
+    items: [
+      {
+        id: "audit-1",
+        occurredAt: "2026-09-26T10:00:00.000Z",
+        actorUserId: "user-1",
+        actorName: "Supervisor User",
+        actorUsername: "supervisor",
+        action: "ADMIN_PAYMENT_VOID",
+        entityType: "PAYMENT",
+        entityId: "pay-123",
+        requestId: "req-abc",
+        reason: "Customer check bounced",
+        ipAddress: "192.168.1.100",
+        metadata: { cashierStation: "Station-01", amount: "₱1,500.00" },
+        oldValues: { status: "POSTED", allocated: true },
+        newValues: { status: "VOID", allocated: false },
+      },
+    ],
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(api, "getDailyCollectionReport").mockResolvedValue(mockDailyReport);
@@ -233,6 +257,7 @@ describe("ReportsPage Component (Phase 8 - Reports, Multi-Format Exports & SOA)"
     vi.spyOn(api, "getFullAgingReport").mockResolvedValue(mockAgingReport);
     vi.spyOn(api, "getSubscriberSOA").mockResolvedValue(mockSoaReport);
     vi.spyOn(api, "getCollectorPerformanceReport").mockResolvedValue(mockCollectorReport);
+    vi.spyOn(api, "getAuditActivityReport").mockResolvedValue(mockAuditReport);
     vi.spyOn(api, "downloadReportFile").mockResolvedValue(undefined);
   });
 
@@ -347,6 +372,32 @@ describe("ReportsPage Component (Phase 8 - Reports, Multi-Format Exports & SOA)"
     fireEvent.click(screen.getByTestId("export-csv-btn"));
     await waitFor(() => {
       expect(api.downloadReportFile).toHaveBeenCalledWith("DAILY_COLLECTION", "csv", expect.any(Object));
+    });
+
+    // Test Direct Print button
+    const printSpy = vi.spyOn(window, "print").mockImplementation(() => {});
+    expect(screen.getByTestId("print-report-btn")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId("print-report-btn"));
+    expect(printSpy).toHaveBeenCalled();
+    printSpy.mockRestore();
+  });
+
+  it("expands audit activity log and displays human-readable diffs without raw JSON", async () => {
+    renderWithAuth(<ReportsPage />);
+
+    fireEvent.click(screen.getByTestId("report-tab-AUDIT_ACTIVITY"));
+
+    await waitFor(() => {
+      expect(screen.getByText("ADMIN_PAYMENT_VOID")).toBeInTheDocument();
+    });
+
+    // Click row to expand change diffs
+    fireEvent.click(screen.getByText("ADMIN_PAYMENT_VOID"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Audited Changes & Field Diffs")).toBeInTheDocument();
+      expect(screen.getByText("Previous State")).toBeInTheDocument();
+      expect(screen.getByText("Updated State")).toBeInTheDocument();
     });
   });
 });

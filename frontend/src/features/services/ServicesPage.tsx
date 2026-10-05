@@ -98,12 +98,12 @@ export const ServicesPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl font-bold text-[#0F172A] tracking-tight">Services & Plans Catalog</h2>
-            <span className="text-xs px-2 py-0.5 rounded bg-blue-50 text-[#2563EB] border border-blue-200 font-medium">
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight">Services & Plans Catalog</h2>
+            <span className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 font-medium">
               Official Catalog
             </span>
           </div>
-          <p className="text-xs text-[#64748B] mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Broadband Internet speed tiers, digital cable television lineups, and municipal coverage areas
           </p>
         </div>
@@ -112,7 +112,7 @@ export const ServicesPage: React.FC = () => {
           <button
             onClick={loadData}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#475569] bg-white border border-[#CBD5E1] rounded-md hover:bg-[#F8FAFC] shadow-2xs transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded-md hover:bg-slate-50 shadow-2xs transition-colors cursor-pointer"
           >
             <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin")} />
             Refresh
@@ -130,37 +130,37 @@ export const ServicesPage: React.FC = () => {
       {/* KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Plans */}
-        <div className="bg-white p-4 rounded-lg border border-[#E2E8F0] shadow-2xs flex items-center justify-between">
+        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-2xs flex items-center justify-between">
           <div>
-            <div className="text-xs font-medium text-[#64748B]">Active Service Plans</div>
-            <div className="text-2xl font-bold font-mono text-[#0F172A] mt-1">{plans.length}</div>
-            <div className="text-[11px] text-[#059669] font-medium mt-0.5">Catalog tiers online</div>
+            <div className="text-xs font-medium text-slate-500">Active Service Plans</div>
+            <div className="text-2xl font-bold font-mono text-slate-900 mt-1">{plans.length}</div>
+            <div className="text-[11px] text-emerald-600 font-medium mt-0.5">Catalog tiers online</div>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-blue-50 text-[#2563EB] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
             <Layers className="w-5 h-5" />
           </div>
         </div>
 
         {/* Broadband Internet */}
-        <div className="bg-white p-4 rounded-lg border border-[#E2E8F0] shadow-2xs flex items-center justify-between">
+        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-2xs flex items-center justify-between">
           <div>
-            <div className="text-xs font-medium text-[#64748B]">Fiber Broadband Tiers</div>
-            <div className="text-2xl font-bold font-mono text-[#0F172A] mt-1">{internetPlansCount}</div>
-            <div className="text-[11px] text-[#64748B] font-medium mt-0.5">Up to 100+ Mbps</div>
+            <div className="text-xs font-medium text-slate-500">Fiber Broadband Tiers</div>
+            <div className="text-2xl font-bold font-mono text-slate-900 mt-1">{internetPlansCount}</div>
+            <div className="text-[11px] text-slate-500 font-medium mt-0.5">Up to 100+ Mbps</div>
           </div>
-          <div className="w-10 h-10 rounded-lg bg-emerald-50 text-[#059669] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
             <Wifi className="w-5 h-5" />
           </div>
         </div>
 
         {/* Cable & Combo */}
-        <div className="bg-white p-4 rounded-lg border border-[#E2E8F0] shadow-2xs flex items-center justify-between">
+        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-2xs flex items-center justify-between">
           <div>
-            <div className="text-xs font-medium text-[#64748B]">Cable & Bundles</div>
-            <div className="text-2xl font-bold font-mono text-[#0F172A] mt-1">
+            <div className="text-xs font-medium text-slate-500">Cable & Bundles</div>
+            <div className="text-2xl font-bold font-mono text-slate-900 mt-1">
               {cablePlansCount + comboPlansCount}
             </div>
-            <div className="text-[11px] text-[#64748B] font-medium mt-0.5">TV & Dual-Play Bundles</div>
+            <div className="text-[11px] text-slate-500 font-medium mt-0.5">TV & Dual-Play Bundles</div>
           </div>
           <div className="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
             <Tv className="w-5 h-5" />
@@ -168,11 +168,11 @@ export const ServicesPage: React.FC = () => {
         </div>
 
         {/* Coverage Areas */}
-        <div className="bg-white p-4 rounded-lg border border-[#E2E8F0] shadow-2xs flex items-center justify-between">
+        <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-2xs flex items-center justify-between">
           <div>
-            <div className="text-xs font-medium text-[#64748B]">Coverage Zones</div>
-            <div className="text-2xl font-bold font-mono text-[#0F172A] mt-1">{areas.length}</div>
-            <div className="text-[11px] text-[#64748B] font-medium mt-0.5">
+            <div className="text-xs font-medium text-slate-500">Coverage Zones</div>
+            <div className="text-2xl font-bold font-mono text-slate-900 mt-1">{areas.length}</div>
+            <div className="text-[11px] text-slate-500 font-medium mt-0.5">
               {collectors.length} Field Collectors
             </div>
           </div>
@@ -183,15 +183,15 @@ export const ServicesPage: React.FC = () => {
       </div>
 
       {/* Main Tab Navigation */}
-      <div className="bg-white border border-[#E2E8F0] rounded-lg p-1.5 shadow-2xs flex items-center gap-2">
+      <div className="bg-white border border-slate-200 rounded-lg p-1.5 shadow-2xs flex items-center gap-2">
         <button
           onClick={() => setActiveTab("plans")}
           data-testid="tab-plans"
           className={cn(
             "flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer",
             activeTab === "plans"
-              ? "bg-[#2563EB] text-white shadow-2xs"
-              : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]"
+              ? "bg-blue-600 text-white shadow-2xs"
+              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
           )}
         >
           <Layers className="w-4 h-4" />
@@ -204,8 +204,8 @@ export const ServicesPage: React.FC = () => {
           className={cn(
             "flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer",
             activeTab === "areas"
-              ? "bg-[#2563EB] text-white shadow-2xs"
-              : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]"
+              ? "bg-blue-600 text-white shadow-2xs"
+              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
           )}
         >
           <MapPin className="w-4 h-4" />
@@ -218,8 +218,8 @@ export const ServicesPage: React.FC = () => {
           className={cn(
             "flex items-center gap-2 px-3.5 py-1.5 rounded-md text-xs font-semibold transition-colors cursor-pointer",
             activeTab === "policies"
-              ? "bg-[#2563EB] text-white shadow-2xs"
-              : "text-[#64748B] hover:text-[#0F172A] hover:bg-[#F8FAFC]"
+              ? "bg-blue-600 text-white shadow-2xs"
+              : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
           )}
         >
           <FileText className="w-4 h-4" />
@@ -229,9 +229,9 @@ export const ServicesPage: React.FC = () => {
 
       {/* Search & Filter Bar */}
       {activeTab !== "policies" && (
-        <div className="bg-white p-3.5 border border-[#E2E8F0] rounded-lg shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
+        <div className="bg-white p-3.5 border border-slate-200 rounded-lg shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
           <div className="relative w-full md:w-96">
-            <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder={
@@ -241,13 +241,13 @@ export const ServicesPage: React.FC = () => {
               }
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 text-xs bg-[#F8FAFC] border border-[#E2E8F0] rounded-md focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-[#2563EB] focus:border-[#2563EB] text-[#0F172A] placeholder:text-[#94A3B8]"
+              className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-blue-600 focus:border-blue-600 text-slate-900 placeholder:text-slate-400"
             />
           </div>
 
           {activeTab === "plans" && (
             <div className="flex items-center gap-1.5 w-full md:w-auto overflow-x-auto">
-              <span className="text-xs text-[#64748B] mr-1 flex items-center gap-1">
+              <span className="text-xs text-slate-500 mr-1 flex items-center gap-1">
                 <SlidersHorizontal className="w-3.5 h-3.5" /> Type:
               </span>
               {(["ALL", "INTERNET", "CABLE", "COMBO"] as TypeFilter[]).map((t) => (
@@ -257,8 +257,8 @@ export const ServicesPage: React.FC = () => {
                   className={cn(
                     "px-2.5 py-1 text-xs font-medium rounded-full transition-colors cursor-pointer whitespace-nowrap",
                     typeFilter === t
-                      ? "bg-[#0F172A] text-white"
-                      : "bg-[#F1F5F9] text-[#475569] hover:bg-[#E2E8F0]"
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   )}
                 >
                   {t === "ALL" ? "All Packages" : t === "INTERNET" ? "Fiber Internet" : t === "CABLE" ? "Cable TV" : "Combo Bundles"}
@@ -271,11 +271,11 @@ export const ServicesPage: React.FC = () => {
 
       {/* Tab 1: Service Plans */}
       {activeTab === "plans" && (
-        <div className="bg-white border border-[#E2E8F0] rounded-lg shadow-2xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-[#64748B] font-semibold">
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
                   <th className="py-3 px-4">Plan Code</th>
                   <th className="py-3 px-4">Service Plan Name</th>
                   <th className="py-3 px-4">Service Type</th>
@@ -289,20 +289,20 @@ export const ServicesPage: React.FC = () => {
               <tbody className="divide-y divide-[#E2E8F0]">
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-[#64748B]">
+                    <td colSpan={8} className="py-12 text-center text-slate-500">
                       <div className="flex flex-col items-center gap-2">
-                        <RefreshCw className="w-6 h-6 animate-spin text-[#2563EB]" />
+                        <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
                         <span>Loading service catalog...</span>
                       </div>
                     </td>
                   </tr>
                 ) : filteredPlans.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-[#64748B]">
+                    <td colSpan={8} className="py-12 text-center text-slate-500">
                       <div className="flex flex-col items-center gap-2">
-                        <Layers className="w-8 h-8 text-[#CBD5E1]" />
-                        <span className="font-medium text-[#0F172A]">No service plans found</span>
-                        <p className="text-xs text-[#94A3B8]">
+                        <Layers className="w-8 h-8 text-slate-300" />
+                        <span className="font-medium text-slate-900">No service plans found</span>
+                        <p className="text-xs text-slate-400">
                           {search.trim() ? "No plans match your search query." : "No plans currently active."}
                         </p>
                       </div>
@@ -314,14 +314,14 @@ export const ServicesPage: React.FC = () => {
                     const isCable = plan.serviceType?.code === "CABLE";
 
                     return (
-                      <tr key={plan.id} className="hover:bg-[#F8FAFC] transition-colors">
-                        <td className="py-3 px-4 font-mono font-semibold text-[#2563EB]">
+                      <tr key={plan.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-3 px-4 font-mono font-semibold text-blue-600">
                           {plan.code}
                         </td>
                         <td className="py-3 px-4">
-                          <div className="font-semibold text-[#0F172A]">{plan.name}</div>
+                          <div className="font-semibold text-slate-900">{plan.name}</div>
                           {plan.description && (
-                            <div className="text-[11px] text-[#64748B] mt-0.5 line-clamp-1">
+                            <div className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
                               {plan.description}
                             </div>
                           )}
@@ -349,26 +349,26 @@ export const ServicesPage: React.FC = () => {
                         </td>
                         <td className="py-3 px-4">
                           {plan.speedMbps ? (
-                            <div className="flex items-center gap-1.5 font-mono font-medium text-[#0F172A]">
-                              <Gauge className="w-3.5 h-3.5 text-[#2563EB]" />
+                            <div className="flex items-center gap-1.5 font-mono font-medium text-slate-900">
+                              <Gauge className="w-3.5 h-3.5 text-blue-600" />
                               <span>{plan.speedMbps} Mbps</span>
                             </div>
                           ) : plan.channelCount ? (
-                            <div className="flex items-center gap-1.5 font-mono font-medium text-[#0F172A]">
+                            <div className="flex items-center gap-1.5 font-mono font-medium text-slate-900">
                               <Tv className="w-3.5 h-3.5 text-amber-600" />
                               <span>{plan.channelCount} Channels</span>
                             </div>
                           ) : (
-                            <span className="text-[#94A3B8]">—</span>
+                            <span className="text-slate-400">—</span>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-right font-mono font-bold text-[#0F172A]">
+                        <td className="py-3 px-4 text-right font-mono font-bold text-slate-900">
                           {formatMoney(plan.monthlyPrice)}
                         </td>
-                        <td className="py-3 px-4 text-right font-mono text-[#475569]">
+                        <td className="py-3 px-4 text-right font-mono text-slate-600">
                           {formatMoney(plan.installationFee)}
                         </td>
-                        <td className="py-3 px-4 text-right font-mono text-[#475569]">
+                        <td className="py-3 px-4 text-right font-mono text-slate-600">
                           {formatMoney(plan.reconnectionFee)}
                         </td>
                         <td className="py-3 px-4 text-center">
@@ -401,11 +401,11 @@ export const ServicesPage: React.FC = () => {
 
       {/* Tab 2: Coverage Areas */}
       {activeTab === "areas" && (
-        <div className="bg-white border border-[#E2E8F0] rounded-lg shadow-2xs overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-[#64748B] font-semibold">
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
                   <th className="py-3 px-4">Area Code</th>
                   <th className="py-3 px-4">Barangay / Coverage Zone</th>
                   <th className="py-3 px-4">Description</th>
@@ -416,19 +416,19 @@ export const ServicesPage: React.FC = () => {
               <tbody className="divide-y divide-[#E2E8F0]">
                 {loading ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-[#64748B]">
+                    <td colSpan={5} className="py-12 text-center text-slate-500">
                       <div className="flex flex-col items-center gap-2">
-                        <RefreshCw className="w-6 h-6 animate-spin text-[#2563EB]" />
+                        <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
                         <span>Loading coverage zones...</span>
                       </div>
                     </td>
                   </tr>
                 ) : filteredAreas.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-[#64748B]">
+                    <td colSpan={5} className="py-12 text-center text-slate-500">
                       <div className="flex flex-col items-center gap-2">
-                        <MapPin className="w-8 h-8 text-[#CBD5E1]" />
-                        <span className="font-medium text-[#0F172A]">No coverage areas found</span>
+                        <MapPin className="w-8 h-8 text-slate-300" />
+                        <span className="font-medium text-slate-900">No coverage areas found</span>
                       </div>
                     </td>
                   </tr>
@@ -439,21 +439,21 @@ export const ServicesPage: React.FC = () => {
                     ); // default display indicator
 
                     return (
-                      <tr key={area.id} className="hover:bg-[#F8FAFC] transition-colors">
-                        <td className="py-3 px-4 font-mono font-semibold text-[#2563EB]">
+                      <tr key={area.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="py-3 px-4 font-mono font-semibold text-blue-600">
                           {area.code}
                         </td>
-                        <td className="py-3 px-4 font-semibold text-[#0F172A]">
+                        <td className="py-3 px-4 font-semibold text-slate-900">
                           <div className="flex items-center gap-2">
-                            <MapPin className="w-3.5 h-3.5 text-[#2563EB]" />
+                            <MapPin className="w-3.5 h-3.5 text-blue-600" />
                             <span>{area.name}</span>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-[#475569]">
+                        <td className="py-3 px-4 text-slate-600">
                           {area.description || "Malaybalay City, Bukidnon"}
                         </td>
                         <td className="py-3 px-4">
-                          <span className="text-xs text-[#0F172A] font-medium">
+                          <span className="text-xs text-slate-900 font-medium">
                             {assignedCollector ? assignedCollector.name : "Unassigned"}
                           </span>
                         </td>
@@ -488,26 +488,26 @@ export const ServicesPage: React.FC = () => {
       {/* Tab 3: Service Policies */}
       {activeTab === "policies" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white border border-[#E2E8F0] rounded-lg p-5 shadow-2xs space-y-4">
-            <div className="flex items-center gap-2.5 text-[#0F172A] font-bold text-sm border-b border-[#E2E8F0] pb-3">
-              <Clock className="w-4 h-4 text-[#2563EB]" />
+          <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-2xs space-y-4">
+            <div className="flex items-center gap-2.5 text-slate-900 font-bold text-sm border-b border-slate-200 pb-3">
+              <Clock className="w-4 h-4 text-blue-600" />
               <span>Billing Cycles & Due Dates</span>
             </div>
-            <ul className="space-y-3 text-xs text-[#475569]">
+            <ul className="space-y-3 text-xs text-slate-600">
               <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] mt-1.5 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0" />
                 <span>
                   <strong>Monthly Cycle:</strong> Invoices are generated at the 1st of each calendar month covering the active subscription cycle.
                 </span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] mt-1.5 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0" />
                 <span>
                   <strong>Due Date:</strong> Due dates default to the 15th of the billing month (14-day standard settlement window).
                 </span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] mt-1.5 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 mt-1.5 shrink-0" />
                 <span>
                   <strong>5-Day Grace Period:</strong> Overdue penalties and automated service disconnection notices activate strictly after the 5-day grace period.
                 </span>
@@ -515,26 +515,26 @@ export const ServicesPage: React.FC = () => {
             </ul>
           </div>
 
-          <div className="bg-white border border-[#E2E8F0] rounded-lg p-5 shadow-2xs space-y-4">
-            <div className="flex items-center gap-2.5 text-[#0F172A] font-bold text-sm border-b border-[#E2E8F0] pb-3">
-              <ShieldCheck className="w-4 h-4 text-[#059669]" />
+          <div className="bg-white border border-slate-200 rounded-lg p-5 shadow-2xs space-y-4">
+            <div className="flex items-center gap-2.5 text-slate-900 font-bold text-sm border-b border-slate-200 pb-3">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
               <span>Suspension & Reconnection Standards</span>
             </div>
-            <ul className="space-y-3 text-xs text-[#475569]">
+            <ul className="space-y-3 text-xs text-slate-600">
               <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#059669] mt-1.5 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-1.5 shrink-0" />
                 <span>
                   <strong>Delinquency Threshold:</strong> Service accounts with overdue balances exceeding ₱1,500.00 or aging beyond 30 days are flagged as Suspension Candidates.
                 </span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#059669] mt-1.5 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-1.5 shrink-0" />
                 <span>
                   <strong>Reconnection Fee:</strong> A standard ₱300.00 reconnection fee applies to restore suspended fiber lines upon full arrears settlement.
                 </span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#059669] mt-1.5 shrink-0" />
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mt-1.5 shrink-0" />
                 <span>
                   <strong>Same-Day Restoration SLA:</strong> Paid accounts have restoration work orders dispatched to technicians within 4 business hours.
                 </span>

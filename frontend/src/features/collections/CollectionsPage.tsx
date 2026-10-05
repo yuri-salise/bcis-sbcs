@@ -438,11 +438,11 @@ export function CollectionsPage() {
       {/* Header & Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-[#0F172A] flex items-center gap-2.5">
-            <FolderSync className="w-6 h-6 text-[#2563EB]" />
+          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2.5">
+            <FolderSync className="w-6 h-6 text-blue-600" />
             <span>Collections & Route Reconciliation</span>
           </h2>
-          <p className="text-xs text-[#64748B] mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Field collector route sheets, cash collections, and authoritative remittance balancing (AT-07 & AT-08).
           </p>
         </div>
@@ -451,7 +451,7 @@ export function CollectionsPage() {
           <button
             onClick={() => loadBatches()}
             disabled={loading}
-            className="px-3 py-1.5 rounded border border-[#E2E8F0] bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            className="px-3 py-1.5 rounded border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin")} />
             <span>Refresh</span>
@@ -460,7 +460,7 @@ export function CollectionsPage() {
           {canManage && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-3.5 py-1.5 rounded bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="px-3.5 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>New Batch</span>
@@ -471,33 +471,33 @@ export function CollectionsPage() {
 
       {/* Metrics Banner */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-1">
-          <div className="text-xs font-medium text-[#64748B]">Total Route Batches</div>
-          <div className="text-2xl font-bold text-[#0F172A]">{metrics.total}</div>
+        <div className="p-4 bg-white border border-slate-200 rounded-lg shadow-xs space-y-1">
+          <div className="text-xs font-medium text-slate-500">Total Route Batches</div>
+          <div className="text-2xl font-bold text-slate-900">{metrics.total}</div>
           <div className="text-[11px] text-slate-400">All registered collection runs</div>
         </div>
 
-        <div className="p-4 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-1">
-          <div className="text-xs font-medium text-[#64748B]">In Progress</div>
-          <div className="text-2xl font-bold text-[#2563EB]">{metrics.inProgress}</div>
+        <div className="p-4 bg-white border border-slate-200 rounded-lg shadow-xs space-y-1">
+          <div className="text-xs font-medium text-slate-500">In Progress</div>
+          <div className="text-2xl font-bold text-blue-600">{metrics.inProgress}</div>
           <div className="text-[11px] text-blue-500">Active in the field</div>
         </div>
 
-        <div className="p-4 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-1">
-          <div className="text-xs font-medium text-[#64748B]">Pending Reconciliation</div>
+        <div className="p-4 bg-white border border-slate-200 rounded-lg shadow-xs space-y-1">
+          <div className="text-xs font-medium text-slate-500">Pending Reconciliation</div>
           <div className="text-2xl font-bold text-amber-600">{metrics.remitted}</div>
           <div className="text-[11px] text-amber-600">Turned in & awaiting supervisor review</div>
         </div>
 
-        <div className="p-4 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-1">
-          <div className="text-xs font-medium text-[#64748B]">Total Collected Today</div>
+        <div className="p-4 bg-white border border-slate-200 rounded-lg shadow-xs space-y-1">
+          <div className="text-xs font-medium text-slate-500">Total Collected Today</div>
           <div className="text-2xl font-bold text-emerald-600">{formatMoney(metrics.totalCollected)}</div>
           <div className="text-[11px] text-emerald-600">Recorded field collections</div>
         </div>
       </div>
 
       {/* Filters Bar */}
-      <div className="p-4 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-3">
+      <div className="p-4 bg-white border border-slate-200 rounded-lg shadow-xs space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Status Tabs */}
           <div className="flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-md text-xs">
@@ -508,7 +508,7 @@ export function CollectionsPage() {
                 className={cn(
                   "px-2.5 py-1 rounded font-medium transition-colors cursor-pointer",
                   statusFilter === s
-                    ? "bg-white text-[#2563EB] shadow-xs font-semibold"
+                    ? "bg-white text-blue-600 shadow-xs font-semibold"
                     : "text-slate-600 hover:text-slate-900"
                 )}
               >
@@ -526,7 +526,7 @@ export function CollectionsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && loadBatches()}
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
             />
           </div>
         </div>
@@ -534,11 +534,11 @@ export function CollectionsPage() {
         {/* Collector & Area Dropdowns */}
         <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100">
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-[#64748B] font-medium">Collector:</span>
+            <span className="text-slate-500 font-medium">Collector:</span>
             <select
               value={collectorFilter}
               onChange={(e) => setCollectorFilter(e.target.value)}
-              className="text-xs py-1 px-2.5 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+              className="text-xs py-1 px-2.5 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
             >
               <option value="">All Collectors</option>
               {collectors.map((c) => (
@@ -550,11 +550,11 @@ export function CollectionsPage() {
           </div>
 
           <div className="flex items-center gap-2 text-xs">
-            <span className="text-[#64748B] font-medium">Area:</span>
+            <span className="text-slate-500 font-medium">Area:</span>
             <select
               value={areaFilter}
               onChange={(e) => setAreaFilter(e.target.value)}
-              className="text-xs py-1 px-2.5 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+              className="text-xs py-1 px-2.5 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
             >
               <option value="">All Areas</option>
               {areas.map((a) => (
@@ -572,19 +572,19 @@ export function CollectionsPage() {
         {/* Left Pane: Batches List (5 cols) */}
         <div className="lg:col-span-5 space-y-3">
           <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-bold text-[#0F172A] uppercase tracking-wider">
+            <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
               Batches ({batches.length})
             </span>
             <span className="text-xs text-slate-400">Click to inspect</span>
           </div>
 
           {loading ? (
-            <div className="p-8 bg-white border border-[#E2E8F0] rounded-lg text-center space-y-2">
-              <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#2563EB]" />
+            <div className="p-8 bg-white border border-slate-200 rounded-lg text-center space-y-2">
+              <RefreshCw className="w-5 h-5 animate-spin mx-auto text-blue-600" />
               <div className="text-xs text-slate-500">Loading collection batches...</div>
             </div>
           ) : batches.length === 0 ? (
-            <div className="p-8 bg-white border border-[#E2E8F0] rounded-lg text-center space-y-2">
+            <div className="p-8 bg-white border border-slate-200 rounded-lg text-center space-y-2">
               <FolderSync className="w-8 h-8 text-slate-300 mx-auto" />
               <div className="text-xs font-semibold text-slate-700">No collection batches found</div>
               <div className="text-[11px] text-slate-400 max-w-xs mx-auto">
@@ -605,16 +605,16 @@ export function CollectionsPage() {
                     className={cn(
                       "p-4 rounded-lg border transition-all cursor-pointer space-y-2.5",
                       isSelected
-                        ? "bg-blue-50/50 border-[#2563EB] shadow-xs ring-1 ring-[#2563EB]"
-                        : "bg-white border-[#E2E8F0] hover:border-slate-300"
+                        ? "bg-blue-50/50 border-blue-600 shadow-xs ring-1 ring-blue-600"
+                        : "bg-white border-slate-200 hover:border-slate-300"
                     )}
                   >
                     <div className="flex items-start justify-between">
                       <div>
-                        <div className="font-mono text-xs font-bold text-[#0F172A]">
+                        <div className="font-mono text-xs font-bold text-slate-900">
                           {b.batchNumber}
                         </div>
-                        <div className="text-xs text-[#64748B] flex items-center gap-1.5 mt-0.5">
+                        <div className="text-xs text-slate-500 flex items-center gap-1.5 mt-0.5">
                           <User className="w-3 h-3 text-slate-400" />
                           <span>{b.collectorName || "Assigned Collector"}</span>
                         </div>
@@ -674,7 +674,7 @@ export function CollectionsPage() {
         {/* Right Pane: Active Batch Route Sheet Details (7 cols) */}
         <div className="lg:col-span-7 space-y-4">
           {!activeBatchDetail ? (
-            <div className="p-12 bg-white border border-[#E2E8F0] rounded-lg text-center space-y-3">
+            <div className="p-12 bg-white border border-slate-200 rounded-lg text-center space-y-3">
               <FolderSync className="w-10 h-10 text-slate-300 mx-auto" />
               <div className="text-sm font-semibold text-slate-700">No Batch Selected</div>
               <div className="text-xs text-slate-400 max-w-sm mx-auto">
@@ -682,23 +682,23 @@ export function CollectionsPage() {
               </div>
             </div>
           ) : detailLoading ? (
-            <div className="p-12 bg-white border border-[#E2E8F0] rounded-lg text-center space-y-2">
-              <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#2563EB]" />
+            <div className="p-12 bg-white border border-slate-200 rounded-lg text-center space-y-2">
+              <RefreshCw className="w-6 h-6 animate-spin mx-auto text-blue-600" />
               <div className="text-xs text-slate-500">Loading batch details...</div>
             </div>
           ) : (
             <>
               {/* Batch Detail Header Card */}
-              <div className="p-5 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-4">
+              <div className="p-5 bg-white border border-slate-200 rounded-lg shadow-xs space-y-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="flex items-center gap-2.5">
-                      <span className="font-mono text-base font-bold text-[#0F172A]">
+                      <span className="font-mono text-base font-bold text-slate-900">
                         {activeBatchDetail.batchNumber}
                       </span>
                       {getStatusBadge(activeBatchDetail.status)}
                     </div>
-                    <div className="text-xs text-[#64748B] flex flex-wrap items-center gap-4 mt-1">
+                    <div className="text-xs text-slate-500 flex flex-wrap items-center gap-4 mt-1">
                       <span className="flex items-center gap-1">
                         <User className="w-3.5 h-3.5 text-slate-400" />
                         <strong>{activeBatchDetail.collectorName}</strong> ({activeBatchDetail.collectorCode})
@@ -719,10 +719,10 @@ export function CollectionsPage() {
                     {/* Print Route Sheet Button */}
                     <button
                       onClick={() => setShowRouteSheetModal(true)}
-                      className="px-3 py-1.5 rounded bg-white hover:bg-slate-50 border border-[#CBD5E1] text-[#334155] text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                      className="px-3 py-1.5 rounded bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
                       title="Print Route Sheet for Field Collector"
                     >
-                      <Printer className="w-3.5 h-3.5 text-[#2563EB]" />
+                      <Printer className="w-3.5 h-3.5 text-blue-600" />
                       <span>Print Route Sheet</span>
                     </button>
 
@@ -746,7 +746,7 @@ export function CollectionsPage() {
                     {(activeBatchDetail.status === "IN_PROGRESS" || activeBatchDetail.status === "SUBMITTED") && canManage && (
                       <button
                         onClick={handleOpenRemitModal}
-                        className="px-3 py-1.5 rounded bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        className="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
                       >
                         <Coins className="w-3.5 h-3.5" />
                         <span>Remit Cash</span>
@@ -788,7 +788,7 @@ export function CollectionsPage() {
 
                   <div className="p-3 bg-blue-50/60 rounded border border-blue-200">
                     <div className="text-[10px] text-blue-600 uppercase font-semibold">Collected Cash</div>
-                    <div className="text-sm font-bold text-[#2563EB]">
+                    <div className="text-sm font-bold text-blue-600">
                       {formatMoney(activeBatchDetail.collectedCash)}
                     </div>
                   </div>
@@ -834,10 +834,10 @@ export function CollectionsPage() {
               </div>
 
               {/* Route Sheet Accounts Table */}
-              <div className="bg-white border border-[#E2E8F0] rounded-lg shadow-xs overflow-hidden space-y-3">
+              <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden space-y-3">
                 <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                  <h3 className="text-xs font-bold text-[#0F172A] uppercase tracking-wider flex items-center gap-2">
-                    <Receipt className="w-4 h-4 text-[#2563EB]" />
+                  <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                    <Receipt className="w-4 h-4 text-blue-600" />
                     <span>Route Accounts ({activeBatchDetail.accounts?.length || 0})</span>
                   </h3>
                   <span className="text-xs text-slate-400">Scheduled for field collection</span>
@@ -913,7 +913,7 @@ export function CollectionsPage() {
                               canCreatePayment ? (
                                 <button
                                   onClick={() => handleOpenCollectModal(acc)}
-                                  className="px-2.5 py-1 rounded bg-[#2563EB] hover:bg-blue-700 text-white text-[11px] font-medium transition-colors cursor-pointer"
+                                  className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-medium transition-colors cursor-pointer"
                                 >
                                   Collect
                                 </button>
@@ -931,9 +931,9 @@ export function CollectionsPage() {
 
               {/* Remittance History Table */}
               {activeBatchDetail.remittances && activeBatchDetail.remittances.length > 0 && (
-                <div className="bg-white border border-[#E2E8F0] rounded-lg shadow-xs overflow-hidden space-y-3">
+                <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden space-y-3">
                   <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-                    <h3 className="text-xs font-bold text-[#0F172A] uppercase tracking-wider flex items-center gap-2">
+                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
                       <Wallet className="w-4 h-4 text-purple-600" />
                       <span>Remittance Log ({activeBatchDetail.remittances.length})</span>
                     </h3>
@@ -1014,8 +1014,8 @@ export function CollectionsPage() {
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full border border-slate-200 p-6 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
-                <Plus className="w-4 h-4 text-[#2563EB]" />
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Plus className="w-4 h-4 text-blue-600" />
                 <span>Create Collection Batch</span>
               </h3>
               <button
@@ -1039,7 +1039,7 @@ export function CollectionsPage() {
                 <select
                   value={newCollectorId}
                   onChange={(e) => setNewCollectorId(e.target.value)}
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+                  className="w-full p-2 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
                   required
                 >
                   <option value="">Select Collector</option>
@@ -1056,7 +1056,7 @@ export function CollectionsPage() {
                 <select
                   value={newAreaId}
                   onChange={(e) => setNewAreaId(e.target.value)}
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+                  className="w-full p-2 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
                   required
                 >
                   <option value="">Select Area</option>
@@ -1074,7 +1074,7 @@ export function CollectionsPage() {
                   type="date"
                   value={newCollectionDate}
                   onChange={(e) => setNewCollectionDate(e.target.value)}
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+                  className="w-full p-2 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
                   required
                 >
                 </input>
@@ -1087,7 +1087,7 @@ export function CollectionsPage() {
                   value={newBatchNotes}
                   onChange={(e) => setNewBatchNotes(e.target.value)}
                   placeholder="e.g. Purok 3 to 7 morning run"
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+                  className="w-full p-2 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
                 />
               </div>
 
@@ -1102,7 +1102,7 @@ export function CollectionsPage() {
                 <button
                   type="submit"
                   disabled={creatingBatch}
-                  className="px-4 py-1.5 rounded bg-[#2563EB] hover:bg-blue-700 text-white font-semibold cursor-pointer disabled:opacity-50"
+                  className="px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold cursor-pointer disabled:opacity-50"
                 >
                   {creatingBatch ? "Creating Batch..." : "Create Route Batch"}
                 </button>
@@ -1117,8 +1117,8 @@ export function CollectionsPage() {
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full border border-slate-200 p-6 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
-                <Receipt className="w-4 h-4 text-[#2563EB]" />
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Receipt className="w-4 h-4 text-blue-600" />
                 <span>Record Field Collection</span>
               </h3>
               <button
@@ -1160,7 +1160,7 @@ export function CollectionsPage() {
                   min="0.01"
                   value={collectAmount}
                   onChange={(e) => setCollectAmount(e.target.value)}
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white font-mono font-bold text-slate-800 focus:outline-none focus:border-[#2563EB]"
+                  className="w-full p-2 rounded border border-slate-200 bg-white font-mono font-bold text-slate-800 focus:outline-none focus:border-blue-600"
                   required
                 />
               </div>
@@ -1170,7 +1170,7 @@ export function CollectionsPage() {
                 <select
                   value={collectMethod}
                   onChange={(e) => setCollectMethod(e.target.value as PaymentMethod)}
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+                  className="w-full p-2 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
                 >
                   <option value="CASH">Cash Payment</option>
                   <option value="GCASH">GCash</option>
@@ -1186,7 +1186,7 @@ export function CollectionsPage() {
                   placeholder="e.g. Field receipt booklet # or GCash Ref"
                   value={collectRef}
                   onChange={(e) => setCollectRef(e.target.value)}
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+                  className="w-full p-2 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
                 />
               </div>
 
@@ -1197,7 +1197,7 @@ export function CollectionsPage() {
                   placeholder="e.g. Paid in full to collector"
                   value={collectNotes}
                   onChange={(e) => setCollectNotes(e.target.value)}
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+                  className="w-full p-2 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
                 />
               </div>
 
@@ -1212,7 +1212,7 @@ export function CollectionsPage() {
                 <button
                   type="submit"
                   disabled={collecting}
-                  className="px-4 py-1.5 rounded bg-[#2563EB] hover:bg-blue-700 text-white font-semibold cursor-pointer disabled:opacity-50"
+                  className="px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold cursor-pointer disabled:opacity-50"
                 >
                   {collecting ? "Issuing Receipt..." : "Issue Official Receipt"}
                 </button>
@@ -1227,8 +1227,8 @@ export function CollectionsPage() {
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full border border-slate-200 p-6 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
-                <Coins className="w-4 h-4 text-[#2563EB]" />
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Coins className="w-4 h-4 text-blue-600" />
                 <span>Cash Remittance Handover</span>
               </h3>
               <button
@@ -1253,7 +1253,7 @@ export function CollectionsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Target Cash Collected:</span>
-                <span className="font-bold text-[#2563EB]">{formatMoney(activeBatchDetail.collectedCash)}</span>
+                <span className="font-bold text-blue-600">{formatMoney(activeBatchDetail.collectedCash)}</span>
               </div>
             </div>
 
@@ -1266,7 +1266,7 @@ export function CollectionsPage() {
                   min="0"
                   value={remitCash}
                   onChange={(e) => setRemitCash(e.target.value)}
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white font-mono font-bold text-base text-slate-800 focus:outline-none focus:border-[#2563EB]"
+                  className="w-full p-2 rounded border border-slate-200 bg-white font-mono font-bold text-base text-slate-800 focus:outline-none focus:border-blue-600"
                   required
                 />
               </div>
@@ -1310,7 +1310,7 @@ export function CollectionsPage() {
                   value={remitNotes}
                   onChange={(e) => setRemitNotes(e.target.value)}
                   placeholder="e.g. Counted in presence of Cashier and Collector"
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+                  className="w-full p-2 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
                 />
               </div>
 
@@ -1325,7 +1325,7 @@ export function CollectionsPage() {
                 <button
                   type="submit"
                   disabled={remitting}
-                  className="px-4 py-1.5 rounded bg-[#2563EB] hover:bg-blue-700 text-white font-semibold cursor-pointer disabled:opacity-50"
+                  className="px-4 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold cursor-pointer disabled:opacity-50"
                 >
                   {remitting ? "Recording Remittance..." : "Confirm Cash Remittance"}
                 </button>
@@ -1340,7 +1340,7 @@ export function CollectionsPage() {
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full border border-slate-200 p-6 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-teal-600" />
                 <span>Supervisor Reconciliation</span>
               </h3>
@@ -1382,7 +1382,7 @@ export function CollectionsPage() {
                   value={reconcileNotes}
                   onChange={(e) => setReconcileNotes(e.target.value)}
                   placeholder="e.g. Verified official receipts against register drawer count."
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+                  className="w-full p-2 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
                 />
               </div>
 
@@ -1412,7 +1412,7 @@ export function CollectionsPage() {
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full border border-slate-200 p-6 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <Lock className="w-4 h-4 text-emerald-600" />
                 <span>Close Collection Batch</span>
               </h3>
@@ -1461,7 +1461,7 @@ export function CollectionsPage() {
                     value={closeReason}
                     onChange={(e) => setCloseReason(e.target.value)}
                     placeholder="e.g. Shortage of ₱500 acknowledged by Collector Juan; promissory note filed with HR."
-                    className="w-full p-2 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+                    className="w-full p-2 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
                     required
                   />
                   <div className="text-[10px] text-slate-400 mt-1 flex justify-between">
@@ -1499,9 +1499,9 @@ export function CollectionsPage() {
             {/* Modal Toolbar (Non-printable buttons) */}
             <div className="flex items-center justify-between border-b border-slate-200 pb-4 print:hidden">
               <div className="flex items-center gap-2">
-                <Printer className="w-5 h-5 text-[#2563EB]" />
-                <h3 className="text-base font-bold text-[#0F172A]">Field Collector Route Sheet</h3>
-                <span className="text-xs px-2 py-0.5 rounded bg-blue-50 text-[#2563EB] font-mono font-medium">
+                <Printer className="w-5 h-5 text-blue-600" />
+                <h3 className="text-base font-bold text-slate-900">Field Collector Route Sheet</h3>
+                <span className="text-xs px-2 py-0.5 rounded bg-blue-50 text-blue-600 font-mono font-medium">
                   {activeBatchDetail.batchNumber}
                 </span>
               </div>
@@ -1509,7 +1509,7 @@ export function CollectionsPage() {
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-xs font-semibold shadow-xs cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs cursor-pointer"
                 >
                   <Printer className="w-4 h-4" />
                   <span>Print Route Sheet</span>
@@ -1525,50 +1525,50 @@ export function CollectionsPage() {
             </div>
 
             {/* Printable Document Body */}
-            <div className="space-y-6 text-[#0F172A]">
+            <div className="space-y-6 text-slate-900">
               {/* Header Letterhead */}
-              <div className="flex items-start justify-between border-b-2 border-[#0F2747] pb-4">
+              <div className="flex items-start justify-between border-b-2 border-slate-950 pb-4">
                 <div>
-                  <h1 className="text-lg font-bold tracking-tight text-[#0F2747]">
+                  <h1 className="text-lg font-bold tracking-tight text-slate-950">
                     BUKIDNON CABLE & INTERNET SERVICES (BCIS)
                   </h1>
-                  <p className="text-xs text-[#64748B]">Official Field Collection Manifest & Route Sheet</p>
-                  <p className="text-[11px] text-[#64748B]">Malaybalay City, Bukidnon &bull; Operations & Dispatch</p>
+                  <p className="text-xs text-slate-500">Official Field Collection Manifest & Route Sheet</p>
+                  <p className="text-[11px] text-slate-500">Malaybalay City, Bukidnon &bull; Operations & Dispatch</p>
                 </div>
                 <div className="text-right text-xs">
-                  <div className="font-mono font-bold text-sm text-[#0F2747]">{activeBatchDetail.batchNumber}</div>
-                  <div className="text-[#64748B] mt-0.5">Date: {activeBatchDetail.collectionDate}</div>
-                  <div className="text-[#64748B]">Status: <span className="font-semibold uppercase">{activeBatchDetail.status}</span></div>
+                  <div className="font-mono font-bold text-sm text-slate-950">{activeBatchDetail.batchNumber}</div>
+                  <div className="text-slate-500 mt-0.5">Date: {activeBatchDetail.collectionDate}</div>
+                  <div className="text-slate-500">Status: <span className="font-semibold uppercase">{activeBatchDetail.status}</span></div>
                 </div>
               </div>
 
               {/* Collector & Area Metadata Box */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#F8FAFC] p-3.5 rounded-lg border border-[#E2E8F0] text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 p-3.5 rounded-lg border border-slate-200 text-xs">
                 <div>
-                  <span className="text-[#64748B] block text-[11px]">Assigned Collector</span>
-                  <span className="font-bold text-[#0F172A]">{activeBatchDetail.collectorName}</span>
-                  <span className="font-mono text-[#64748B] text-[10px] block">({activeBatchDetail.collectorCode})</span>
+                  <span className="text-slate-500 block text-[11px]">Assigned Collector</span>
+                  <span className="font-bold text-slate-900">{activeBatchDetail.collectorName}</span>
+                  <span className="font-mono text-slate-500 text-[10px] block">({activeBatchDetail.collectorCode})</span>
                 </div>
                 <div>
-                  <span className="text-[#64748B] block text-[11px]">Collection Route / Area</span>
-                  <span className="font-bold text-[#0F172A]">{activeBatchDetail.collectionAreaName}</span>
-                  <span className="font-mono text-[#64748B] text-[10px] block">{activeBatchDetail.collectionAreaCode}</span>
+                  <span className="text-slate-500 block text-[11px]">Collection Route / Area</span>
+                  <span className="font-bold text-slate-900">{activeBatchDetail.collectionAreaName}</span>
+                  <span className="font-mono text-slate-500 text-[10px] block">{activeBatchDetail.collectionAreaCode}</span>
                 </div>
                 <div>
-                  <span className="text-[#64748B] block text-[11px]">Assigned Accounts</span>
-                  <span className="font-bold font-mono text-sm text-[#0F172A]">{activeBatchDetail.accounts?.length || 0}</span>
+                  <span className="text-slate-500 block text-[11px]">Assigned Accounts</span>
+                  <span className="font-bold font-mono text-sm text-slate-900">{activeBatchDetail.accounts?.length || 0}</span>
                 </div>
                 <div>
-                  <span className="text-[#64748B] block text-[11px]">Expected Collection</span>
-                  <span className="font-bold font-mono text-sm text-[#2563EB]">{formatMoney(activeBatchDetail.expectedTotal)}</span>
+                  <span className="text-slate-500 block text-[11px]">Expected Collection</span>
+                  <span className="font-bold font-mono text-sm text-blue-600">{formatMoney(activeBatchDetail.expectedTotal)}</span>
                 </div>
               </div>
 
               {/* Accounts Manifest Table */}
-              <div className="overflow-x-auto border border-[#E2E8F0] rounded-lg">
+              <div className="overflow-x-auto border border-slate-200 rounded-lg">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="bg-[#F1F5F9] border-b border-[#E2E8F0] text-[#475569] font-bold">
+                    <tr className="bg-slate-100 border-b border-slate-200 text-slate-600 font-bold">
                       <th className="py-2.5 px-3">#</th>
                       <th className="py-2.5 px-3">Account & Subscriber</th>
                       <th className="py-2.5 px-3">Service Address</th>
@@ -1582,29 +1582,29 @@ export function CollectionsPage() {
                   <tbody className="divide-y divide-[#E2E8F0]">
                     {(!activeBatchDetail.accounts || activeBatchDetail.accounts.length === 0) ? (
                       <tr>
-                        <td colSpan={8} className="py-6 text-center text-[#64748B]">
+                        <td colSpan={8} className="py-6 text-center text-slate-500">
                           No accounts assigned to this route batch.
                         </td>
                       </tr>
                     ) : (
                       activeBatchDetail.accounts.map((acc, idx) => (
                         <tr key={acc.id} className="hover:bg-slate-50/50">
-                          <td className="py-2 px-3 font-mono text-[#64748B]">{idx + 1}</td>
+                          <td className="py-2 px-3 font-mono text-slate-500">{idx + 1}</td>
                           <td className="py-2 px-3">
-                            <div className="font-bold text-[#0F172A]">
+                            <div className="font-bold text-slate-900">
                               {acc.subscriberDisplayName ||
                                 (acc.subscriberLastName ? `${acc.subscriberLastName}, ${acc.subscriberFirstName}` : acc.subscriberBusinessName) ||
                                 "Subscriber"}
                             </div>
-                            <div className="font-mono text-[10px] text-[#64748B]">{acc.serviceAccountNumber}</div>
+                            <div className="font-mono text-[10px] text-slate-500">{acc.serviceAccountNumber}</div>
                           </td>
-                          <td className="py-2 px-3 text-[#475569] text-[11px]">
+                          <td className="py-2 px-3 text-slate-600 text-[11px]">
                             {acc.addressLine || activeBatchDetail.collectionAreaName}
                           </td>
-                          <td className="py-2 px-3 text-[#475569] text-[11px]">
+                          <td className="py-2 px-3 text-slate-600 text-[11px]">
                             {acc.servicePlanName || "Broadband"}
                           </td>
-                          <td className="py-2 px-3 text-right font-mono font-bold text-[#0F172A]">
+                          <td className="py-2 px-3 text-right font-mono font-bold text-slate-900">
                             {formatMoney(acc.expectedAmount)}
                           </td>
                           <td className="py-2 px-3 text-center font-mono">
@@ -1632,14 +1632,14 @@ export function CollectionsPage() {
               {/* Sign-off Footer */}
               <div className="grid grid-cols-2 gap-8 pt-8 border-t border-slate-200 text-xs">
                 <div className="space-y-10">
-                  <div className="text-[11px] text-[#64748B]">Prepared & Dispatched By:</div>
-                  <div className="border-t border-[#0F172A] pt-1 text-center font-medium">
+                  <div className="text-[11px] text-slate-500">Prepared & Dispatched By:</div>
+                  <div className="border-t border-slate-900 pt-1 text-center font-medium">
                     Billing Supervisor / Cashier Signature
                   </div>
                 </div>
                 <div className="space-y-10">
-                  <div className="text-[11px] text-[#64748B]">Received & Field Collected By:</div>
-                  <div className="border-t border-[#0F172A] pt-1 text-center font-medium">
+                  <div className="text-[11px] text-slate-500">Received & Field Collected By:</div>
+                  <div className="border-t border-slate-900 pt-1 text-center font-medium">
                     {activeBatchDetail.collectorName} (Field Collector)
                   </div>
                 </div>

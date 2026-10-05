@@ -178,8 +178,8 @@ export function SubscribersPage() {
       {/* Top Banner & Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-[#0F172A] tracking-tight">Subscriber Directory</h2>
-          <p className="text-xs text-[#64748B] mt-0.5">
+          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Subscriber Directory</h2>
+          <p className="text-xs text-slate-500 mt-0.5">
             Authoritative registry of subscribers, billable service accounts, and service controls
           </p>
         </div>
@@ -188,7 +188,7 @@ export function SubscribersPage() {
           <button
             onClick={() => fetchSubscribers()}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#475569] bg-white border border-[#CBD5E1] rounded-md hover:bg-[#F8FAFC] shadow-2xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded-md hover:bg-slate-50 shadow-2xs transition-colors"
           >
             <RefreshCw className={cn("w-3.5 h-3.5", loading && "animate-spin")} />
             Refresh
@@ -197,7 +197,7 @@ export function SubscribersPage() {
           {canCreateSubscriber && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-md shadow-xs transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-xs transition-colors"
             >
               <Plus className="w-4 h-4" />
               Register Subscriber
@@ -207,9 +207,9 @@ export function SubscribersPage() {
       </div>
 
       {/* Filter / Search Bar */}
-      <div className="bg-white p-3.5 border border-[#E2E8F0] rounded-lg shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
+      <div className="bg-white p-3.5 border border-slate-200 rounded-lg shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="relative w-full md:w-96">
-          <Search className="w-4 h-4 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search by account #, name, phone, or business..."
@@ -218,19 +218,19 @@ export function SubscribersPage() {
               setSearch(e.target.value);
               setPage(1);
             }}
-            className="w-full pl-9 pr-3 py-1.5 text-xs bg-[#F8FAFC] border border-[#E2E8F0] rounded-md focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-[#2563EB] focus:border-[#2563EB] text-[#0F172A] placeholder:text-[#94A3B8]"
+            className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-md focus:bg-white focus:outline-hidden focus:ring-1 focus:ring-blue-600 focus:border-blue-600 text-slate-900 placeholder:text-slate-400"
           />
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <span className="text-xs text-[#64748B] font-medium">Status:</span>
+          <span className="text-xs text-slate-500 font-medium">Status:</span>
           <select
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="text-xs bg-[#F8FAFC] border border-[#E2E8F0] rounded-md px-2.5 py-1.5 text-[#0F172A] focus:outline-hidden focus:ring-1 focus:ring-[#2563EB]"
+            className="text-xs bg-slate-50 border border-slate-200 rounded-md px-2.5 py-1.5 text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-blue-600"
           >
             <option value="">All Statuses</option>
             <option value="ACTIVE">Active</option>
@@ -241,11 +241,11 @@ export function SubscribersPage() {
       </div>
 
       {/* Directory Table */}
-      <div className="bg-white border border-[#E2E8F0] rounded-lg shadow-2xs overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-lg shadow-2xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#F8FAFC] border-b border-[#E2E8F0] text-[11px] font-semibold text-[#475569] uppercase tracking-wider">
+              <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
                 <th className="py-3 px-4">Account Number</th>
                 <th className="py-3 px-4">Subscriber Name</th>
                 <th className="py-3 px-4">Contact Number</th>
@@ -258,20 +258,20 @@ export function SubscribersPage() {
             <tbody className="divide-y divide-[#F1F5F9] text-xs">
               {loading && subscribers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-[#64748B]">
+                  <td colSpan={7} className="py-12 text-center text-slate-500">
                     <div className="flex flex-col items-center gap-2">
-                      <RefreshCw className="w-5 h-5 animate-spin text-[#2563EB]" />
+                      <RefreshCw className="w-5 h-5 animate-spin text-blue-600" />
                       <span>Loading subscribers from database...</span>
                     </div>
                   </td>
                 </tr>
               ) : subscribers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-[#64748B]">
+                  <td colSpan={7} className="py-12 text-center text-slate-500">
                     <div className="flex flex-col items-center gap-2">
-                      <Boxes className="w-8 h-8 text-[#CBD5E1]" />
-                      <span className="font-medium text-[#0F172A]">No subscribers found</span>
-                      <p className="text-xs text-[#94A3B8]">
+                      <Boxes className="w-8 h-8 text-slate-300" />
+                      <span className="font-medium text-slate-900">No subscribers found</span>
+                      <p className="text-xs text-slate-400">
                         {search ? "No matching records found. Try adjusting your search query." : "No subscribers have been created yet."}
                       </p>
                     </div>
@@ -279,8 +279,8 @@ export function SubscribersPage() {
                 </tr>
               ) : (
                 subscribers.map((sub) => (
-                  <tr key={sub.id} className="hover:bg-[#F8FAFC] transition-colors">
-                    <td className="py-3 px-4 font-mono font-medium text-[#2563EB]">
+                  <tr key={sub.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="py-3 px-4 font-mono font-medium text-blue-600">
                       <button
                         onClick={() => openSubscriberDrawer(sub.id)}
                         className="hover:underline flex items-center gap-1 text-left cursor-pointer"
@@ -289,29 +289,29 @@ export function SubscribersPage() {
                       </button>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="font-medium text-[#0F172A]">
+                      <div className="font-medium text-slate-900">
                         {sub.lastName}, {sub.firstName} {sub.middleName ? `${sub.middleName[0]}.` : ""}
                       </div>
                       {sub.businessName && (
-                        <div className="text-[11px] text-[#64748B] flex items-center gap-1">
+                        <div className="text-[11px] text-slate-500 flex items-center gap-1">
                           <span className="italic">{sub.businessName}</span>
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-[#334155] font-mono">
+                    <td className="py-3 px-4 text-slate-700 font-mono">
                       {sub.primaryContactNumber}
                     </td>
-                    <td className="py-3 px-4 text-[#475569]">
+                    <td className="py-3 px-4 text-slate-600">
                       {sub.primaryAddress ? (
                         <span>
                           {sub.primaryAddress.barangay}, {sub.primaryAddress.cityMunicipality}
                         </span>
                       ) : (
-                        <span className="text-[#94A3B8] italic">No address recorded</span>
+                        <span className="text-slate-400 italic">No address recorded</span>
                       )}
                     </td>
                     <td className="py-3 px-4 text-center">
-                      <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-[#2563EB] border border-blue-100">
+                      <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-600 border border-blue-100">
                         {sub.serviceAccountsCount || 0} active
                       </span>
                     </td>
@@ -320,8 +320,8 @@ export function SubscribersPage() {
                         className={cn(
                           "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border",
                           sub.status === "ACTIVE"
-                            ? "bg-emerald-50 text-[#059669] border-emerald-200"
-                            : "bg-slate-100 text-[#475569] border-slate-200"
+                            ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                            : "bg-slate-100 text-slate-600 border-slate-200"
                         )}
                       >
                         {sub.status}
@@ -349,7 +349,7 @@ export function SubscribersPage() {
                         <button
                           type="button"
                           onClick={() => openSubscriberDrawer(sub.id)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-[#2563EB] hover:bg-blue-50 rounded border border-transparent hover:border-blue-200 transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50 rounded border border-transparent hover:border-blue-200 transition-colors cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           <span>View Profile</span>
@@ -364,16 +364,16 @@ export function SubscribersPage() {
         </div>
 
         {/* Pagination Footer */}
-        <div className="px-4 py-3 bg-[#F8FAFC] border-t border-[#E2E8F0] flex items-center justify-between text-xs text-[#64748B]">
+        <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
           <div>
-            Showing <span className="font-semibold text-[#0F172A]">{subscribers.length}</span> of{" "}
-            <span className="font-semibold text-[#0F172A]">{totalCount}</span> subscribers
+            Showing <span className="font-semibold text-slate-900">{subscribers.length}</span> of{" "}
+            <span className="font-semibold text-slate-900">{totalCount}</span> subscribers
           </div>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1 || loading}
-              className="px-2.5 py-1 bg-white border border-[#CBD5E1] rounded text-[#334155] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F1F5F9] transition-colors"
+              className="px-2.5 py-1 bg-white border border-slate-300 rounded text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors"
             >
               Previous
             </button>
@@ -383,7 +383,7 @@ export function SubscribersPage() {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || loading}
-              className="px-2.5 py-1 bg-white border border-[#CBD5E1] rounded text-[#334155] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[#F1F5F9] transition-colors"
+              className="px-2.5 py-1 bg-white border border-slate-300 rounded text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors"
             >
               Next
             </button>
@@ -398,32 +398,32 @@ export function SubscribersPage() {
         <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-2xs flex justify-end">
           <div className="w-full max-w-2xl bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
             {/* Drawer Header */}
-            <div className="px-6 py-4 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F8FAFC]">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-lg bg-blue-50 text-[#2563EB]">
+                <div className="p-2.5 rounded-lg bg-blue-50 text-blue-600">
                   <UserCheck className="w-6 h-6" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-base font-bold text-[#0F172A]">
+                    <h3 className="text-base font-bold text-slate-900">
                       {subscriberProfile
                         ? `${subscriberProfile.lastName}, ${subscriberProfile.firstName} ${subscriberProfile.middleName || ""}`
                         : "Loading profile..."}
                     </h3>
                     {subscriberProfile && (
-                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-[#059669] border border-emerald-200">
+                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
                         {subscriberProfile.status}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs font-mono text-[#64748B]">
+                  <p className="text-xs font-mono text-slate-500">
                     {subscriberProfile?.accountNumber}
                   </p>
                 </div>
               </div>
               <button
                 onClick={closeSubscriberDrawer}
-                className="p-1.5 text-[#64748B] hover:text-[#0F172A] hover:bg-[#E2E8F0] rounded-md transition-colors cursor-pointer"
+                className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-200 rounded-md transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -432,8 +432,8 @@ export function SubscribersPage() {
             {/* Drawer Content */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {profileLoading || !subscriberProfile ? (
-                <div className="py-20 flex flex-col items-center justify-center text-[#64748B] gap-2">
-                  <RefreshCw className="w-6 h-6 animate-spin text-[#2563EB]" />
+                <div className="py-20 flex flex-col items-center justify-center text-slate-500 gap-2">
+                  <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
                   <span className="text-xs">Fetching subscriber profile...</span>
                 </div>
               ) : (
@@ -465,56 +465,56 @@ export function SubscribersPage() {
                   </div>
 
                   {/* Subscriber Metadata Card */}
-                  <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg p-4 space-y-3">
-                    <h4 className="text-xs font-semibold text-[#475569] uppercase tracking-wider">
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-3">
+                    <h4 className="text-xs font-semibold text-slate-600 uppercase tracking-wider">
                       Contact & Account Information
                     </h4>
                     <div className="grid grid-cols-2 gap-3 text-xs">
                       <div>
-                        <span className="text-[#64748B] block">Primary Phone:</span>
-                        <span className="font-mono font-medium text-[#0F172A]">
+                        <span className="text-slate-500 block">Primary Phone:</span>
+                        <span className="font-mono font-medium text-slate-900">
                           {subscriberProfile.primaryContactNumber}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[#64748B] block">Secondary Phone:</span>
-                        <span className="font-mono text-[#0F172A]">
+                        <span className="text-slate-500 block">Secondary Phone:</span>
+                        <span className="font-mono text-slate-900">
                           {subscriberProfile.secondaryContactNumber || "None"}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[#64748B] block">Email Address:</span>
-                        <span className="text-[#0F172A]">
+                        <span className="text-slate-500 block">Email Address:</span>
+                        <span className="text-slate-900">
                           {subscriberProfile.email || "None"}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[#64748B] block">Registered On:</span>
-                        <span className="font-mono text-[#0F172A]">
+                        <span className="text-slate-500 block">Registered On:</span>
+                        <span className="font-mono text-slate-900">
                           {new Date(subscriberProfile.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                       {subscriberProfile.businessName && (
                         <div className="col-span-2">
-                          <span className="text-[#64748B] block">Business Name:</span>
-                          <span className="font-medium text-[#0F172A]">
+                          <span className="text-slate-500 block">Business Name:</span>
+                          <span className="font-medium text-slate-900">
                             {subscriberProfile.businessName}
                           </span>
                         </div>
                       )}
                       {subscriberProfile.notes && (
-                        <div className="col-span-2 pt-1 border-t border-[#E2E8F0]">
-                          <span className="text-[#64748B] block">Notes:</span>
-                          <p className="text-[#475569] italic">{subscriberProfile.notes}</p>
+                        <div className="col-span-2 pt-1 border-t border-slate-200">
+                          <span className="text-slate-500 block">Notes:</span>
+                          <p className="text-slate-600 italic">{subscriberProfile.notes}</p>
                         </div>
                       )}
                     </div>
                   </div>
 
                   {/* Registered Addresses Card */}
-                  <div className="bg-white border border-[#E2E8F0] rounded-lg p-4 space-y-2">
-                    <div className="flex items-center gap-1.5 text-xs font-semibold text-[#475569] uppercase tracking-wider">
-                      <MapPin className="w-3.5 h-3.5 text-[#2563EB]" />
+                  <div className="bg-white border border-slate-200 rounded-lg p-4 space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                      <MapPin className="w-3.5 h-3.5 text-blue-600" />
                       <span>Registered Addresses</span>
                     </div>
 
@@ -523,25 +523,25 @@ export function SubscribersPage() {
                         {subscriberProfile.addresses.map((addr, idx) => (
                           <div
                             key={idx}
-                            className="p-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded text-xs space-y-1"
+                            className="p-3 bg-slate-50 border border-slate-200 rounded text-xs space-y-1"
                           >
                             <div className="flex items-center justify-between">
-                              <span className="font-semibold text-[#0F172A]">{addr.label}</span>
+                              <span className="font-semibold text-slate-900">{addr.label}</span>
                               {addr.isPrimary && (
-                                <span className="px-1.5 py-0.5 text-[10px] bg-blue-50 text-[#2563EB] border border-blue-200 rounded font-medium">
+                                <span className="px-1.5 py-0.5 text-[10px] bg-blue-50 text-blue-600 border border-blue-200 rounded font-medium">
                                   Primary
                                 </span>
                               )}
                             </div>
-                            <p className="text-[#334155]">
+                            <p className="text-slate-700">
                               {addr.line1}
                               {addr.line2 ? `, ${addr.line2}` : ""}
                             </p>
-                            <p className="text-[#64748B]">
+                            <p className="text-slate-500">
                               Barangay {addr.barangay}, {addr.cityMunicipality}, {addr.province} {addr.postalCode}
                             </p>
                             {addr.landmark && (
-                              <p className="text-[11px] text-[#475569] italic">
+                              <p className="text-[11px] text-slate-600 italic">
                                 Landmark: {addr.landmark}
                               </p>
                             )}
@@ -549,7 +549,7 @@ export function SubscribersPage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-[#94A3B8] italic">No addresses on file.</p>
+                      <p className="text-xs text-slate-400 italic">No addresses on file.</p>
                     )}
                   </div>
 
@@ -557,8 +557,8 @@ export function SubscribersPage() {
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <Layers className="w-4 h-4 text-[#2563EB]" />
-                        <h4 className="text-xs font-bold text-[#0F172A] uppercase tracking-wider">
+                        <Layers className="w-4 h-4 text-blue-600" />
+                        <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                           Billable Service Subscriptions ({subscriberProfile.serviceAccounts?.length || 0})
                         </h4>
                       </div>
@@ -566,7 +566,7 @@ export function SubscribersPage() {
                       {canCreateSubscriber && (
                         <button
                           onClick={() => setShowAddServiceModal(true)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#2563EB] bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded transition-colors cursor-pointer"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           Add Service Account
@@ -587,7 +587,7 @@ export function SubscribersPage() {
                               className={cn(
                                 "border rounded-lg p-4 space-y-3 transition-shadow",
                                 sa.status === "ACTIVE"
-                                  ? "bg-white border-[#E2E8F0] shadow-xs"
+                                  ? "bg-white border-slate-200 shadow-xs"
                                   : "bg-rose-50/30 border-rose-200"
                               )}
                             >
@@ -598,7 +598,7 @@ export function SubscribersPage() {
                                     <span
                                       className={cn(
                                         "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold",
-                                        isInternet && "bg-blue-50 text-[#2563EB] border border-blue-200",
+                                        isInternet && "bg-blue-50 text-blue-600 border border-blue-200",
                                         isCable && "bg-purple-50 text-purple-700 border border-purple-200",
                                         isCombo && "bg-emerald-50 text-emerald-700 border border-emerald-200"
                                       )}
@@ -609,12 +609,12 @@ export function SubscribersPage() {
                                       {sa.serviceType?.name || sa.serviceType?.code}
                                     </span>
 
-                                    <span className="font-mono text-xs font-semibold text-[#0F172A]">
+                                    <span className="font-mono text-xs font-semibold text-slate-900">
                                       {sa.serviceAccountNumber}
                                     </span>
                                   </div>
 
-                                  <div className="text-sm font-bold text-[#0F172A]">
+                                  <div className="text-sm font-bold text-slate-900">
                                     {sa.servicePlan?.name}
                                   </div>
                                 </div>
@@ -624,38 +624,38 @@ export function SubscribersPage() {
                                     className={cn(
                                       "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border",
                                       sa.status === "ACTIVE"
-                                        ? "bg-emerald-50 text-[#059669] border-emerald-200"
-                                        : "bg-rose-50 text-[#DC2626] border-rose-200"
+                                        ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+                                        : "bg-rose-50 text-red-600 border-rose-200"
                                     )}
                                   >
                                     {sa.status}
                                   </span>
-                                  <div className="mt-1 font-mono font-bold text-sm text-[#0F172A]">
+                                  <div className="mt-1 font-mono font-bold text-sm text-slate-900">
                                     {formatMoney(sa.currentRate)}
-                                    <span className="text-[10px] text-[#64748B] font-normal">/mo</span>
+                                    <span className="text-[10px] text-slate-500 font-normal">/mo</span>
                                   </div>
                                 </div>
                               </div>
 
                               {/* Subscription Details Grid */}
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-2 border-t border-[#F1F5F9]">
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] pt-2 border-t border-slate-100">
                                 <div>
-                                  <span className="text-[#64748B] block">Activated:</span>
-                                  <span className="font-mono text-[#0F172A]">{sa.activationDate}</span>
+                                  <span className="text-slate-500 block">Activated:</span>
+                                  <span className="font-mono text-slate-900">{sa.activationDate}</span>
                                 </div>
                                 <div>
-                                  <span className="text-[#64748B] block">Billing / Due:</span>
-                                  <span className="font-mono text-[#0F172A]">Day {sa.billingDay} / Day {sa.dueDay}</span>
+                                  <span className="text-slate-500 block">Billing / Due:</span>
+                                  <span className="font-mono text-slate-900">Day {sa.billingDay} / Day {sa.dueDay}</span>
                                 </div>
                                 <div>
-                                  <span className="text-[#64748B] block">Area:</span>
-                                  <span className="text-[#0F172A] truncate block">
+                                  <span className="text-slate-500 block">Area:</span>
+                                  <span className="text-slate-900 truncate block">
                                     {sa.collectionArea?.name || "General"}
                                   </span>
                                 </div>
                                 <div>
-                                  <span className="text-[#64748B] block">Collector:</span>
-                                  <span className="text-[#0F172A] truncate block">
+                                  <span className="text-slate-500 block">Collector:</span>
+                                  <span className="text-slate-900 truncate block">
                                     {sa.collector?.name || "Unassigned"}
                                   </span>
                                 </div>
@@ -663,16 +663,16 @@ export function SubscribersPage() {
 
                               {/* Service Control Action Bar */}
                               {canControlService && (
-                                <div className="flex items-center justify-between pt-2 border-t border-[#F1F5F9]">
-                                  <span className="text-[11px] text-[#64748B] font-medium flex items-center gap-1">
-                                    <Lock className="w-3 h-3 text-[#94A3B8]" />
+                                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                                  <span className="text-[11px] text-slate-500 font-medium flex items-center gap-1">
+                                    <Lock className="w-3 h-3 text-slate-400" />
                                     Authorized Service Control:
                                   </span>
 
                                   {sa.status === "ACTIVE" ? (
                                     <button
                                       onClick={() => promptStatusChange(sa, "SUSPENDED")}
-                                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#DC2626] bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded transition-colors cursor-pointer"
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-red-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded transition-colors cursor-pointer"
                                     >
                                       <ShieldAlert className="w-3.5 h-3.5" />
                                       Suspend Service
@@ -680,7 +680,7 @@ export function SubscribersPage() {
                                   ) : (
                                     <button
                                       onClick={() => promptStatusChange(sa, "ACTIVE")}
-                                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#059669] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded transition-colors cursor-pointer"
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded transition-colors cursor-pointer"
                                     >
                                       <CheckCircle2 className="w-3.5 h-3.5" />
                                       Reconnect Service
@@ -691,35 +691,35 @@ export function SubscribersPage() {
 
                               {/* Immutable Status History Timeline */}
                               {sa.statusHistory && sa.statusHistory.length > 0 && (
-                                <div className="pt-2 border-t border-[#F1F5F9] space-y-1.5">
-                                  <span className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wider block">
+                                <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
                                     Status Transition Audit Trail
                                   </span>
                                   <div className="space-y-1.5">
                                     {sa.statusHistory.map((h, i) => (
                                       <div
                                         key={h.id || i}
-                                        className="text-[11px] bg-[#F8FAFC] p-2 rounded border border-[#E2E8F0] space-y-0.5"
+                                        className="text-[11px] bg-slate-50 p-2 rounded border border-slate-200 space-y-0.5"
                                       >
                                         <div className="flex items-center justify-between">
-                                          <div className="flex items-center gap-1.5 font-medium text-[#0F172A]">
+                                          <div className="flex items-center gap-1.5 font-medium text-slate-900">
                                             <span className="px-1 py-0.2 bg-slate-100 rounded text-[9px] font-bold">
                                               {h.fromStatus}
                                             </span>
                                             &rarr;
-                                            <span className="px-1 py-0.2 bg-blue-50 text-[#2563EB] rounded text-[9px] font-bold">
+                                            <span className="px-1 py-0.2 bg-blue-50 text-blue-600 rounded text-[9px] font-bold">
                                               {h.toStatus}
                                             </span>
                                           </div>
-                                          <span className="font-mono text-[10px] text-[#94A3B8]">
+                                          <span className="font-mono text-[10px] text-slate-400">
                                             {new Date(h.effectiveAt).toLocaleString()}
                                           </span>
                                         </div>
-                                        <p className="text-[#475569]">
-                                          <span className="font-semibold text-[#0F172A]">Reason:</span> {h.reason}
+                                        <p className="text-slate-600">
+                                          <span className="font-semibold text-slate-900">Reason:</span> {h.reason}
                                         </p>
                                         {h.actor && (
-                                          <p className="text-[10px] text-[#64748B]">
+                                          <p className="text-[10px] text-slate-500">
                                             Authorized by: {h.actor.displayName || h.actor.username}
                                           </p>
                                         )}
@@ -733,7 +733,7 @@ export function SubscribersPage() {
                         })}
                       </div>
                     ) : (
-                      <div className="p-6 bg-[#F8FAFC] border border-dashed border-[#CBD5E1] rounded-lg text-center text-xs text-[#64748B]">
+                      <div className="p-6 bg-slate-50 border border-dashed border-slate-300 rounded-lg text-center text-xs text-slate-500">
                         No active service subscriptions under this subscriber. Click "Add Service Account" above to bind a catalog plan.
                       </div>
                     )}
@@ -784,22 +784,22 @@ export function SubscribersPage() {
       {/* ========================================================= */}
       {showStatusModal && targetServiceAccount && (
         <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full border border-[#CBD5E1] overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F8FAFC]">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full border border-slate-300 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-2">
                 <ShieldAlert
                   className={cn(
                     "w-5 h-5",
-                    newStatusAction === "SUSPENDED" ? "text-[#DC2626]" : "text-[#059669]"
+                    newStatusAction === "SUSPENDED" ? "text-red-600" : "text-emerald-600"
                   )}
                 />
-                <h3 className="text-sm font-bold text-[#0F172A]">
+                <h3 className="text-sm font-bold text-slate-900">
                   Confirm Service {newStatusAction === "SUSPENDED" ? "Suspension" : "Reconnection"}
                 </h3>
               </div>
               <button
                 onClick={() => setShowStatusModal(false)}
-                className="text-[#64748B] hover:text-[#0F172A]"
+                className="text-slate-500 hover:text-slate-900"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -808,23 +808,23 @@ export function SubscribersPage() {
             <form onSubmit={executeStatusChange} className="p-5 space-y-4">
               <div className="p-3 bg-slate-50 border border-slate-200 rounded text-xs space-y-1">
                 <div className="flex justify-between">
-                  <span className="text-[#64748B]">Service Account:</span>
-                  <span className="font-mono font-bold text-[#0F172A]">
+                  <span className="text-slate-500">Service Account:</span>
+                  <span className="font-mono font-bold text-slate-900">
                     {targetServiceAccount.serviceAccountNumber}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#64748B]">Plan / Rate:</span>
-                  <span className="font-medium text-[#0F172A]">
+                  <span className="text-slate-500">Plan / Rate:</span>
+                  <span className="font-medium text-slate-900">
                     {targetServiceAccount.servicePlan?.name} ({formatMoney(targetServiceAccount.currentRate)})
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-[#64748B]">Action:</span>
+                  <span className="text-slate-500">Action:</span>
                   <span
                     className={cn(
                       "font-bold",
-                      newStatusAction === "SUSPENDED" ? "text-[#DC2626]" : "text-[#059669]"
+                      newStatusAction === "SUSPENDED" ? "text-red-600" : "text-emerald-600"
                     )}
                   >
                     {targetServiceAccount.status} &rarr; {newStatusAction}
@@ -833,7 +833,7 @@ export function SubscribersPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#0F172A] mb-1">
+                <label className="block text-xs font-semibold text-slate-900 mb-1">
                   Reason for Status Change <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -842,15 +842,15 @@ export function SubscribersPage() {
                   placeholder="e.g. Non-payment of past due invoices"
                   value={statusReason}
                   onChange={(e) => setStatusReason(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs border border-[#CBD5E1] rounded focus:outline-hidden focus:ring-1 focus:ring-[#2563EB]"
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded focus:outline-hidden focus:ring-1 focus:ring-blue-600"
                 />
-                <p className="text-[11px] text-[#64748B] mt-1">
+                <p className="text-[11px] text-slate-500 mt-1">
                   Mandatory for financial and operational audit trail compliance.
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-[#0F172A] mb-1">
+                <label className="block text-xs font-medium text-slate-900 mb-1">
                   Operational Notes (Optional)
                 </label>
                 <textarea
@@ -858,15 +858,15 @@ export function SubscribersPage() {
                   placeholder="Additional technician or dispatch remarks..."
                   value={statusNotes}
                   onChange={(e) => setStatusNotes(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs border border-[#CBD5E1] rounded focus:outline-hidden focus:ring-1 focus:ring-[#2563EB]"
+                  className="w-full px-3 py-1.5 text-xs border border-slate-300 rounded focus:outline-hidden focus:ring-1 focus:ring-blue-600"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#E2E8F0]">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
                 <button
                   type="button"
                   onClick={() => setShowStatusModal(false)}
-                  className="px-3 py-1.5 text-xs font-medium text-[#475569] bg-white border border-[#CBD5E1] rounded hover:bg-[#F8FAFC]"
+                  className="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50"
                 >
                   Cancel
                 </button>
@@ -876,8 +876,8 @@ export function SubscribersPage() {
                   className={cn(
                     "px-4 py-1.5 text-xs font-bold text-white rounded transition-colors disabled:opacity-50",
                     newStatusAction === "SUSPENDED"
-                      ? "bg-[#DC2626] hover:bg-rose-700"
-                      : "bg-[#059669] hover:bg-emerald-700"
+                      ? "bg-red-600 hover:bg-rose-700"
+                      : "bg-emerald-600 hover:bg-emerald-700"
                   )}
                 >
                   {statusActionSubmitting ? "Processing..." : `Execute ${newStatusAction}`}
@@ -962,32 +962,32 @@ function CreateSubscriberModal({
 
   return (
     <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl max-w-xl w-full border border-[#CBD5E1] overflow-hidden flex flex-col max-h-[90vh]">
-        <div className="px-5 py-4 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F8FAFC]">
+      <div className="bg-white rounded-lg shadow-2xl max-w-xl w-full border border-slate-300 overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
           <div className="flex items-center gap-2">
-            <Plus className="w-5 h-5 text-[#2563EB]" />
-            <h3 className="text-sm font-bold text-[#0F172A]">Register New Subscriber</h3>
+            <Plus className="w-5 h-5 text-blue-600" />
+            <h3 className="text-sm font-bold text-slate-900">Register New Subscriber</h3>
           </div>
-          <button onClick={onClose} className="text-[#64748B] hover:text-[#0F172A] cursor-pointer">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-900 cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
           {error && (
-            <div className="p-3 rounded bg-red-50 border border-red-200 text-[#DC2626] font-medium">
+            <div className="p-3 rounded bg-red-50 border border-red-200 text-red-600 font-medium">
               {error}
             </div>
           )}
 
           {/* Section: Identity */}
           <div className="space-y-3">
-            <h4 className="font-bold text-[#475569] uppercase tracking-wider text-[11px]">
+            <h4 className="font-bold text-slate-600 uppercase tracking-wider text-[11px]">
               Customer Details
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="block font-medium text-[#0F172A] mb-1">
+                <label className="block font-medium text-slate-900 mb-1">
                   First Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -995,22 +995,22 @@ function CreateSubscriberModal({
                   required
                   value={formData.firstName}
                   onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                  className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded focus:ring-1 focus:ring-[#2563EB] focus:outline-hidden"
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden"
                 />
               </div>
 
               <div>
-                <label className="block font-medium text-[#0F172A] mb-1">Middle Name</label>
+                <label className="block font-medium text-slate-900 mb-1">Middle Name</label>
                 <input
                   type="text"
                   value={formData.middleName || ""}
                   onChange={(e) => setFormData({ ...formData, middleName: e.target.value })}
-                  className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded focus:ring-1 focus:ring-[#2563EB] focus:outline-hidden"
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden"
                 />
               </div>
 
               <div>
-                <label className="block font-medium text-[#0F172A] mb-1">
+                <label className="block font-medium text-slate-900 mb-1">
                   Last Name <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1018,31 +1018,31 @@ function CreateSubscriberModal({
                   required
                   value={formData.lastName}
                   onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                  className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded focus:ring-1 focus:ring-[#2563EB] focus:outline-hidden"
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block font-medium text-[#0F172A] mb-1">Business Name (Optional)</label>
+              <label className="block font-medium text-slate-900 mb-1">Business Name (Optional)</label>
               <input
                 type="text"
                 placeholder="e.g. Bukidnon Enterprise Trading"
                 value={formData.businessName || ""}
                 onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-                className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded focus:ring-1 focus:ring-[#2563EB] focus:outline-hidden"
+                className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden"
               />
             </div>
           </div>
 
           {/* Section: Contact */}
-          <div className="space-y-3 pt-3 border-t border-[#E2E8F0]">
-            <h4 className="font-bold text-[#475569] uppercase tracking-wider text-[11px]">
+          <div className="space-y-3 pt-3 border-t border-slate-200">
+            <h4 className="font-bold text-slate-600 uppercase tracking-wider text-[11px]">
               Contact Details
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block font-medium text-[#0F172A] mb-1">
+                <label className="block font-medium text-slate-900 mb-1">
                   Primary Contact Number <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1051,42 +1051,42 @@ function CreateSubscriberModal({
                   placeholder="0917-123-4567"
                   value={formData.primaryContactNumber}
                   onChange={(e) => setFormData({ ...formData, primaryContactNumber: e.target.value })}
-                  className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded focus:ring-1 focus:ring-[#2563EB] focus:outline-hidden font-mono"
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden font-mono"
                 />
               </div>
 
               <div>
-                <label className="block font-medium text-[#0F172A] mb-1">Secondary Contact Number</label>
+                <label className="block font-medium text-slate-900 mb-1">Secondary Contact Number</label>
                 <input
                   type="text"
                   placeholder="088-813-1234"
                   value={formData.secondaryContactNumber || ""}
                   onChange={(e) => setFormData({ ...formData, secondaryContactNumber: e.target.value })}
-                  className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded focus:ring-1 focus:ring-[#2563EB] focus:outline-hidden font-mono"
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden font-mono"
                 />
               </div>
 
               <div className="col-span-2">
-                <label className="block font-medium text-[#0F172A] mb-1">Email Address</label>
+                <label className="block font-medium text-slate-900 mb-1">Email Address</label>
                 <input
                   type="email"
                   placeholder="customer@example.com"
                   value={formData.email || ""}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded focus:ring-1 focus:ring-[#2563EB] focus:outline-hidden"
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden"
                 />
               </div>
             </div>
           </div>
 
           {/* Section: Primary Installation Address */}
-          <div className="space-y-3 pt-3 border-t border-[#E2E8F0]">
-            <h4 className="font-bold text-[#475569] uppercase tracking-wider text-[11px]">
+          <div className="space-y-3 pt-3 border-t border-slate-200">
+            <h4 className="font-bold text-slate-600 uppercase tracking-wider text-[11px]">
               Primary Address (Bukidnon)
             </h4>
             <div className="space-y-3">
               <div>
-                <label className="block font-medium text-[#0F172A] mb-1">
+                <label className="block font-medium text-slate-900 mb-1">
                   Street / House Number / Purok <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -1100,13 +1100,13 @@ function CreateSubscriberModal({
                       address: { ...formData.address, line1: e.target.value },
                     })
                   }
-                  className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded focus:ring-1 focus:ring-[#2563EB] focus:outline-hidden"
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-medium text-[#0F172A] mb-1">
+                  <label className="block font-medium text-slate-900 mb-1">
                     Barangay <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -1117,7 +1117,7 @@ function CreateSubscriberModal({
                         address: { ...formData.address, barangay: e.target.value },
                       })
                     }
-                    className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded focus:ring-1 focus:ring-[#2563EB] focus:outline-hidden"
+                    className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden"
                   >
                     <option value="Casisang">Casisang</option>
                     <option value="Poblacion">Poblacion</option>
@@ -1130,18 +1130,18 @@ function CreateSubscriberModal({
                 </div>
 
                 <div>
-                  <label className="block font-medium text-[#0F172A] mb-1">City / Municipality</label>
+                  <label className="block font-medium text-slate-900 mb-1">City / Municipality</label>
                   <input
                     type="text"
                     disabled
                     value={formData.address.cityMunicipality}
-                    className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded bg-[#F1F5F9] text-[#64748B]"
+                    className="w-full px-3 py-1.5 border border-slate-300 rounded bg-slate-100 text-slate-500"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-medium text-[#0F172A] mb-1">Landmark / Directions</label>
+                <label className="block font-medium text-slate-900 mb-1">Landmark / Directions</label>
                 <input
                   type="text"
                   placeholder="e.g. Near Barangay Hall, yellow gate"
@@ -1152,24 +1152,24 @@ function CreateSubscriberModal({
                       address: { ...formData.address, landmark: e.target.value },
                     })
                   }
-                  className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded focus:ring-1 focus:ring-[#2563EB] focus:outline-hidden"
+                  className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden"
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-4 border-t border-[#E2E8F0]">
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-1.5 font-medium text-[#475569] bg-white border border-[#CBD5E1] rounded hover:bg-[#F8FAFC] cursor-pointer"
+              className="px-3.5 py-1.5 font-medium text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-1.5 font-bold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded disabled:opacity-50 cursor-pointer shadow-xs"
+              className="px-4 py-1.5 font-bold text-white bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-50 cursor-pointer shadow-xs"
             >
               {submitting ? "Saving..." : "Create Subscriber"}
             </button>
@@ -1235,32 +1235,32 @@ function AddServiceAccountModal({
 
   return (
     <div className="fixed inset-0 z-60 bg-black/50 backdrop-blur-2xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full border border-[#CBD5E1] overflow-hidden">
-        <div className="px-5 py-4 border-b border-[#E2E8F0] flex items-center justify-between bg-[#F8FAFC]">
+      <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full border border-slate-300 overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
           <div className="flex items-center gap-2">
-            <Layers className="w-5 h-5 text-[#2563EB]" />
-            <h3 className="text-sm font-bold text-[#0F172A]">Add Billable Service Account</h3>
+            <Layers className="w-5 h-5 text-blue-600" />
+            <h3 className="text-sm font-bold text-slate-900">Add Billable Service Account</h3>
           </div>
-          <button onClick={onClose} className="text-[#64748B] hover:text-[#0F172A] cursor-pointer">
+          <button onClick={onClose} className="text-slate-500 hover:text-slate-900 cursor-pointer">
             <X className="w-4 h-4" />
           </button>
         </div>
 
         <form onSubmit={handleCreate} className="p-6 space-y-4 text-xs">
           {error && (
-            <div className="p-3 rounded bg-red-50 border border-red-200 text-[#DC2626] font-medium">
+            <div className="p-3 rounded bg-red-50 border border-red-200 text-red-600 font-medium">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block font-medium text-[#0F172A] mb-1">
+            <label className="block font-medium text-slate-900 mb-1">
               Select Service Plan <span className="text-red-500">*</span>
             </label>
             <select
               value={selectedPlanId}
               onChange={(e) => setSelectedPlanId(e.target.value)}
-              className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded focus:ring-1 focus:ring-[#2563EB] focus:outline-hidden"
+              className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden"
             >
               {plans.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -1273,13 +1273,13 @@ function AddServiceAccountModal({
           {/* Rate Snapshot Banner */}
           {selectedPlan && (
             <div className="p-3 bg-blue-50/70 border border-blue-200 rounded text-xs space-y-1">
-              <div className="flex justify-between font-semibold text-[#0F172A]">
+              <div className="flex justify-between font-semibold text-slate-900">
                 <span>Locked Monthly Rate:</span>
-                <span className="font-mono text-base text-[#2563EB]">
+                <span className="font-mono text-base text-blue-600">
                   {formatMoney(selectedPlan.monthlyPrice)}
                 </span>
               </div>
-              <p className="text-[11px] text-[#475569]">
+              <p className="text-[11px] text-slate-600">
                 Invariant: Rate will be snapshotted authoritatively into the service account.
                 Future catalog price adjustments will not alter this subscription rate.
               </p>
@@ -1288,11 +1288,11 @@ function AddServiceAccountModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block font-medium text-[#0F172A] mb-1">Collection Area</label>
+              <label className="block font-medium text-slate-900 mb-1">Collection Area</label>
               <select
                 value={selectedAreaId}
                 onChange={(e) => setSelectedAreaId(e.target.value)}
-                className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded focus:ring-1 focus:ring-[#2563EB] focus:outline-hidden"
+                className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden"
               >
                 {areas.map((a) => (
                   <option key={a.id} value={a.id}>
@@ -1303,11 +1303,11 @@ function AddServiceAccountModal({
             </div>
 
             <div>
-              <label className="block font-medium text-[#0F172A] mb-1">Field Collector</label>
+              <label className="block font-medium text-slate-900 mb-1">Field Collector</label>
               <select
                 value={selectedCollectorId}
                 onChange={(e) => setSelectedCollectorId(e.target.value)}
-                className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded focus:ring-1 focus:ring-[#2563EB] focus:outline-hidden"
+                className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden"
               >
                 <option value="">Unassigned</option>
                 {collectors.map((c) => (
@@ -1319,32 +1319,32 @@ function AddServiceAccountModal({
             </div>
 
             <div>
-              <label className="block font-medium text-[#0F172A] mb-1">Billing Day</label>
+              <label className="block font-medium text-slate-900 mb-1">Billing Day</label>
               <input
                 type="number"
                 min={1}
                 max={28}
                 value={billingDay}
                 onChange={(e) => setBillingDay(Number(e.target.value))}
-                className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded font-mono"
+                className="w-full px-3 py-1.5 border border-slate-300 rounded font-mono"
               />
             </div>
 
             <div>
-              <label className="block font-medium text-[#0F172A] mb-1">Due Day</label>
+              <label className="block font-medium text-slate-900 mb-1">Due Day</label>
               <input
                 type="number"
                 min={1}
                 max={28}
                 value={dueDay}
                 onChange={(e) => setDueDay(Number(e.target.value))}
-                className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded font-mono"
+                className="w-full px-3 py-1.5 border border-slate-300 rounded font-mono"
               />
             </div>
           </div>
 
           <div>
-            <label className="block font-medium text-[#0F172A] mb-1">
+            <label className="block font-medium text-slate-900 mb-1">
               Activation Reason <span className="text-red-500">*</span>
             </label>
             <input
@@ -1352,22 +1352,22 @@ function AddServiceAccountModal({
               required
               value={activationReason}
               onChange={(e) => setActivationReason(e.target.value)}
-              className="w-full px-3 py-1.5 border border-[#CBD5E1] rounded focus:ring-1 focus:ring-[#2563EB] focus:outline-hidden"
+              className="w-full px-3 py-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-blue-600 focus:outline-hidden"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-4 border-t border-[#E2E8F0]">
+          <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-200">
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-1.5 font-medium text-[#475569] bg-white border border-[#CBD5E1] rounded hover:bg-[#F8FAFC] cursor-pointer"
+              className="px-3.5 py-1.5 font-medium text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-4 py-1.5 font-bold text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded disabled:opacity-50 cursor-pointer shadow-xs"
+              className="px-4 py-1.5 font-bold text-white bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-50 cursor-pointer shadow-xs"
             >
               {submitting ? "Binding Plan..." : "Add Subscription"}
             </button>

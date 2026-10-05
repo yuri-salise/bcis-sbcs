@@ -296,11 +296,11 @@ export function ReceivablesPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-[#0F172A] flex items-center gap-2.5">
-            <AlertCircle className="w-6 h-6 text-[#2563EB]" />
+          <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2.5">
+            <AlertCircle className="w-6 h-6 text-blue-600" />
             <span>Accounts Receivable & Service Control</span>
           </h2>
-          <p className="text-xs text-[#64748B] mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Comprehensive AR aging analysis, overdue delinquency tracking, suspension screening, and reconnection work orders.
           </p>
         </div>
@@ -309,7 +309,7 @@ export function ReceivablesPage() {
           <button
             onClick={loadTabData}
             disabled={loading}
-            className="px-3 py-1.5 rounded border border-[#E2E8F0] bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+            className="px-3 py-1.5 rounded border border-slate-200 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
             <span>Refresh</span>
@@ -330,13 +330,13 @@ export function ReceivablesPage() {
       )}
 
       {/* Tabs Bar */}
-      <div className="border-b border-[#E2E8F0] flex items-center justify-between gap-4">
+      <div className="border-b border-slate-200 flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveTab("aging")}
             className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
               activeTab === "aging"
-                ? "border-[#2563EB] text-[#2563EB]"
+                ? "border-blue-600 text-blue-600"
                 : "border-transparent text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -348,7 +348,7 @@ export function ReceivablesPage() {
             onClick={() => setActiveTab("overdue")}
             className={`px-4 py-2.5 text-xs font-semibold border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
               activeTab === "overdue"
-                ? "border-[#2563EB] text-[#2563EB]"
+                ? "border-blue-600 text-blue-600"
                 : "border-transparent text-slate-600 hover:text-slate-900"
             }`}
           >
@@ -395,13 +395,13 @@ export function ReceivablesPage() {
             type="date"
             value={asOfDate}
             onChange={(e) => setAsOfDate(e.target.value)}
-            className="text-xs py-1 px-2.5 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+            className="text-xs py-1 px-2.5 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
           />
         </div>
       </div>
 
       {/* Common Filter Row */}
-      <div className="p-3 bg-white border border-[#E2E8F0] rounded-lg shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div className="p-3 bg-white border border-slate-200 rounded-lg shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative w-64">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
@@ -411,16 +411,16 @@ export function ReceivablesPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && loadTabData()}
-              className="w-full pl-8 pr-3 py-1.5 text-xs rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+              className="w-full pl-8 pr-3 py-1.5 text-xs rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
             />
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[#64748B] font-medium">Area:</span>
+            <span className="text-slate-500 font-medium">Area:</span>
             <select
               value={areaFilter}
               onChange={(e) => setAreaFilter(e.target.value)}
-              className="py-1 px-2.5 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+              className="py-1 px-2.5 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
             >
               <option value="">All Collection Areas</option>
               {areas.map((a) => (
@@ -435,11 +435,11 @@ export function ReceivablesPage() {
         {activeTab === "reconnections" && (
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-[#64748B] font-medium">Order Status:</span>
+              <span className="text-slate-500 font-medium">Order Status:</span>
               <select
                 value={reconStatusFilter}
                 onChange={(e) => setReconStatusFilter(e.target.value)}
-                className="py-1 px-2.5 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+                className="py-1 px-2.5 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
               >
                 <option value="ALL">All Statuses</option>
                 <option value="REQUESTED">Requested</option>
@@ -472,7 +472,7 @@ export function ReceivablesPage() {
           {/* 5-Bucket KPI Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
             {/* Current */}
-            <div className="p-3.5 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-1">
+            <div className="p-3.5 bg-white border border-slate-200 rounded-lg shadow-xs space-y-1">
               <div className="text-[11px] font-semibold text-emerald-700">Current (Not Overdue)</div>
               <div className="text-lg font-bold text-emerald-700">
                 {agingSummary ? agingSummary.current.amount : "₱0.00"}
@@ -483,7 +483,7 @@ export function ReceivablesPage() {
             </div>
 
             {/* 1-30 Days */}
-            <div className="p-3.5 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-1">
+            <div className="p-3.5 bg-white border border-slate-200 rounded-lg shadow-xs space-y-1">
               <div className="text-[11px] font-semibold text-blue-700">1–30 Days Past Due</div>
               <div className="text-lg font-bold text-blue-700">
                 {agingSummary ? agingSummary.days1to30.amount : "₱0.00"}
@@ -494,7 +494,7 @@ export function ReceivablesPage() {
             </div>
 
             {/* 31-60 Days */}
-            <div className="p-3.5 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-1">
+            <div className="p-3.5 bg-white border border-slate-200 rounded-lg shadow-xs space-y-1">
               <div className="text-[11px] font-semibold text-amber-700">31–60 Days Past Due</div>
               <div className="text-lg font-bold text-amber-700">
                 {agingSummary ? agingSummary.days31to60.amount : "₱0.00"}
@@ -505,7 +505,7 @@ export function ReceivablesPage() {
             </div>
 
             {/* 61-90 Days */}
-            <div className="p-3.5 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-1">
+            <div className="p-3.5 bg-white border border-slate-200 rounded-lg shadow-xs space-y-1">
               <div className="text-[11px] font-semibold text-orange-700">61–90 Days Past Due</div>
               <div className="text-lg font-bold text-orange-700">
                 {agingSummary ? agingSummary.days61to90.amount : "₱0.00"}
@@ -516,7 +516,7 @@ export function ReceivablesPage() {
             </div>
 
             {/* 90+ Days */}
-            <div className="p-3.5 bg-white border border-[#E2E8F0] rounded-lg shadow-xs space-y-1">
+            <div className="p-3.5 bg-white border border-slate-200 rounded-lg shadow-xs space-y-1">
               <div className="text-[11px] font-semibold text-rose-700">90+ Days Past Due</div>
               <div className="text-lg font-bold text-rose-700">
                 {agingSummary ? agingSummary.days90Plus.amount : "₱0.00"}
@@ -537,9 +537,9 @@ export function ReceivablesPage() {
           </div>
 
           {/* Subscriber Breakdown Table */}
-          <div className="bg-white border border-[#E2E8F0] rounded-lg shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
             <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-              <span className="text-xs font-bold text-[#0F172A] uppercase tracking-wider">
+              <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
                 Accounts Receivable Breakdown by Subscriber ({subscribersAging.length})
               </span>
               <span className="text-xs text-slate-400">Derived strictly from finalized invoice balances</span>
@@ -548,7 +548,7 @@ export function ReceivablesPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-[#64748B]">
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500">
                     <th className="py-2.5 px-3 font-semibold">Subscriber</th>
                     <th className="py-2.5 px-3 font-semibold text-right text-emerald-700">Current</th>
                     <th className="py-2.5 px-3 font-semibold text-right text-blue-700">1–30 Days</th>
@@ -564,7 +564,7 @@ export function ReceivablesPage() {
                   {loading ? (
                     <tr>
                       <td colSpan={9} className="py-8 text-center text-slate-400">
-                        <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#2563EB] mb-2" />
+                        <RefreshCw className="w-5 h-5 animate-spin mx-auto text-blue-600 mb-2" />
                         <span>Computing accounts receivable aging relative to {asOfDate}...</span>
                       </td>
                     </tr>
@@ -578,7 +578,7 @@ export function ReceivablesPage() {
                     subscribersAging.map((row) => (
                       <tr key={row.subscriberId} className="hover:bg-slate-50/70 transition-colors">
                         <td className="py-2.5 px-3">
-                          <div className="font-semibold text-[#0F172A]">{row.displayName}</div>
+                          <div className="font-semibold text-slate-900">{row.displayName}</div>
                           <div className="font-mono text-[11px] text-slate-400">{row.subscriberAccountNumber}</div>
                         </td>
                         <td className="py-2.5 px-3 text-right font-medium text-slate-700">{row.currentAmount}</td>
@@ -655,11 +655,11 @@ export function ReceivablesPage() {
             </div>
           </div>
 
-          <div className="bg-white border border-[#E2E8F0] rounded-lg shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-[#64748B]">
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500">
                     <th className="py-2.5 px-3 font-semibold">Invoice #</th>
                     <th className="py-2.5 px-3 font-semibold">Subscriber</th>
                     <th className="py-2.5 px-3 font-semibold">Service Account</th>
@@ -676,7 +676,7 @@ export function ReceivablesPage() {
                   {loading ? (
                     <tr>
                       <td colSpan={10} className="py-8 text-center text-slate-400">
-                        <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#2563EB] mb-2" />
+                        <RefreshCw className="w-5 h-5 animate-spin mx-auto text-blue-600 mb-2" />
                         <span>Loading overdue invoices...</span>
                       </td>
                     </tr>
@@ -689,7 +689,7 @@ export function ReceivablesPage() {
                   ) : (
                     overdueItems.map((inv) => (
                       <tr key={inv.invoiceId} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="py-2.5 px-3 font-mono font-bold text-[#0F172A]">{inv.invoiceNumber}</td>
+                        <td className="py-2.5 px-3 font-mono font-bold text-slate-900">{inv.invoiceNumber}</td>
                         <td className="py-2.5 px-3">
                           <div className="font-semibold text-slate-800">{inv.subscriberDisplayName}</div>
                           <div className="text-[11px] text-slate-400">{inv.subscriberAccountNumber}</div>
@@ -767,11 +767,11 @@ export function ReceivablesPage() {
             </div>
           </div>
 
-          <div className="bg-white border border-[#E2E8F0] rounded-lg shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-[#64748B]">
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500">
                     <th className="py-2.5 px-3 font-semibold">Service Account</th>
                     <th className="py-2.5 px-3 font-semibold">Subscriber</th>
                     <th className="py-2.5 px-3 font-semibold">Territory</th>
@@ -786,7 +786,7 @@ export function ReceivablesPage() {
                   {loading ? (
                     <tr>
                       <td colSpan={8} className="py-8 text-center text-slate-400">
-                        <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#2563EB] mb-2" />
+                        <RefreshCw className="w-5 h-5 animate-spin mx-auto text-blue-600 mb-2" />
                         <span>Evaluating suspension candidates...</span>
                       </td>
                     </tr>
@@ -799,7 +799,7 @@ export function ReceivablesPage() {
                   ) : (
                     candidates.map((c) => (
                       <tr key={c.serviceAccountId} className="hover:bg-slate-50/70 transition-colors">
-                        <td className="py-2.5 px-3 font-mono font-bold text-[#0F172A]">
+                        <td className="py-2.5 px-3 font-mono font-bold text-slate-900">
                           <div>{c.serviceAccountNumber}</div>
                           <div className="text-[11px] font-normal text-slate-400">{c.servicePlanName}</div>
                         </td>
@@ -876,11 +876,11 @@ export function ReceivablesPage() {
       {/* --- TAB 4: RECONNECTIONS & WORK ORDERS --- */}
       {activeTab === "reconnections" && (
         <div className="space-y-4">
-          <div className="bg-white border border-[#E2E8F0] rounded-lg shadow-xs overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200 text-[#64748B]">
+                  <tr className="bg-slate-50 border-b border-slate-200 text-slate-500">
                     <th className="py-2.5 px-3 font-semibold">Order #</th>
                     <th className="py-2.5 px-3 font-semibold">Subscriber</th>
                     <th className="py-2.5 px-3 font-semibold">Service Account</th>
@@ -895,7 +895,7 @@ export function ReceivablesPage() {
                   {loading ? (
                     <tr>
                       <td colSpan={8} className="py-8 text-center text-slate-400">
-                        <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#2563EB] mb-2" />
+                        <RefreshCw className="w-5 h-5 animate-spin mx-auto text-blue-600 mb-2" />
                         <span>Loading reconnection work orders...</span>
                       </td>
                     </tr>
@@ -910,7 +910,7 @@ export function ReceivablesPage() {
                       const tech = technicians.find((t) => t.id === wo.technicianUserId);
                       return (
                         <tr key={wo.id} className="hover:bg-slate-50/70 transition-colors">
-                          <td className="py-2.5 px-3 font-mono font-bold text-[#0F172A]">{wo.reconnectionNumber}</td>
+                          <td className="py-2.5 px-3 font-mono font-bold text-slate-900">{wo.reconnectionNumber}</td>
                           <td className="py-2.5 px-3">
                             <div className="font-semibold text-slate-800">{wo.subscriberDisplayName}</div>
                             <div className="text-[11px] text-slate-400">{wo.subscriberAccountNumber}</div>
@@ -996,7 +996,7 @@ export function ReceivablesPage() {
                 <select
                   value={suspendReason}
                   onChange={(e) => setSuspendReason(e.target.value)}
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white mb-2"
+                  className="w-full p-2 rounded border border-slate-200 bg-white mb-2"
                 >
                   <option value="NON_PAYMENT: Overdue balance exceeds policy threshold.">NON_PAYMENT: Overdue balance exceeds policy threshold</option>
                   <option value="DELINQUENT_INVOICES: Multiple unpaid billing cycles past grace period.">DELINQUENT_INVOICES: Multiple unpaid billing cycles</option>
@@ -1010,7 +1010,7 @@ export function ReceivablesPage() {
                     type="text"
                     placeholder="Type custom suspension reason..."
                     onChange={(e) => setSuspendReason(e.target.value)}
-                    className="w-full p-2 rounded border border-[#E2E8F0] bg-white"
+                    className="w-full p-2 rounded border border-slate-200 bg-white"
                     required
                   />
                 )}
@@ -1023,7 +1023,7 @@ export function ReceivablesPage() {
                   value={suspendNotes}
                   onChange={(e) => setSuspendNotes(e.target.value)}
                   placeholder="e.g. Disconnect notice dispatched via SMS; field tech informed."
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white"
+                  className="w-full p-2 rounded border border-slate-200 bg-white"
                 />
               </div>
 
@@ -1096,7 +1096,7 @@ export function ReceivablesPage() {
                   type="text"
                   value={reconFee}
                   onChange={(e) => setReconFee(e.target.value)}
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white"
+                  className="w-full p-2 rounded border border-slate-200 bg-white"
                   required
                 />
               </div>
@@ -1108,7 +1108,7 @@ export function ReceivablesPage() {
                     <select
                       value={reconTechId}
                       onChange={(e) => setReconTechId(e.target.value)}
-                      className="w-full p-2 rounded border border-[#E2E8F0] bg-white"
+                      className="w-full p-2 rounded border border-slate-200 bg-white"
                     >
                       <option value="">Select Technician...</option>
                       {technicians.map((t) => (
@@ -1123,7 +1123,7 @@ export function ReceivablesPage() {
                       type="datetime-local"
                       value={reconScheduledAt}
                       onChange={(e) => setReconScheduledAt(e.target.value)}
-                      className="w-full p-2 rounded border border-[#E2E8F0] bg-white"
+                      className="w-full p-2 rounded border border-slate-200 bg-white"
                     />
                   </div>
                 </>
@@ -1136,7 +1136,7 @@ export function ReceivablesPage() {
                   value={reconNotes}
                   onChange={(e) => setReconNotes(e.target.value)}
                   placeholder="e.g. Full overdue balance settled via OR # BCIS-REC-2026-0045."
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white"
+                  className="w-full p-2 rounded border border-slate-200 bg-white"
                 />
               </div>
 
@@ -1166,7 +1166,7 @@ export function ReceivablesPage() {
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full border border-slate-200 p-6 space-y-4 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-teal-600" />
                 <span>Complete Reconnection Work Order</span>
               </h3>
@@ -1187,7 +1187,7 @@ export function ReceivablesPage() {
                   value={completeNotes}
                   onChange={(e) => setCompleteNotes(e.target.value)}
                   placeholder="e.g. Signal level tested: -18.4 dBm. Drop wire inspected. Customer signed field work voucher."
-                  className="w-full p-2 rounded border border-[#E2E8F0] bg-white focus:outline-none focus:border-[#2563EB]"
+                  className="w-full p-2 rounded border border-slate-200 bg-white focus:outline-none focus:border-blue-600"
                 />
               </div>
 
@@ -1218,8 +1218,8 @@ export function ReceivablesPage() {
           <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full border border-slate-200 p-6 space-y-4 max-h-[85vh] flex flex-col animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
-                <h3 className="text-sm font-bold text-[#0F172A] flex items-center gap-2">
-                  <History className="w-4 h-4 text-[#2563EB]" />
+                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <History className="w-4 h-4 text-blue-600" />
                   <span>Service Control & Status History</span>
                 </h3>
                 <p className="text-[11px] text-slate-500 mt-0.5">
@@ -1234,7 +1234,7 @@ export function ReceivablesPage() {
             <div className="flex-1 overflow-y-auto pr-1 space-y-3">
               {loadingHistory ? (
                 <div className="py-12 text-center text-slate-400">
-                  <RefreshCw className="w-5 h-5 animate-spin mx-auto text-[#2563EB] mb-2" />
+                  <RefreshCw className="w-5 h-5 animate-spin mx-auto text-blue-600 mb-2" />
                   <span>Loading audit timeline...</span>
                 </div>
               ) : historyEvents.length === 0 ? (

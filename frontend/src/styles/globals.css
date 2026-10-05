@@ -43,6 +43,27 @@
   font-feature-settings: "tnum";
 }
 
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 cursor-pointer;
+  }
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700 shadow-sm border border-transparent;
+  }
+  .btn-secondary {
+    @apply bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 shadow-sm;
+  }
+  .btn-danger {
+    @apply bg-rose-600 text-white hover:bg-rose-700 shadow-sm border border-transparent;
+  }
+  .input {
+    @apply px-3 py-2 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all disabled:opacity-50 disabled:bg-slate-50;
+  }
+  .card {
+    @apply bg-white border border-slate-200 rounded-xl shadow-sm;
+  }
+}
+
 /* Tactile micro-interactions (Emil Kowalski taste) */
 .active-press {
   transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 120ms ease;
@@ -58,4 +79,56 @@
 .focus-ring:focus-visible {
   outline: 2px solid #2563EB;
   outline-offset: 2px;
+}
+
+/* Print Utilities & Stylesheets */
+@media screen {
+  .print-only {
+    display: none !important;
+  }
+}
+
+@media print {
+  body {
+    background-color: #FFFFFF !important;
+    color: #0F172A !important;
+    font-size: 11pt !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  .print-full-width {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  th, td {
+    padding: 6px 8px !important;
+    border-bottom: 1px solid #CBD5E1 !important;
+  }
+
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  @page {
+    margin: 15mm 12mm 15mm 12mm;
+    size: auto;
+  }
 }

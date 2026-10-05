@@ -265,7 +265,7 @@ describe("BillingPage Component (Phase 3 & AT-11)", () => {
           cycleCode: undefined,
         })
       );
-      expect(allCyclesBtn.className).toContain("bg-[#0F172A]");
+      expect(allCyclesBtn.className).toContain("bg-slate-900");
     });
   });
 });

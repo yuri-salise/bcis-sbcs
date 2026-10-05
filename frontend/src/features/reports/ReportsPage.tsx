@@ -12,6 +12,9 @@ import {
   ShieldCheck,
   FileSpreadsheet,
   FileDown,
+  Printer,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   api,
@@ -70,7 +73,22 @@ export const ReportsPage: React.FC = () => {
   const [subMasterData, setSubMasterData] = useState<SubscriberMasterListReport | null>(null);
   const [reversalsData, setReversalsData] = useState<PaymentReversalsReport | null>(null);
   const [auditData, setAuditData] = useState<AuditActivityReport | null>(null);
+  const [expandedAuditId, setExpandedAuditId] = useState<string | null>(null);
 
+  // Helper to format metadata/audit values without raw JSON
+  const formatAuditValue = (val: any): string => {
+    if (val === null || val === undefined) return "—";
+    if (typeof val === "boolean") return val ? "True" : "False";
+    if (typeof val === "object") {
+      if (Array.isArray(val)) {
+        return val.map((v) => formatAuditValue(v)).join(", ");
+      }
+      return Object.entries(val)
+        .map(([k, v]) => `${k}: ${formatAuditValue(v)}`)
+        .join("; ");
+    }
+    return String(val);
+  };
 
   // Load report data based on active report type
   const fetchReport = useCallback(async () => {
@@ -210,9 +228,9 @@ export const ReportsPage: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)] max-w-7xl mx-auto" data-testid="reports-page">
+    <div className="flex flex-col lg:flex-row min-h-[calc(100vh-4rem)] max-w-7xl mx-auto print:max-w-none print:w-full print:block" data-testid="reports-page">
       {/* Left Sidebar: 10 Report Selectors */}
-      <div className="w-full lg:w-64 bg-gray-50 border-r border-gray-200 p-4 space-y-1">
+      <div className="w-full lg:w-64 bg-gray-50 border-r border-gray-200 p-4 space-y-1 no-print">
         <div className="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
           Financial & Audit Reports
         </div>
@@ -237,9 +255,9 @@ export const ReportsPage: React.FC = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 p-6 space-y-6">
+      <div className="flex-1 p-6 space-y-6 print:p-0 print:space-y-4 print-full-width">
         {/* Top Control Bar: Contextual Filters & Export Buttons */}
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 no-print">
           {/* Filters depending on report */}
           <div className="flex flex-wrap items-center gap-3">
             {activeReport === "DAILY_COLLECTION" && (
@@ -369,6 +387,15 @@ export const ReportsPage: React.FC = () => {
           {/* Export Actions Toolbar */}
           <div className="flex items-center gap-2">
             <button
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-semibold rounded-lg shadow-xs cursor-pointer transition-all"
+              data-testid="print-report-btn"
+              title="Print active report document directly"
+            >
+              <Printer className="w-3.5 h-3.5" />
+              <span>Print</span>
+            </button>
+            <button
               onClick={() => handleExport("xlsx")}
               disabled={!!exporting}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-semibold rounded-lg shadow-xs disabled:opacity-50 transition-all cursor-pointer"
@@ -399,10 +426,30 @@ export const ReportsPage: React.FC = () => {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-xs font-medium">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-xs font-medium no-print">
             {error}
           </div>
         )}
+
+        {/* Printable Official Header (Only rendered when printing) */}
+        <div className="print-only mb-6 border-b-2 border-slate-950 pb-4">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-slate-950">BUKIDNON CABLE & INTERNET SERVICES</h1>
+              <p className="text-xs text-gray-700 font-semibold mt-0.5">
+                Official Report: {reportNavItems.find((i) => i.id === activeReport)?.label || activeReport}
+              </p>
+              <p className="text-[11px] text-gray-500">Fortich Street, Poblacion, Malaybalay City, Bukidnon, Philippines</p>
+            </div>
+            <div className="text-right text-xs text-gray-600">
+              <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-900 rounded font-bold text-[10px] uppercase">
+                OFFICIAL REPORT
+              </span>
+              <p className="mt-1">Date Printed: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
+              <p className="text-[10px] text-gray-400">BCIS-SBCS Core Billing Engine</p>
+            </div>
+          </div>
+        </div>
 
         {/* 1. Daily Collection Report Grid */}
         {activeReport === "DAILY_COLLECTION" && (
@@ -924,18 +971,112 @@ export const ReportsPage: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-gray-100 bg-white">
                   {(auditData?.items || []).map((a) => (
-                    <tr key={a.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2.5 text-gray-500 font-mono">{a.occurredAt}</td>
-                      <td className="px-4 py-2.5 font-semibold text-gray-900">{a.actorName}</td>
-                      <td className="px-4 py-2.5">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-800 font-mono">
-                          {a.action}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-gray-700">{a.entityType}</td>
-                      <td className="px-4 py-2.5 text-gray-600">{a.reason}</td>
-                      <td className="px-4 py-2.5 text-gray-500 font-mono">{a.ipAddress}</td>
-                    </tr>
+                    <React.Fragment key={a.id}>
+                      <tr
+                        onClick={() => setExpandedAuditId(expandedAuditId === a.id ? null : a.id)}
+                        className="hover:bg-gray-50 cursor-pointer transition-colors"
+                        title="Click to view change details & metadata"
+                      >
+                        <td className="px-4 py-2.5 text-gray-500 font-mono whitespace-nowrap">
+                          <div className="flex items-center gap-1.5">
+                            <span className="no-print text-gray-400">
+                              {expandedAuditId === a.id ? (
+                                <ChevronUp className="w-3.5 h-3.5 text-blue-600" />
+                              ) : (
+                                <ChevronDown className="w-3.5 h-3.5" />
+                              )}
+                            </span>
+                            <span>{a.occurredAt ? a.occurredAt.replace("T", " ").slice(0, 19) : "—"}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-2.5 font-semibold text-gray-900">{a.actorName}</td>
+                        <td className="px-4 py-2.5">
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-800 font-mono">
+                            {a.action}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-gray-700">{a.entityType}</td>
+                        <td className="px-4 py-2.5 text-gray-600">{a.reason}</td>
+                        <td className="px-4 py-2.5 text-gray-500 font-mono">{a.ipAddress}</td>
+                      </tr>
+                      {expandedAuditId === a.id && (
+                        <tr className="bg-slate-50/70 border-b border-gray-200 no-print">
+                          <td colSpan={6} className="px-6 py-4">
+                            <div className="space-y-3 text-xs">
+                              <div className="flex flex-wrap items-center gap-4 text-gray-500">
+                                <span>Entity ID: <strong className="font-mono text-gray-800">{a.entityId || "N/A"}</strong></span>
+                                {a.requestId && (
+                                  <span>Request ID: <strong className="font-mono text-gray-800">{a.requestId}</strong></span>
+                                )}
+                                <span>Username: <strong className="text-gray-800">{a.actorUsername}</strong></span>
+                              </div>
+
+                              {/* Formatted Changes: oldValues vs newValues */}
+                              {(a.oldValues || a.newValues) && (
+                                <div className="mt-2 bg-white rounded-lg border border-gray-200 p-3 shadow-2xs">
+                                  <p className="font-semibold text-gray-700 mb-2 text-[11px] uppercase tracking-wider">
+                                    Audited Changes & Field Diffs
+                                  </p>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {a.oldValues && (
+                                      <div className="bg-red-50/50 border border-red-100 rounded-md p-2.5">
+                                        <span className="text-[10px] font-bold text-red-700 uppercase tracking-wide">Previous State</span>
+                                        <div className="mt-1 space-y-1">
+                                          {typeof a.oldValues === "object" && !Array.isArray(a.oldValues) ? (
+                                            Object.entries(a.oldValues).map(([k, v]) => (
+                                              <div key={k} className="flex items-start justify-between text-[11px] py-0.5 border-b border-red-100/50 last:border-0">
+                                                <span className="text-gray-600 font-medium">{k}:</span>
+                                                <span className="font-mono text-red-700">{formatAuditValue(v)}</span>
+                                              </div>
+                                            ))
+                                          ) : (
+                                            <p className="font-mono text-red-700 text-[11px]">{formatAuditValue(a.oldValues)}</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {a.newValues && (
+                                      <div className="bg-emerald-50/50 border border-emerald-100 rounded-md p-2.5">
+                                        <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wide">Updated State</span>
+                                        <div className="mt-1 space-y-1">
+                                          {typeof a.newValues === "object" && !Array.isArray(a.newValues) ? (
+                                            Object.entries(a.newValues).map(([k, v]) => (
+                                              <div key={k} className="flex items-start justify-between text-[11px] py-0.5 border-b border-emerald-100/50 last:border-0">
+                                                <span className="text-gray-600 font-medium">{k}:</span>
+                                                <span className="font-mono text-emerald-700 font-semibold">{formatAuditValue(v)}</span>
+                                              </div>
+                                            ))
+                                          ) : (
+                                            <p className="font-mono text-emerald-700 text-[11px] font-semibold">{formatAuditValue(a.newValues)}</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Formatted Operational Metadata */}
+                              {a.metadata && typeof a.metadata === "object" && Object.keys(a.metadata).length > 0 && (
+                                <div className="bg-white rounded-lg border border-gray-200 p-2.5 shadow-2xs">
+                                  <p className="font-semibold text-gray-700 mb-1.5 text-[11px] uppercase tracking-wider">
+                                    Operational Metadata
+                                  </p>
+                                  <div className="flex flex-wrap gap-2">
+                                    {Object.entries(a.metadata).map(([k, v]) => (
+                                      <span key={k} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-100 text-gray-800 text-[11px]">
+                                        <span className="text-gray-500 font-medium">{k}:</span>
+                                        <span className="font-semibold">{formatAuditValue(v)}</span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   ))}
                   {(auditData?.items?.length ?? 0) === 0 && (
                     <tr>
@@ -949,6 +1090,27 @@ export const ReportsPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Printable Official Sign-Off Block (Only rendered when printing) */}
+        <div className="print-only mt-10 pt-6 border-t border-gray-300">
+          <div className="grid grid-cols-3 gap-8 text-xs text-gray-700">
+            <div>
+              <p className="font-semibold text-gray-900">Prepared & Extracted By:</p>
+              <div className="mt-8 border-b border-gray-400 w-44"></div>
+              <p className="text-[10px] text-gray-500 mt-1">Authorized Staff / Cashier</p>
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Audited & Verified By:</p>
+              <div className="mt-8 border-b border-gray-400 w-44"></div>
+              <p className="text-[10px] text-gray-500 mt-1">Finance Officer / Supervisor</p>
+            </div>
+            <div>
+              <p className="font-semibold text-gray-900">Approved for Official Filing:</p>
+              <div className="mt-8 border-b border-gray-400 w-44"></div>
+              <p className="text-[10px] text-gray-500 mt-1">Station General Manager</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Subscriber Financial Ledger Modal */}

@@ -27,6 +27,7 @@ import {
 import { SubscriberCombobox } from "../subscribers/SubscriberCombobox";
 import { useAuth } from "../auth/AuthContext";
 import { cn, formatMoney } from "../../lib/utils";
+import { Modal } from "../../components/ui/Modal";
 
 export function PaymentsPage() {
   const { hasPermission } = useAuth();
@@ -469,7 +470,7 @@ export function PaymentsPage() {
               fetchPendingGcashCount();
             }}
             disabled={loading}
-            className="btn btn-secondary flex items-center gap-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all shadow-xs cursor-pointer text-sm"
+            className="btn btn-secondary text-sm"
             title="Refresh payments list"
           >
             <RefreshCw className={cn("w-4 h-4", loading && "animate-spin")} />
@@ -483,7 +484,7 @@ export function PaymentsPage() {
                 setPaymentMethod("GCASH");
                 setShowReceiveModal(true);
               }}
-              className="btn flex items-center gap-2 shadow-xs bg-sky-50 border border-sky-200 text-sky-700 hover:bg-sky-100 hover:border-sky-300 font-medium px-3.5 py-2 rounded-lg active:scale-95 transition-all cursor-pointer text-sm"
+              className="btn bg-sky-50 border border-sky-200 text-sky-700 hover:bg-sky-100 hover:border-sky-300 font-medium text-sm shadow-sm"
               title="File and verify GCash payment proof with screenshot attachment"
             >
               <FileCheck className="w-4 h-4 text-sky-600" />
@@ -498,7 +499,7 @@ export function PaymentsPage() {
                 setPaymentMethod("CASH");
                 setShowReceiveModal(true);
               }}
-              className="btn btn-primary flex items-center gap-2 shadow-xs bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg active:scale-95 transition-all cursor-pointer text-sm"
+              className="btn btn-primary text-sm"
             >
               <CreditCard className="w-4 h-4" />
               Receive Payment
@@ -752,37 +753,39 @@ export function PaymentsPage() {
                           </span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-right space-x-2">
-                        <button
-                          onClick={async () => {
-                            try {
-                              const hydrated = await api.getPaymentById(pmt.id);
-                              setSelectedReceipt(hydrated);
-                            } catch (err) {
-                              console.error("Failed to load receipt details", err);
-                            }
-                          }}
-                          className="btn btn-secondary py-1 px-2.5 text-xs inline-flex items-center gap-1.5"
-                          title="View Official Receipt"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          Receipt
-                        </button>
-
-                        {canReversePayment && !pmt.isReversed && (
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => {
-                              setReversalPayment(pmt);
-                              setReversalReason("");
-                              setReversalError(null);
+                            onClick={async () => {
+                              try {
+                                const hydrated = await api.getPaymentById(pmt.id);
+                                setSelectedReceipt(hydrated);
+                              } catch (err) {
+                                console.error("Failed to load receipt details", err);
+                              }
                             }}
-                            className="btn py-1 px-2.5 text-xs inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
-                            title="Reverse Payment (Restores Invoices)"
+                            className="btn btn-secondary !py-1 !px-2.5 text-xs"
+                            title="View Official Receipt"
                           >
-                            <RotateCcw className="w-3.5 h-3.5" />
-                            Reverse
+                            <Eye className="w-3.5 h-3.5" />
+                            Receipt
                           </button>
-                        )}
+
+                          {canReversePayment && !pmt.isReversed && (
+                            <button
+                              onClick={() => {
+                                setReversalPayment(pmt);
+                                setReversalReason("");
+                                setReversalError(null);
+                              }}
+                              className="btn !py-1 !px-2.5 text-xs bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
+                              title="Reverse Payment (Restores Invoices)"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              Reverse
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -821,767 +824,535 @@ export function PaymentsPage() {
       {/* ========================================================================= */}
       {/* MODAL 1: RECEIVE PAYMENT (Oldest-First Live Preview & Change Calculator)   */}
       {/* ========================================================================= */}
-      {showReceiveModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-2xl w-full p-6 my-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div>
-                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                  <CreditCard className="w-5 h-5 text-blue-600" />
-                  Receive & Allocate Payment
-                </h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Process subscriber payments with automatic oldest-first arrears allocation.
-                </p>
-              </div>
-              <button
-                onClick={() => setShowReceiveModal(false)}
-                className="text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {paymentError && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-sm flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span>{paymentError}</span>
-              </div>
-            )}
-
-            <form onSubmit={handlePostPayment} onPaste={handlePaste} className="space-y-5">
-              {/* Dynamic Auto-Suggest Subscriber Combobox */}
-              <SubscriberCombobox
-                value={selectedSub}
-                onChange={(sub) => {
-                  setSelectedSub(sub);
-                  if (!sub) setPreviewResult(null);
-                }}
-                label="1. Select Subscriber"
-                required
-                autoFocus
-              />
-
-              {/* Method, Reference & Amounts */}
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label
-                      htmlFor="payment-method-select"
-                      className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5"
-                    >
-                      2. Payment Method *
-                    </label>
-                    <select
-                      id="payment-method-select"
-                      value={paymentMethod}
-                      onChange={(e) => {
-                        const newMethod = e.target.value as PaymentMethod;
-                        setPaymentMethod(newMethod);
-                        setPaymentError(null);
-                      }}
-                      className="input text-sm w-full bg-white border-slate-200 text-slate-700 focus:border-blue-500"
-                    >
-                      <option value="CASH">Cash (Drawer)</option>
-                      <option value="GCASH">GCash (Requires Screenshot Proof)</option>
-                      <option value="BANK_TRANSFER">Bank Transfer (Deposit Slip)</option>
-                      <option value="CHECK">Cheque</option>
-                      <option value="OTHER">Other</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                      3. Amount Paid (₱) *
-                    </label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-semibold">
-                        ₱
-                      </span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
-                        value={amountPaid}
-                        onChange={(e) => setAmountPaid(e.target.value)}
-                        placeholder="0.00"
-                        className="input pl-8 text-sm w-full font-mono font-semibold bg-white border-slate-200 text-slate-900 focus:border-blue-500"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Conditional Fields based on Payment Method */}
-                {paymentMethod === "GCASH" ? (
-                  <div className="space-y-4 pt-1">
-                    {/* AT-05 Security Compliance Callout */}
-                    <div className="p-3.5 bg-blue-50/80 border border-blue-200 rounded-xl flex items-start gap-3">
-                      <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
-                      <div className="text-xs text-blue-900 space-y-0.5">
-                        <p className="font-semibold text-blue-950">GCash Digital Settlement Protocol (AT-05 Compliance)</p>
-                        <p className="text-blue-800/90 leading-relaxed">
-                          GCash transfers credit the corporate e-wallet directly. Attaching an authentic receipt screenshot is mandatory for SHA-256 fingerprinting, anti-double-posting verification, and bank reconciliation.
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                          GCash Reference Number *
-                        </label>
-                        <input
-                          type="text"
-                          value={referenceNumber}
-                          onChange={(e) => setReferenceNumber(e.target.value)}
-                          placeholder="e.g. 1029384756123 (13 digits)"
-                          className="input text-sm w-full font-mono bg-white border-slate-200 text-slate-900 focus:border-blue-500"
-                          required
-                        />
-                        <p className="text-[11px] text-slate-500 mt-1">13-digit reference number from GCash receipt.</p>
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                          Transaction Date *
-                        </label>
-                        <input
-                          type="date"
-                          value={transactionDate}
-                          onChange={(e) => setTransactionDate(e.target.value)}
-                          className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500"
-                          required
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                          Sender Name (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          value={submitSenderName}
-                          onChange={(e) => setSubmitSenderName(e.target.value)}
-                          placeholder="e.g. Juan Dela Cruz"
-                          className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                          Sender Mobile (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          value={submitSenderMobile}
-                          onChange={(e) => setSubmitSenderMobile(e.target.value)}
-                          placeholder="e.g. 0917-123-4567"
-                          className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500"
-                        />
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                          Payment Notes / Memo (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          value={paymentNotes}
-                          onChange={(e) => setPaymentNotes(e.target.value)}
-                          placeholder="e.g. In-counter payment with mobile screenshot proof"
-                          className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Receipt Screenshot Attachment Dropzone */}
-                    <div onPaste={handlePaste} className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center justify-between">
-                        <span>Receipt Screenshot / Proof File *</span>
-                        <span className="text-[11px] text-blue-600 font-normal">Tip: Paste screenshot directly with Ctrl+V</span>
-                      </label>
-
-                      {!selectedFile ? (
-                        <div
-                          onDragOver={(e) => {
-                            e.preventDefault();
-                            setIsDraggingFile(true);
-                          }}
-                          onDragLeave={() => setIsDraggingFile(false)}
-                          onDrop={(e) => {
-                            e.preventDefault();
-                            setIsDraggingFile(false);
-                            if (e.dataTransfer.files?.[0]) {
-                              handleFileChange(e.dataTransfer.files[0]);
-                            }
-                          }}
-                          className={cn(
-                            "border-2 border-dashed rounded-xl p-5 text-center transition-all cursor-pointer",
-                            isDraggingFile
-                              ? "border-blue-500 bg-blue-50/50"
-                              : "border-slate-300 hover:border-blue-400 bg-slate-50/60 hover:bg-slate-50"
-                          )}
-                          onClick={() => {
-                            const input = document.getElementById("gcash-file-input-payments");
-                            if (input) input.click();
-                          }}
-                        >
-                          <input
-                            id="gcash-file-input-payments"
-                            type="file"
-                            accept="image/png,image/jpeg,image/webp,application/pdf"
-                            className="hidden"
-                            onChange={(e) => {
-                              if (e.target.files?.[0]) {
-                                handleFileChange(e.target.files[0]);
-                              }
-                            }}
-                          />
-                          <div className="flex flex-col items-center justify-center gap-1.5">
-                            <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mb-0.5">
-                              <UploadCloud className="w-5 h-5" />
-                            </div>
-                            <p className="text-sm font-medium text-slate-800">
-                              Click to upload or drag & drop proof screenshot
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              PNG, JPG, WebP, or PDF up to 10MB • Or press <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono shadow-2xs font-semibold">Ctrl+V</kbd> to paste
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-10 h-10 rounded-lg bg-blue-100/60 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0">
-                              <FileCheck className="w-5 h-5" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-xs font-semibold text-slate-900 truncate">{selectedFile.name}</p>
-                              <p className="text-[11px] text-slate-500">
-                                {(selectedFile.size / 1024).toFixed(1)} KB • {selectedFile.type || "Attached Proof"}
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedFile(null);
-                              setFileBase64("");
-                            }}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
-                            title="Remove file"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Reference Number {paymentMethod !== "CASH" ? "*" : "(Optional)"}
-                      </label>
-                      <input
-                        type="text"
-                        value={referenceNumber}
-                        onChange={(e) => setReferenceNumber(e.target.value)}
-                        placeholder={
-                          paymentMethod === "CHECK"
-                            ? "e.g. Check Number"
-                            : "Bank reference / deposit slip #"
-                        }
-                        className="input text-sm w-full font-mono bg-white border-slate-200 text-slate-900 focus:border-blue-500"
-                      />
-                    </div>
-
-                    {paymentMethod === "CASH" ? (
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                          Tendered Cash (₱)
-                        </label>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-semibold">
-                            ₱
-                          </span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min="0"
-                            value={tenderedAmount}
-                            onChange={(e) => setTenderedAmount(e.target.value)}
-                            placeholder="e.g. 1000.00"
-                            className="input pl-8 text-sm w-full font-mono bg-white border-slate-200 text-slate-900 focus:border-blue-500"
-                          />
-                        </div>
-                        {changeDue !== null && (
-                          <p className="text-xs text-emerald-600 font-semibold mt-1">
-                            Change Due: {formatMoney(changeDue)}
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                          Notes
-                        </label>
-                        <input
-                          type="text"
-                          value={paymentNotes}
-                          onChange={(e) => setPaymentNotes(e.target.value)}
-                          placeholder="Optional memo or transaction note..."
-                          className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500"
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Oldest-First Allocation Live Preview */}
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-700 uppercase tracking-wider">
-                  <span className="flex items-center gap-1.5">
-                    <Receipt className="w-4 h-4 text-blue-600" />
-                    Oldest-First Allocation Projection
-                  </span>
-                  {previewLoading && (
-                    <span className="text-slate-400 flex items-center gap-1 text-[11px] lowercase">
-                      <RefreshCw className="w-3 h-3 animate-spin" /> calculating...
-                    </span>
-                  )}
-                </div>
-
-                {!selectedSub ? (
-                  <p className="text-xs text-slate-500 italic">
-                    Select a subscriber above to preview how this payment will allocate across open invoices.
-                  </p>
-                ) : !previewResult || previewResult.invoiceAllocations.length === 0 ? (
-                  <div className="text-xs text-slate-500">
-                    {parseFloat(amountPaid || "0") > 0 ? (
-                      <p className="text-amber-700 font-medium">
-                        No outstanding unpaid invoices. Full amount ({formatMoney(amountPaid || "0")}) will be credited as an advance surplus for future invoices.
-                      </p>
-                    ) : (
-                      <p className="text-slate-500">Enter a payment amount to calculate invoice allocations.</p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="max-h-44 overflow-y-auto border border-slate-200 rounded-lg overflow-hidden bg-white">
-                      <table className="w-full text-left text-xs">
-                        <thead className="bg-slate-50 text-[11px] font-semibold text-slate-600 border-b border-slate-200">
-                          <tr>
-                            <th className="py-2 px-3">Invoice</th>
-                            <th className="py-2 px-3">Due Date</th>
-                            <th className="py-2 px-3 text-right">Current Bal</th>
-                            <th className="py-2 px-3 text-right text-blue-600">Applied</th>
-                            <th className="py-2 px-3 text-right">New Bal</th>
-                            <th className="py-2 px-3 text-center">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {previewResult.invoiceAllocations.map((alloc) => (
-                            <tr key={alloc.invoiceId}>
-                              <td className="py-2 px-3 font-mono font-medium">{alloc.invoiceNumber}</td>
-                              <td className="py-2 px-3 text-slate-500">{alloc.dueDate}</td>
-                              <td className="py-2 px-3 text-right font-mono">{formatMoney(alloc.currentBalance)}</td>
-                              <td className="py-2 px-3 text-right font-mono font-semibold text-blue-600">
-                                {formatMoney(alloc.allocatedAmount)}
-                              </td>
-                              <td className="py-2 px-3 text-right font-mono">{formatMoney(alloc.remainingBalance)}</td>
-                              <td className="py-2 px-3 text-center">
-                                <span
-                                  className={cn(
-                                    "px-1.5 py-0.5 rounded text-[10px] font-semibold",
-                                    alloc.resultingStatus === "PAID"
-                                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                                      : "bg-amber-50 text-amber-700 border border-amber-200"
-                                  )}
-                                >
-                                  {alloc.resultingStatus}
-                                </span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Advance surplus notice if payment exceeds open invoices */}
-                    {parseFloat(previewResult.advanceCredit) > 0 && (
-                      <div className="p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800 flex items-center justify-between">
-                        <span>Surplus advance credit (carried forward):</span>
-                        <span className="font-bold font-mono">
-                          +{formatMoney(previewResult.advanceCredit)}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Modal Actions */}
-              {paymentMethod === "GCASH" ? (
-                <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowReceiveModal(false)}
-                    className="btn btn-secondary text-sm"
-                  >
-                    Cancel
-                  </button>
-                  <div className="flex items-center gap-2.5">
-                    <button
-                      type="button"
-                      disabled={
-                        submittingToQueue ||
-                        submittingPayment ||
-                        !selectedSub ||
-                        !selectedFile ||
-                        !fileBase64 ||
-                        !referenceNumber.trim() ||
-                        parseFloat(amountPaid || "0") <= 0
-                      }
-                      onClick={handleGcashSubmitToQueue}
-                      className="btn btn-secondary text-sm flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95 transition-all cursor-pointer"
-                      title="Submit proof to queue for later supervisor verification"
-                    >
-                      {submittingToQueue ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          Submitting...
-                        </>
-                      ) : (
-                        <>
-                          <Clock className="w-4 h-4 text-slate-500" />
-                          Submit to Queue
-                        </>
-                      )}
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={
-                        submittingPayment ||
-                        submittingToQueue ||
-                        !selectedSub ||
-                        !referenceNumber.trim() ||
-                        parseFloat(amountPaid || "0") <= 0 ||
-                        (selectedFile !== null && !fileBase64)
-                      }
-                      className="btn btn-primary text-sm flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium active:scale-95 transition-all shadow-xs cursor-pointer"
-                      title="Verify GCash reference against AT-05 deduplication, allocate oldest-first, and issue Official Receipt"
-                    >
-                      {submittingPayment ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          Verifying & Posting...
-                        </>
-                      ) : (
-                        <>
-                          <ShieldCheck className="w-4 h-4" />
-                          Submit & Verify (Issue Receipt)
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowReceiveModal(false)}
-                    className="btn btn-secondary text-sm"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submittingPayment || !selectedSub || parseFloat(amountPaid || "0") <= 0}
-                    className="btn btn-primary text-sm flex items-center gap-2"
-                  >
-                    {submittingPayment ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                        Posting Payment...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="w-4 h-4" />
-                        Post Payment & Issue Receipt
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* MODAL 2: PRINTABLE OFFICIAL RECEIPT                                       */}
-      {/* ========================================================================= */}
-      {selectedReceipt && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white text-slate-900 rounded-2xl shadow-2xl max-w-xl w-full p-8 my-8 space-y-6 print:m-0 print:p-4 print:shadow-none print:max-w-none print:w-full">
-            {/* Header / Actions in screen mode */}
-            <div className="flex items-center justify-between border-b border-slate-200 pb-4 print:hidden">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Official Receipt Preview
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => window.print()}
-                  className="btn btn-primary py-1.5 px-3 text-xs flex items-center gap-1.5"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  Print Receipt
-                </button>
-                <button
-                  onClick={() => setSelectedReceipt(null)}
-                  className="btn btn-secondary py-1.5 px-3 text-xs"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-
-            {/* Printable Receipt Area */}
-            <div id="printable-receipt" className="space-y-6">
-              {/* Receipt Header */}
-              <div className="text-center space-y-1">
-                <h2 className="text-xl font-black tracking-wide text-slate-900 uppercase">
-                  Bukidnon Cable and Internet Services
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Fortich Street, Poblacion, Malaybalay City, Bukidnon 8700
-                </p>
-                <div className="pt-2">
-                  <span className="inline-block px-3 py-1 bg-slate-900 text-white text-xs font-bold uppercase tracking-widest rounded">
-                    Official Receipt
-                  </span>
-                </div>
-              </div>
-
-              {/* Receipt Metadata */}
-              <div className="grid grid-cols-2 gap-4 text-xs border-y border-slate-200 py-3">
-                <div>
-                  <span className="text-slate-500 block">Receipt Number:</span>
-                  <span className="font-mono font-bold text-slate-900 text-sm">
-                    {selectedReceipt.receiptNumber}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-slate-500 block">Payment Date:</span>
-                  <span className="font-semibold text-slate-900">
-                    {selectedReceipt.paymentDate}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-slate-500 block">Received From:</span>
-                  <span className="font-bold text-slate-900">
-                    {selectedReceipt.subscriber?.firstName} {selectedReceipt.subscriber?.lastName}
-                    {selectedReceipt.subscriber?.businessName ? ` (${selectedReceipt.subscriber.businessName})` : ""}
-                  </span>
-                  <span className="font-mono text-slate-500 block">
-                    Acct #: {selectedReceipt.subscriber?.accountNumber}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-slate-500 block">Payment Method:</span>
-                  <span className="font-semibold text-slate-900 inline-flex items-center justify-end gap-1">
-                    {selectedReceipt.paymentMethod === "GCASH" && (
-                      <ShieldCheck className="w-3.5 h-3.5 text-blue-600 inline" />
-                    )}
-                    {selectedReceipt.paymentMethod === "GCASH"
-                      ? "GCash (Verified Digital Settlement)"
-                      : selectedReceipt.paymentMethod}
-                  </span>
-                  {selectedReceipt.referenceNumber && (
-                    <span className="font-mono text-slate-500 block">
-                      Ref #: {selectedReceipt.referenceNumber}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Invoice Allocations Breakdown */}
-              <div className="space-y-2">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Allocation Breakdown
-                </p>
-                <table className="w-full text-xs text-left">
-                  <thead className="border-b border-slate-200 text-slate-500">
-                    <tr>
-                      <th className="py-1">Description / Invoice</th>
-                      <th className="py-1 text-right">Prev Balance</th>
-                      <th className="py-1 text-right">Applied</th>
-                      <th className="py-1 text-right">Remaining</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {selectedReceipt.allocations && selectedReceipt.allocations.length > 0 ? (
-                      selectedReceipt.allocations.map((a) => (
-                        <tr key={a.id}>
-                          <td className="py-1.5 font-mono font-medium">
-                            {a.invoice?.invoiceNumber || a.invoiceId}
-                          </td>
-                          <td className="py-1.5 text-right font-mono">
-                            {formatMoney(a.previousInvoiceBalance)}
-                          </td>
-                          <td className="py-1.5 text-right font-mono font-bold text-slate-900">
-                            {formatMoney(a.allocatedAmount)}
-                          </td>
-                          <td className="py-1.5 text-right font-mono">
-                            {formatMoney(a.remainingInvoiceBalance)}
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={4} className="py-2 text-slate-400 italic">
-                          Direct advance payment credit without immediate invoice allocation.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Total & Summary */}
-              <div className="border-t border-slate-200 pt-3 space-y-1.5 text-xs">
-                <div className="flex justify-between font-medium">
-                  <span className="text-slate-500">Total Invoices Satisfied:</span>
-                  <span className="font-mono font-semibold">
-                    {formatMoney(selectedReceipt.allocatedAmount)}
-                  </span>
-                </div>
-                {parseFloat(selectedReceipt.advanceAmount || "0") > 0 && (
-                  <div className="flex justify-between font-medium text-amber-700">
-                    <span>Advance Credit (Overpayment):</span>
-                    <span className="font-mono font-semibold">
-                      +{formatMoney(selectedReceipt.advanceAmount)}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between text-base font-black border-t border-slate-900 pt-2 text-slate-900">
-                  <span>TOTAL AMOUNT PAID:</span>
-                  <span className="font-mono font-bold">
-                    {formatMoney(selectedReceipt.amountPaid)}
-                  </span>
-                </div>
-                {selectedReceipt.tenderedAmount && (
-                  <div className="flex justify-between text-slate-500 pt-1">
-                    <span>Cash Tendered: {formatMoney(selectedReceipt.tenderedAmount)}</span>
-                    <span>Change Given: {formatMoney(selectedReceipt.changeAmount || "0.00")}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Signatures Footer */}
-              <div className="pt-6 grid grid-cols-2 gap-8 text-center text-xs">
-                <div>
-                  <div className="border-b border-slate-300 pb-8"></div>
-                  <span className="text-slate-500 mt-1 block">Subscriber Signature</span>
-                </div>
-                <div>
-                  <div className="border-b border-slate-300 pb-8">
-                    <span className="font-semibold text-slate-900">
-                      {selectedReceipt.cashier?.displayName || selectedReceipt.cashier?.username || "Cashier"}
-                    </span>
-                  </div>
-                  <span className="text-slate-500 mt-1 block">Authorized Cashier</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* MODAL 3: REVERSE PAYMENT (AT-06 Supervisor / Admin Protected)             */}
-      {/* ========================================================================= */}
-      {reversalPayment && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl border border-rose-200 max-w-lg w-full p-6 space-y-5">
-            <div className="flex items-center gap-3 text-rose-600">
-              <div className="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center shrink-0 border border-rose-200/60">
-                <AlertTriangle className="w-5 h-5 text-rose-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">
-                  Reverse Payment Receipt #{reversalPayment.receiptNumber}
-                </h3>
-                <p className="text-xs text-slate-500">
-                  Permanent operational reversal with immutable audit trail.
-                </p>
-              </div>
-            </div>
-
-            <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 space-y-1.5">
-              <p className="font-semibold flex items-center gap-1.5 text-rose-900">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-                Impact of Reversal (AT-06):
-              </p>
-              <ul className="list-disc list-inside space-y-0.5 text-slate-600 pl-1">
-                <li>All invoices allocated by this payment will be re-opened to UNPAID/PARTIALLY_PAID.</li>
-                <li>Invoice cached balance due and service account balance due will be restored.</li>
-                <li>An offsetting compensatory DEBIT of {formatMoney(reversalPayment.amountPaid)} will be posted to the subscriber ledger.</li>
-              </ul>
-            </div>
-
-            {reversalError && (
-              <div className="p-3 bg-rose-100 text-rose-800 rounded-lg text-xs font-medium">
-                {reversalError}
-              </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                Mandatory Reversal Reason * (min 5 chars)
-              </label>
-              <textarea
-                value={reversalReason}
-                onChange={(e) => setReversalReason(e.target.value)}
-                placeholder="e.g. Check bounced, erroneous cashier entry, customer bank chargeback..."
-                className="input text-sm w-full h-24 resize-none bg-white border-slate-200 text-slate-900 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
-                required
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-2">
+      <Modal
+        isOpen={showReceiveModal}
+        onClose={() => setShowReceiveModal(false)}
+        title="Receive & Allocate Payment"
+        description="Process subscriber payments with automatic oldest-first arrears allocation."
+        icon={<CreditCard className="w-6 h-6" />}
+        maxWidth="2xl"
+        actions={
+          paymentMethod === "GCASH" ? (
+            <div className="flex w-full items-center justify-end gap-3">
               <button
                 type="button"
-                onClick={() => setReversalPayment(null)}
+                onClick={() => setShowReceiveModal(false)}
                 className="btn btn-secondary text-sm"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                onClick={handleConfirmReversal}
-                disabled={reversing || reversalReason.trim().length < 5}
-                className="btn text-sm bg-rose-600 hover:bg-rose-700 text-white flex items-center gap-2"
+                disabled={
+                  submittingToQueue ||
+                  !selectedSub ||
+                  !selectedFile ||
+                  !fileBase64 ||
+                  !referenceNumber.trim() ||
+                  parseFloat(amountPaid || "0") <= 0
+                }
+                onClick={handleGcashSubmitToQueue}
+                className="btn btn-secondary text-sm"
+                title="Submit proof to queue for later supervisor verification"
               >
-                {reversing ? (
+                {submittingToQueue ? (
                   <>
                     <RefreshCw className="w-4 h-4 animate-spin" />
-                    Reversing Payment...
+                    Submitting...
                   </>
                 ) : (
                   <>
-                    <RotateCcw className="w-4 h-4" />
-                    Confirm Reversal
+                    <Clock className="w-4 h-4" />
+                    Submit to Queue
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                disabled={
+                  submittingPayment ||
+                  submittingToQueue ||
+                  !selectedSub ||
+                  !referenceNumber.trim() ||
+                  parseFloat(amountPaid || "0") <= 0 ||
+                  (selectedFile !== null && !fileBase64)
+                }
+                onClick={handleGcashSubmitAndVerify}
+                className="btn btn-primary text-sm flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium active:scale-95 transition-all shadow-xs cursor-pointer"
+                title="Verify GCash reference against AT-05 deduplication, allocate oldest-first, and issue Official Receipt"
+              >
+                {submittingPayment ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Verifying & Posting...
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="w-4 h-4" />
+                    Submit & Verify (Issue Receipt)
                   </>
                 )}
               </button>
             </div>
+          ) : (
+            <div className="flex w-full items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowReceiveModal(false)}
+                className="btn btn-secondary text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                form="receive-payment-form"
+                disabled={submittingPayment || !selectedSub || parseFloat(amountPaid || "0") <= 0}
+                className="btn btn-primary text-sm"
+              >
+                {submittingPayment ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    Posting...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    Post Payment & Issue Receipt
+                  </>
+                )}
+              </button>
+            </div>
+          )
+        }
+      >
+        <div className="space-y-6">
+          {paymentError && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-sm flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{paymentError}</span>
+            </div>
+          )}
+
+          <form id="receive-payment-form" onSubmit={handlePostPayment} onPaste={handlePaste} className="space-y-5">
+            <SubscriberCombobox
+              value={selectedSub}
+              onChange={(sub) => {
+                setSelectedSub(sub);
+                if (!sub) setPreviewResult(null);
+              }}
+              label="1. Select Subscriber"
+              required
+              autoFocus
+            />
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="payment-method-select" className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    2. Payment Method *
+                  </label>
+                  <select
+                    id="payment-method-select"
+                    value={paymentMethod}
+                    onChange={(e) => {
+                      setPaymentMethod(e.target.value as PaymentMethod);
+                      setPaymentError(null);
+                    }}
+                    className="input text-sm w-full bg-white border-slate-200 text-slate-700 focus:border-blue-500"
+                  >
+                    <option value="CASH">Cash (Drawer)</option>
+                    <option value="GCASH">GCash (Requires Screenshot Proof)</option>
+                    <option value="BANK_TRANSFER">Bank Transfer (Deposit Slip)</option>
+                    <option value="CHECK">Cheque</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    3. Amount Paid (₱) *
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-semibold">₱</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      value={amountPaid}
+                      onChange={(e) => setAmountPaid(e.target.value)}
+                      placeholder="0.00"
+                      className="input pl-8 text-sm w-full font-mono font-semibold bg-white border-slate-200 text-slate-900 focus:border-blue-500"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {paymentMethod === "GCASH" ? (
+                <div className="space-y-4 pt-1">
+                  <div className="p-3.5 bg-blue-50/80 border border-blue-200 rounded-xl flex items-start gap-3">
+                    <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                    <div className="text-xs text-blue-900 space-y-0.5">
+                      <p className="font-semibold text-blue-950">GCash Digital Settlement Protocol (AT-05 Compliance)</p>
+                      <p className="text-blue-800/90 leading-relaxed">
+                        To enforce strict separation of duties, GCash payments must be submitted to the verification queue and approved by an authorized verifier in the GCash tab. Direct OTC verification is disabled.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">GCash Reference Number *</label>
+                      <input type="text" value={referenceNumber} onChange={(e) => setReferenceNumber(e.target.value)} placeholder="e.g. 1029384756123" className="input text-sm w-full font-mono bg-white border-slate-200 text-slate-900 focus:border-blue-500" required />
+                      <p className="text-[11px] text-slate-500 mt-1">13-digit reference from GCash receipt.</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Transaction Date *</label>
+                      <input type="date" value={transactionDate} onChange={(e) => setTransactionDate(e.target.value)} className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500" required />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Sender Name (Optional)</label>
+                      <input type="text" value={submitSenderName} onChange={(e) => setSubmitSenderName(e.target.value)} placeholder="e.g. Juan Dela Cruz" className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Sender Mobile (Optional)</label>
+                      <input type="text" value={submitSenderMobile} onChange={(e) => setSubmitSenderMobile(e.target.value)} placeholder="e.g. 0917-123-4567" className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Payment Notes / Memo (Optional)</label>
+                      <input type="text" value={paymentNotes} onChange={(e) => setPaymentNotes(e.target.value)} placeholder="e.g. Customer present at counter" className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider flex items-center justify-between">
+                      <span>Receipt Screenshot / Proof File *</span>
+                      <span className="text-[11px] text-blue-600 font-normal">Tip: Ctrl+V</span>
+                    </label>
+                    {!selectedFile ? (
+                      <div onDragOver={(e) => { e.preventDefault(); setIsDraggingFile(true); }} onDragLeave={() => setIsDraggingFile(false)} onDrop={(e) => { e.preventDefault(); setIsDraggingFile(false); if (e.dataTransfer.files?.[0]) handleFileChange(e.dataTransfer.files[0]); }} className={cn("border-2 border-dashed rounded-xl p-5 text-center transition-all cursor-pointer", isDraggingFile ? "border-blue-500 bg-blue-50/50" : "border-slate-300 hover:border-blue-400 bg-slate-50/60 hover:bg-slate-50")} onClick={() => document.getElementById("gcash-file-input-payments")?.click()}>
+                        <input id="gcash-file-input-payments" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" className="hidden" onChange={(e) => e.target.files?.[0] && handleFileChange(e.target.files[0])} />
+                        <div className="flex flex-col items-center justify-center gap-1.5">
+                          <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 mb-0.5"><UploadCloud className="w-5 h-5" /></div>
+                          <p className="text-sm font-medium text-slate-800">Click to upload or drag & drop proof screenshot</p>
+                          <p className="text-xs text-slate-500">PNG, JPG, WebP, or PDF up to 10MB • Or <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono shadow-2xs font-semibold">Ctrl+V</kbd> to paste</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-lg bg-blue-100/60 border border-blue-200 flex items-center justify-center text-blue-600 shrink-0"><FileCheck className="w-5 h-5" /></div>
+                          <div className="min-w-0"><p className="text-xs font-semibold text-slate-900 truncate">{selectedFile.name}</p><p className="text-[11px] text-slate-500">{(selectedFile.size / 1024).toFixed(1)} KB</p></div>
+                        </div>
+                        <button type="button" onClick={() => { setSelectedFile(null); setFileBase64(""); }} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"><X className="w-4 h-4" /></button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Reference Number {paymentMethod !== "CASH" ? "*" : "(Optional)"}</label>
+                    <input type="text" value={referenceNumber} onChange={(e) => setReferenceNumber(e.target.value)} placeholder={paymentMethod === "CHECK" ? "e.g. Check Number" : "Bank reference / deposit slip #"} className="input text-sm w-full font-mono bg-white border-slate-200 text-slate-900 focus:border-blue-500" />
+                  </div>
+                  {paymentMethod === "CASH" ? (
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Tendered Cash (₱)</label>
+                      <div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-semibold">₱</span><input type="number" step="0.01" min="0" value={tenderedAmount} onChange={(e) => setTenderedAmount(e.target.value)} placeholder="e.g. 1000.00" className="input pl-8 text-sm w-full font-mono bg-white border-slate-200 text-slate-900 focus:border-blue-500" /></div>
+                      {changeDue !== null && <p className="text-xs text-emerald-600 font-semibold mt-1">Change Due: {formatMoney(changeDue)}</p>}
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Notes</label>
+                      <input type="text" value={paymentNotes} onChange={(e) => setPaymentNotes(e.target.value)} placeholder="Optional memo or transaction note..." className="input text-sm w-full bg-white border-slate-200 text-slate-900 focus:border-blue-500" />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <div className="flex items-center justify-between text-xs font-semibold text-slate-700 uppercase tracking-wider">
+                <span className="flex items-center gap-1.5"><Receipt className="w-4 h-4 text-blue-600" />Oldest-First Allocation Projection</span>
+                {previewLoading && <span className="text-slate-400 flex items-center gap-1 text-[11px] lowercase"><RefreshCw className="w-3 h-3 animate-spin" /> calculating...</span>}
+              </div>
+              {!selectedSub ? (
+                <p className="text-xs text-slate-500 italic">Select a subscriber above to preview how this payment will allocate.</p>
+              ) : !previewResult || previewResult.invoiceAllocations.length === 0 ? (
+                <div className="text-xs text-slate-500">{parseFloat(amountPaid || "0") > 0 ? <p className="text-amber-700 font-medium">Full amount will be credited as an advance surplus for future invoices.</p> : <p className="text-slate-500">Enter a payment amount to calculate invoice allocations.</p>}</div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="max-h-44 overflow-y-auto border border-slate-200 rounded-lg overflow-hidden bg-white">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 text-[11px] font-semibold text-slate-600 border-b border-slate-200">
+                        <tr><th className="py-2 px-3">Invoice</th><th className="py-2 px-3">Due Date</th><th className="py-2 px-3 text-right">Bal</th><th className="py-2 px-3 text-right text-blue-600">Applied</th><th className="py-2 px-3 text-right">New Bal</th><th className="py-2 px-3 text-center">Status</th></tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {previewResult.invoiceAllocations.map((alloc) => (
+                          <tr key={alloc.invoiceId}>
+                            <td className="py-2 px-3 font-mono font-medium">{alloc.invoiceNumber}</td><td className="py-2 px-3 text-slate-500">{alloc.dueDate}</td><td className="py-2 px-3 text-right font-mono">{formatMoney(alloc.currentBalance)}</td><td className="py-2 px-3 text-right font-mono font-semibold text-blue-600">{formatMoney(alloc.allocatedAmount)}</td><td className="py-2 px-3 text-right font-mono">{formatMoney(alloc.remainingBalance)}</td>
+                            <td className="py-2 px-3 text-center"><span className={cn("px-1.5 py-0.5 rounded text-[10px] font-semibold", alloc.resultingStatus === "PAID" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-amber-50 text-amber-700 border border-amber-200")}>{alloc.resultingStatus}</span></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  {parseFloat(previewResult.advanceCredit) > 0 && (
+                    <div className="p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800 flex items-center justify-between"><span>Surplus advance credit:</span><span className="font-bold font-mono">+{formatMoney(previewResult.advanceCredit)}</span></div>
+                  )}
+                </div>
+              )}
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* MODAL 2: PRINTABLE OFFICIAL RECEIPT                                       */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={!!selectedReceipt}
+        onClose={() => setSelectedReceipt(null)}
+        title="Official Receipt Preview"
+        icon={<Receipt className="w-5 h-5 text-emerald-600" />}
+        maxWidth="xl"
+        actions={
+          <div className="flex w-full items-center justify-end gap-2 print:hidden">
+            <button
+              onClick={() => setSelectedReceipt(null)}
+              className="btn btn-secondary text-sm"
+            >
+              Close
+            </button>
+            <button
+              onClick={() => window.print()}
+              className="btn btn-primary text-sm flex items-center gap-1.5"
+            >
+              <Printer className="w-4 h-4" />
+              Print Receipt
+            </button>
+          </div>
+        }
+      >
+        {selectedReceipt && (
+          <div id="printable-receipt" className="space-y-6 text-slate-900 print:text-black">
+            <div className="text-center space-y-1">
+              <h2 className="text-xl font-black tracking-wide text-slate-900 uppercase">
+                Bukidnon Cable and Internet Services
+              </h2>
+              <p className="text-xs text-slate-500">
+                Fortich Street, Poblacion, Malaybalay City, Bukidnon 8700
+              </p>
+              <div className="pt-2">
+                <span className="inline-block px-3 py-1 bg-slate-900 text-white text-xs font-bold uppercase tracking-widest rounded">
+                  Official Receipt
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 text-xs border-y border-slate-200 py-3">
+              <div>
+                <span className="text-slate-500 block">Receipt Number:</span>
+                <span className="font-mono font-bold text-slate-900 text-sm">
+                  {selectedReceipt.receiptNumber}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-slate-500 block">Payment Date:</span>
+                <span className="font-semibold text-slate-900">
+                  {selectedReceipt.paymentDate}
+                </span>
+              </div>
+              <div>
+                <span className="text-slate-500 block">Received From:</span>
+                <span className="font-bold text-slate-900">
+                  {selectedReceipt.subscriber?.firstName} {selectedReceipt.subscriber?.lastName}
+                  {selectedReceipt.subscriber?.businessName ? ` (${selectedReceipt.subscriber.businessName})` : ""}
+                </span>
+                <span className="font-mono text-slate-500 block">
+                  Acct #: {selectedReceipt.subscriber?.accountNumber}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-slate-500 block">Payment Method:</span>
+                <span className="font-semibold text-slate-900 inline-flex items-center justify-end gap-1">
+                  {selectedReceipt.paymentMethod === "GCASH" && (
+                    <ShieldCheck className="w-3.5 h-3.5 text-blue-600 inline" />
+                  )}
+                  {selectedReceipt.paymentMethod === "GCASH"
+                    ? "GCash (Verified Digital Settlement)"
+                    : selectedReceipt.paymentMethod}
+                </span>
+                {selectedReceipt.referenceNumber && (
+                  <span className="font-mono text-slate-500 block">
+                    Ref #: {selectedReceipt.referenceNumber}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                Allocation Breakdown
+              </p>
+              <table className="w-full text-xs text-left">
+                <thead className="border-b border-slate-200 text-slate-500">
+                  <tr>
+                    <th className="py-1">Description / Invoice</th>
+                    <th className="py-1 text-right">Prev Balance</th>
+                    <th className="py-1 text-right">Applied</th>
+                    <th className="py-1 text-right">Remaining</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {selectedReceipt.allocations && selectedReceipt.allocations.length > 0 ? (
+                    selectedReceipt.allocations.map((a) => (
+                      <tr key={a.id}>
+                        <td className="py-1.5 font-mono font-medium">
+                          {a.invoice?.invoiceNumber || a.invoiceId}
+                        </td>
+                        <td className="py-1.5 text-right font-mono">
+                          {formatMoney(a.previousInvoiceBalance)}
+                        </td>
+                        <td className="py-1.5 text-right font-mono font-bold text-slate-900">
+                          {formatMoney(a.allocatedAmount)}
+                        </td>
+                        <td className="py-1.5 text-right font-mono">
+                          {formatMoney(a.remainingInvoiceBalance)}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="py-2 text-slate-400 italic">
+                        Direct advance payment credit without immediate invoice allocation.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="border-t border-slate-200 pt-3 space-y-1.5 text-xs">
+              <div className="flex justify-between font-medium">
+                <span className="text-slate-500">Total Invoices Satisfied:</span>
+                <span className="font-mono font-semibold">
+                  {formatMoney(selectedReceipt.allocatedAmount)}
+                </span>
+              </div>
+              {parseFloat(selectedReceipt.advanceAmount || "0") > 0 && (
+                <div className="flex justify-between font-medium text-amber-700">
+                  <span>Advance Credit (Overpayment):</span>
+                  <span className="font-mono font-semibold">
+                    +{formatMoney(selectedReceipt.advanceAmount)}
+                  </span>
+                </div>
+              )}
+              <div className="flex justify-between text-base font-black border-t border-slate-900 pt-2 text-slate-900">
+                <span>TOTAL AMOUNT PAID:</span>
+                <span className="font-mono font-bold">
+                  {formatMoney(selectedReceipt.amountPaid)}
+                </span>
+              </div>
+              {selectedReceipt.tenderedAmount && (
+                <div className="flex justify-between text-slate-500 pt-1">
+                  <span>Cash Tendered: {formatMoney(selectedReceipt.tenderedAmount)}</span>
+                  <span>Change Given: {formatMoney(selectedReceipt.changeAmount || "0.00")}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-6 grid grid-cols-2 gap-8 text-center text-xs">
+              <div>
+                <div className="border-b border-slate-300 pb-8"></div>
+                <span className="text-slate-500 mt-1 block">Subscriber Signature</span>
+              </div>
+              <div>
+                <div className="border-b border-slate-300 pb-8">
+                  <span className="font-semibold text-slate-900">
+                    {selectedReceipt.cashier?.displayName || selectedReceipt.cashier?.username || "Cashier"}
+                  </span>
+                </div>
+                <span className="text-slate-500 mt-1 block">Authorized Cashier</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* ========================================================================= */}
+      {/* MODAL 3: REVERSE PAYMENT (AT-06 Supervisor / Admin Protected)             */}
+      {/* ========================================================================= */}
+      <Modal
+        isOpen={!!reversalPayment}
+        onClose={() => setReversalPayment(null)}
+        title={reversalPayment ? `Reverse Payment Receipt #${reversalPayment.receiptNumber}` : "Reverse Payment"}
+        description="Permanent operational reversal with immutable audit trail."
+        icon={<AlertTriangle className="w-6 h-6 text-rose-600" />}
+        maxWidth="lg"
+        actions={
+          <div className="flex w-full items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setReversalPayment(null)}
+              className="btn btn-secondary text-sm"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleConfirmReversal}
+              disabled={reversing || reversalReason.trim().length < 5}
+              className="btn btn-danger text-sm"
+            >
+              {reversing ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  Reversing...
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="w-4 h-4" />
+                  Confirm Reversal
+                </>
+              )}
+            </button>
+          </div>
+        }
+      >
+        <div className="space-y-5">
+          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 space-y-1.5">
+            <p className="font-semibold flex items-center gap-1.5 text-rose-900">
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+              Impact of Reversal (AT-06):
+            </p>
+            <ul className="list-disc list-inside space-y-0.5 text-slate-600 pl-1">
+              <li>All invoices allocated by this payment will be re-opened to UNPAID/PARTIALLY_PAID.</li>
+              <li>Invoice cached balance due and service account balance due will be restored.</li>
+              <li>An offsetting compensatory DEBIT of {reversalPayment && formatMoney(reversalPayment.amountPaid)} will be posted to the subscriber ledger.</li>
+            </ul>
+          </div>
+
+          {reversalError && (
+            <div className="p-3 bg-rose-100 text-rose-800 rounded-lg text-xs font-medium">
+              {reversalError}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+              Mandatory Reversal Reason * (min 5 chars)
+            </label>
+            <textarea
+              value={reversalReason}
+              onChange={(e) => setReversalReason(e.target.value)}
+              placeholder="e.g. Check bounced, erroneous cashier entry, customer bank chargeback..."
+              className="input text-sm w-full h-24 resize-none bg-white border-slate-200 text-slate-900 focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+              required
+            />
           </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }
