@@ -25,6 +25,8 @@ uploads/
 .drizzle/
 backups/
 **/backups/
+debug*.ts
+**/debug*.ts
 
 # Desktop / Tauri build artifacts
 src-tauri/target/
