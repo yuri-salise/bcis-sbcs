@@ -244,6 +244,22 @@ export const subscriberRoutes: FastifyPluginAsync = async (fastify) => {
     }
   );
 
+  // POST /service-plans
+  fastify.post(
+    "/service-plans",
+    {
+      preHandler: [authenticate, requirePermission("service.manage")],
+      schema: {
+        description: "Create a new service plan",
+        tags: ["Subscribers"],
+      },
+    },
+    async (request, reply) => {
+      const plan = await SubscriberService.createServicePlan(request.body);
+      return reply.code(201).send(plan);
+    }
+  );
+
   // GET /collection-areas
   fastify.get(
     "/collection-areas",

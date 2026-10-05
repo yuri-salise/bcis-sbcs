@@ -124,6 +124,7 @@ export class SubscriberService {
     const subscriberIds = rows.map((s) => s.id);
     let addressMap = new Map<string, typeof subscriberAddresses.$inferSelect>();
     let serviceAccountCountMap = new Map<string, number>();
+    let totalBalanceMap = new Map<string, string>();
 
     if (subscriberIds.length > 0) {
       const addrs = await db
@@ -143,6 +144,7 @@ export class SubscriberService {
         .select({
           subscriberId: serviceAccounts.subscriberId,
           count: count(),
+          totalBalance: sql<string>`COALESCE(SUM(CAST(${serviceAccounts.cachedBalanceDue} AS NUMERIC)), 0)::text`,
         })
         .from(serviceAccounts)
         .where(sql`${serviceAccounts.subscriberId} IN ${subscriberIds}`)
@@ -150,6 +152,7 @@ export class SubscriberService {
 
       for (const sc of saCounts) {
         serviceAccountCountMap.set(sc.subscriberId, Number(sc.count));
+        totalBalanceMap.set(sc.subscriberId, sc.totalBalance);
       }
     }
 
@@ -157,6 +160,7 @@ export class SubscriberService {
       ...s,
       primaryAddress: addressMap.get(s.id) || null,
       serviceAccountsCount: serviceAccountCountMap.get(s.id) || 0,
+      totalBalanceDue: totalBalanceMap.get(s.id) || "0.00",
     }));
 
     return {
@@ -638,6 +642,24 @@ export class SubscriberService {
       .innerJoin(serviceTypes, eq(servicePlans.serviceTypeId, serviceTypes.id))
       .where(eq(servicePlans.isActive, true))
       .orderBy(servicePlans.monthlyPrice);
+  }
+
+  public static async createServicePlan(payload: any) {
+    const [st] = await db.select().from(serviceTypes).where(eq(serviceTypes.code, payload.serviceTypeCode)).limit(1);
+    if (!st) throw new Error(`Service type ${payload.serviceTypeCode} not found`);
+
+    const [plan] = await db.insert(servicePlans).values({
+      serviceTypeId: st.id,
+      code: payload.code,
+      name: payload.name,
+      description: payload.description || null,
+      monthlyPrice: payload.monthlyPrice,
+      installationFee: payload.installationFee || "0.00",
+      reconnectionFee: payload.reconnectionFee || "0.00",
+      speedMbps: payload.speedMbps || null,
+      channelCount: payload.channelCount || null,
+    }).returning();
+    return plan;
   }
 
   /**

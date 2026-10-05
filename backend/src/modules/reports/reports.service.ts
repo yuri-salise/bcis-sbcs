@@ -1005,6 +1005,7 @@ export class ReportsService {
         planName: servicePlans.name,
         planCode: servicePlans.code,
         monthlyPrice: servicePlans.monthlyPrice,
+        currentRate: serviceAccounts.currentRate,
         areaName: collectionAreas.name,
         collectorName: collectors.name,
       })
@@ -1140,7 +1141,7 @@ export class ReportsService {
         id: a.id,
         serviceAccountNumber: a.serviceAccountNumber,
         planName: a.planName || "Standard Plan",
-        monthlyRate: a.monthlyPrice ? Money.fromDecimal(a.monthlyPrice).format() : "₱0.00",
+        monthlyRate: a.currentRate ? Money.fromDecimal(a.currentRate).format() : "₱0.00",
         area: a.areaName || "General Area",
         collector: a.collectorName || "Office Collector",
         status: a.status,
